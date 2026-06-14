@@ -1,41 +1,123 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowUpRight } from '@phosphor-icons/react'
 
 export function Footer() {
   return (
-    <footer id="connect" className="border-t border-white/[0.06] py-24 md:py-32">
-      <div className="section-shell section-center">
-        <div className="content-column flex flex-col items-center gap-14 text-center md:gap-20">
+    <footer
+      id="connect"
+      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '120px 0 80px' }}
+    >
+      <div className="section-shell">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '680px' }}>
+
+          {/* Statement */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="label-caps">Connect</p>
             <h2
-              className="mt-5 font-extralight leading-[1.08] tracking-[-0.04em] text-white"
-              style={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.2rem)' }}
+              style={{
+                fontSize: 'clamp(2rem, 4.5vw, 3.6rem)',
+                fontWeight: 200,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.1,
+                color: '#f0f0f0',
+              }}
             >
-              If the record fits, we will tell you.
+              If the record fits,
               <br />
-              If it does not, we will say that too.
+              <span style={{ color: 'rgba(240,240,240,0.42)' }}>we will tell you.</span>
             </h2>
+
+            <p
+              style={{
+                marginTop: '20px',
+                fontSize: '14px',
+                lineHeight: 1.75,
+                color: 'rgba(240,240,240,0.38)',
+                maxWidth: '44ch',
+              }}
+            >
+              If it does not, we will say that too.
+              Send your track and we respond within 48 hours.
+            </p>
           </motion.div>
 
-          <motion.a
-            href="mailto:hello@nothingrecords.com"
-            className="inline-flex items-center gap-8 rounded-full border border-white/10 bg-white px-6 py-4 text-[14px] font-medium text-black transition-transform duration-300 hover:-translate-y-0.5"
-            initial={{ opacity: 0, y: 16 }}
+          {/* CTA */}
+          <motion.div
+            style={{ marginTop: '44px', display: 'flex', alignItems: 'center', gap: '16px' }}
+            initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
           >
-            hello@nothingrecords.com
-            <ArrowUpRight size={18} weight="bold" />
-          </motion.a>
+            <a
+              href="mailto:hello@nothingrecords.com"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '13px 28px',
+                borderRadius: '8px',
+                background: '#f0f0f0',
+                color: '#0a0a0a',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'background 0.2s ease, transform 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#ffffff'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#f0f0f0'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              Submit a track
+            </a>
+
+            <a
+              href="mailto:hello@nothingrecords.com"
+              style={{
+                fontSize: '13px',
+                color: 'rgba(240,240,240,0.35)',
+                textDecoration: 'none',
+                letterSpacing: '-0.01em',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.65)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.35)')}
+            >
+              hello@nothingrecords.com
+            </a>
+          </motion.div>
+
+          {/* Bottom meta */}
+          <div
+            style={{
+              marginTop: '80px',
+              paddingTop: '32px',
+              borderTop: '1px solid rgba(255,255,255,0.05)',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span style={{ fontSize: '11px', color: 'rgba(240,240,240,0.22)', letterSpacing: '0.06em' }}>
+              © {new Date().getFullYear()} Nothing Records
+            </span>
+            <span style={{ fontSize: '11px', color: 'rgba(240,240,240,0.16)', letterSpacing: '0.04em' }}>
+              Independent Electronic Music Label
+            </span>
+          </div>
         </div>
       </div>
     </footer>
