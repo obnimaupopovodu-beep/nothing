@@ -1,34 +1,42 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ArrowUpRight } from '@phosphor-icons/react'
 
 export function Footer() {
   return (
-    <footer className="px-6 md:px-10 py-12 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/[0.04]">
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        className="flex items-center gap-3"
-      >
-        {/* Logo mark — minimal SVG monolith */}
-        <svg width="18" height="24" viewBox="0 0 18 24" fill="none" aria-hidden="true">
-          <path d="M3 22L1 2h16l-2 20H3z" stroke="rgba(47,109,255,0.5)" strokeWidth="1" fill="none"/>
-          <path d="M5 18L3.5 6h11L13 18H5z" fill="rgba(47,109,255,0.12)"/>
-        </svg>
-        <span className="text-xs tracking-[0.3em] text-[rgba(245,245,245,0.3)] uppercase font-light">Aurora</span>
-      </motion.div>
+    <footer
+      id="connect"
+      className="border-t border-white/8 px-5 py-10 md:px-8"
+    >
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <motion.div
+          className="max-w-xl"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="font-mono text-[10px] tracking-[0.42em] uppercase text-white/34">
+            Connect
+          </p>
+          <h2 className="mt-4 text-[clamp(2rem,4.5vw,3.4rem)] font-extralight tracking-[-0.05em] text-white">
+            If the record fits, we will tell you. If it does not, we will say that too.
+          </h2>
+        </motion.div>
 
-      <motion.p
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, delay: 0.1 }}
-        className="text-[11px] tracking-widest text-[rgba(245,245,245,0.2)] uppercase"
-      >
-        &copy; {new Date().getFullYear()} Aurora. All rights reserved.
-      </motion.p>
+        <motion.a
+          href="mailto:hello@nothingrecords.com"
+          className="inline-flex items-center justify-between gap-10 rounded-full border border-white/10 bg-white px-5 py-4 text-sm font-medium text-black transition-transform duration-300 hover:-translate-y-0.5"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        >
+          hello@nothingrecords.com
+          <ArrowUpRight size={18} weight="bold" />
+        </motion.a>
+      </div>
     </footer>
   )
 }

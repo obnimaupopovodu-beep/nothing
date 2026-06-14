@@ -3,11 +3,13 @@ import './globals.css'
 import { SmoothScroll } from '@/components/layout/SmoothScroll'
 
 export const metadata: Metadata = {
-  title: 'AURORA — Electronic Music Label',
-  description: 'Electronic music label and creative collective. Music / Culture / Frequency.',
+  title: 'Nothing Records',
+  description:
+    'Premium electronic music label with transparent distribution, promo support, and direct artist feedback.',
   openGraph: {
-    title: 'AURORA',
-    description: 'Electronic music label and creative collective.',
+    title: 'Nothing Records',
+    description:
+      'Premium electronic music label with transparent distribution and optional promotion.',
     type: 'website',
   },
 }
