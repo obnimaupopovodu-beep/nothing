@@ -4,8 +4,7 @@
   --color-bg: #050505;
   --color-surface: #0b0b0b;
   --color-blue-primary: #7fb0ff;
-  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: 'Montserrat', system-ui, sans-serif;
 }
 
 :root {
@@ -83,6 +82,43 @@ body {
   backdrop-filter: blur(22px) saturate(1.1);
   -webkit-backdrop-filter: blur(22px) saturate(1.1);
   border: 1px solid rgba(245, 246, 251, 0.08);
+}
+
+.label-caps {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(245, 246, 251, 0.38);
+  text-align: center;
+}
+
+.body-copy {
+  text-align: center;
+  text-wrap: balance;
+}
+
+.section-shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.section-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-column {
+  width: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+.content-column-wide {
+  width: min(100%, 52rem);
+  margin-inline: auto;
 }
 
 ::-webkit-scrollbar {
