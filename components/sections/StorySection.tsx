@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import type { MotionValue } from 'framer-motion'
 import type { ComponentType } from 'react'
-import { motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowDown,
   ArrowRight,
@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Timer,
 } from '@phosphor-icons/react'
-import { useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 const Scene = dynamic(
   () => import('@/components/3d/Scene').then((m) => ({ default: m.Scene })),
@@ -225,100 +225,66 @@ function MobileStory() {
 
 function DesktopStory() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const spacerRef    = useRef<HTMLDivElement>(null)
+  const h1Ref        = useRef<HTMLHeadingElement>(null)
+
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   const reducedMotion = useReducedMotion()
 
-  const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
+  // Measured pixel offset: how far h1 must travel from its natural position to viewport center.
+  // We measure on mount (and on resize) so the value is always exact.
+  const [centerDeltaX, setCenterDeltaX] = useState(0)
 
-  // ─── Timeline ────────────────────────────────────────────────────────
-  //  [0     → 0.08]  static
-  //  [0.08  → 0.28]  eyebrow/subtitle/right-col fade to 0
-  //  [0.08  → 0.26]  h1 drifts to true viewport center (left: 0%→50%, translateX: 0→-50%)
-  //  [0.26  → 0.34]  h1 holds at center — pause
-  //  [0.34  → 0.46]  h1 floats up -100px and fades out
-  //  [0.38  → 0.48]  One Clear System fades in
+  const measure = () => {
+    if (!spacerRef.current || !h1Ref.current) return
+    const spacerRect = spacerRef.current.getBoundingClientRect()
+    const h1Width    = h1Ref.current.offsetWidth
+    // Viewport center in px
+    const vpCenter   = window.innerWidth / 2
+    // Natural left edge of h1 = spacerRect.left (they share the same position)
+    const naturalLeft = spacerRect.left
+    // Delta needed so h1 center aligns with viewport center
+    const delta = vpCenter - naturalLeft - h1Width / 2
+    setCenterDeltaX(delta)
+  }
 
-  // eyebrow + subtitle: pure opacity fade
-  const eyebrowOpacity  = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
-  const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.30], [1, 1, 0])
-
-  // h1 true-center: animate `left` 0 → 50vw, `translateX` 0 → -50%
-  // Framer Motion handles `left` as a MotionValue on absolute elements.
-  // We keep h1 in the normal flow but use `position: relative` + `left`
-  // combined with a custom `x` that goes from 0 to -50% of its own width.
-  // The cleanest approach: make h1 position:absolute within its parent,
-  // animate `left` from its natural left offset to 50vw, and `x` to -50%.
-  //
-  // Since we can’t easily know the natural left at runtime without a ref+measure,
-  // we keep h1 in the left column but overlay a second absolutely-positioned
-  // clone that fades in as the original fades out — that clone is truly centered.
-  //
-  // Simpler: keep h1 in flow, but the parent left-col has position:relative.
-  // We drive h1 with `x` using a calc that accounts for the right column width.
-  // The viewport center from the h1’s left edge = (100vw / 2) - (leftEdgeOffset).
-  // LeftEdgeOffset ≈ section-shell padding (~80px). Right col = 300px, gap = 64px.
-  // So left col width ≈ 100vw - 80px*2 - 300px - 64px.
-  // h1 left edge ≈ 80px from viewport left.
-  // To center h1 (assume ~480px wide): need left = (100vw - 480px)/2 ≈ 50vw - 240px.
-  // Delta from current pos (80px): 50vw - 240px - 80px = 50vw - 320px.
-  // Use a CSS calc string as the MotionValue target.
-  const h1CenterX = reducedMotion ? '0px' : 'calc(50vw - 320px)'
-
-  // Phase A: drift to center [0.08 → 0.26]
-  const h1DriftProgress = useTransform(scrollYProgress, [0.08, 0.26], [0, 1])
-  const h1X = useTransform(h1DriftProgress, (v) => {
-    if (reducedMotion) return '0px'
-    // interpolate from 0px to calc(50vw - 320px)
-    // We do it numerically: use 50vw ≈ window.innerWidth/2 dynamically
-    // but since MotionValues run on main thread we can use a vw hack:
-    // return a px string based on screen. Actually just return vw-based calc.
-    // Framer handles calc() strings in `x` if we use the `style` prop directly.
-    // Simpler: animate a unitless 0→1 and map to the actual px in a derived transform.
-    // We’ll use `left` instead — see h1 style below.
-    return v
+  useLayoutEffect(() => {
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
   })
 
-  // Phase A: x goes 0 → calc(50vw - 320px) linearly [0.08 → 0.26]
-  // Phase B: hold [0.26 → 0.34]
-  // Phase C: y goes 0 → -100px [0.34 → 0.46]
-  // We animate x as a plain pixel value using a MotionValue derived from scrollYProgress.
-  // For true viewport centering we rely on CSS: we extract the numeric vw portion at runtime.
+  const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
 
-  // Use a transform approach: h1 gets `left: 0; position: absolute` inside a relative wrapper,
-  // and we animate `left` from 0 to `calc(50% + someOffset)` where 50% is parent width / 2.
-  // Parent = left flex column = flex:1. Its 50% is NOT viewport center.
-  //
-  // TRUE solution: pull h1 OUT of the flex layout entirely. Give the whole row
-  // `position: relative` and render h1 as `position: absolute` at `top: 50%; left: 0`.
-  // Then animate `left` from 0 to `calc(50vw - HALF_H1_WIDTH)`.
-  // We hardcode HALF_H1_WIDTH ≈ 200px (h1 is ~clamp(4.5rem,9vw,8rem) × ~7 chars × 2 lines).
-  // At 1280px: 9vw = 115px font, “NOTHING” ≈ 7 chars × ~70px = ~490px wide.
-  // half = ~245px. So left target = calc(50vw - 245px).
-  // At 1920px: 8rem = 128px, “NOTHING” ≈ ~640px, half ≈ 320px. left = calc(50vw - 320px).
-  // We use calc(50vw - 260px) as a reasonable middle ground.
+  // ─── Timeline ──────────────────────────────────────────────────────────
+  //  [0.00 → 0.08]  static at natural position
+  //  [0.08 → 0.26]  h1 drifts right to true viewport center
+  //  [0.26 → 0.34]  hold — h1 sits at center (pause)
+  //  [0.34 → 0.46]  h1 floats up and fades out
+  //  [0.08 → 0.28]  eyebrow + subtitle fade out
+  //  [0.10 → 0.30]  right column fades out
+  //  [0.40 → 0.50]  One Clear System fades in
 
-  // Drift [0.08 → 0.26]: left 0 → calc(50vw - 260px)
-  const h1Left = useTransform(
+  // x: 0 → centerDeltaX (phase A), hold (phase B), hold (phase C, y takes over)
+  const h1X = useTransform(
     scrollYProgress,
     [0.08, 0.26, 0.34, 0.46],
-    reducedMotion
-      ? ['0px', '0px', '0px', '0px']
-      : ['0px', 'calc(50vw - 260px)', 'calc(50vw - 260px)', 'calc(50vw - 260px)']
+    reducedMotion ? [0, 0, 0, 0] : [0, centerDeltaX, centerDeltaX, centerDeltaX]
   )
 
-  // Fly-up [0.34 → 0.46]: y 0 → -100px
+  // y: 0 during drift + hold, then -110px during fly-up
   const h1Y = useTransform(
     scrollYProgress,
     [0.26, 0.34, 0.46],
     reducedMotion ? [0, 0, 0] : [0, 0, -110]
   )
 
-  // Opacity: hold until 0.36, then fade out by 0.46
+  // opacity: visible through hold, fades during fly-up
   const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.36, 0.46], [1, 1, 1, 0])
 
-  // Rest of hero (eyebrow, subtitle) fades out [0.08 → 0.28]
-  // Right column fades out [0.10 → 0.30]
-  // One Clear System appears [0.40 → 0.50]
+  const eyebrowOpacity  = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
+  const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.30], [1, 1, 0])
+
   const contentOpacity       = useTransform(scrollYProgress, [0.40, 0.50], [0, 1])
   const contentY             = useTransform(scrollYProgress, [0.40, 0.50], [20, 0])
   const presentationProgress = useTransform(scrollYProgress, [0.44, 0.96], [0, 1])
@@ -334,13 +300,13 @@ function DesktopStory() {
         <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 25%, rgba(5,5,5,0.6) 65%, #050505 100%)' }} />
         <div className="absolute bottom-0 inset-x-0 z-10 pointer-events-none" style={{ height: '32%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,5,0.92) 80%, #050505)' }} />
 
-        {/* Hero layer: eyebrow, subtitle, right col fade in-place */}
         <div className="relative z-20 flex h-full items-center">
           <div className="section-shell w-full">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '64px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '64px' }}>
 
-              {/* Left column: just eyebrow + subtitle. h1 is absolute-positioned below. */}
+              {/* Left column */}
               <div style={{ flex: 1, minWidth: 0 }}>
+
                 <motion.p
                   style={{
                     fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase',
@@ -354,15 +320,24 @@ function DesktopStory() {
                   Independent Electronic Music Label
                 </motion.p>
 
-                {/* Invisible spacer that holds the layout height so flex row doesn’t collapse */}
-                <div style={{
-                  fontSize: 'clamp(4.5rem, 9vw, 8rem)',
-                  fontWeight: 200,
-                  lineHeight: 0.92,
-                  visibility: 'hidden',
-                  userSelect: 'none',
-                  pointerEvents: 'none',
-                }}>
+                {/*
+                  Spacer: invisible clone of h1 — keeps layout height intact.
+                  Also serves as the measurement anchor: its getBoundingClientRect().left
+                  is exactly where h1 starts naturally.
+                */}
+                <div
+                  ref={spacerRef}
+                  aria-hidden
+                  style={{
+                    fontSize: 'clamp(4.5rem, 9vw, 8rem)',
+                    fontWeight: 200,
+                    lineHeight: 0.92,
+                    letterSpacing: '-0.04em',
+                    visibility: 'hidden',
+                    userSelect: 'none',
+                    pointerEvents: 'none',
+                  }}
+                >
                   NOTHING<br />RECORDS
                 </div>
 
@@ -380,7 +355,7 @@ function DesktopStory() {
                 </motion.p>
               </div>
 
-              {/* Right column: fade out only */}
+              {/* Right column */}
               <motion.div style={{ opacity: rightColOpacity, width: '300px', flexShrink: 0 }}>
                 <motion.div
                   style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}
@@ -409,13 +384,23 @@ function DesktopStory() {
           </div>
         </div>
 
-        {/* h1 absolutely positioned over the whole viewport — can reach true center */}
+        {/*
+          h1 floats above the layout as position:absolute.
+          It starts exactly over the spacer (same top/left) thanks to
+          top:50% + translateY:-50% matching the flex items-center alignment,
+          and x starts at 0 (no offset from spacer).
+          We measure spacerRef to compute centerDeltaX so x:0 = natural position.
+        */}
         <motion.h1
+          ref={h1Ref}
           style={{
             position: 'absolute',
             top: '50%',
+            // Align left edge with spacer: section-shell padding is the inset.
+            // We use the same left offset as the section-shell.
+            left: spacerRef.current ? spacerRef.current.getBoundingClientRect().left : undefined,
             translateY: '-50%',
-            left: h1Left,
+            x: h1X,
             y: h1Y,
             opacity: h1Opacity,
             zIndex: 25,
