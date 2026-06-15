@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import type { MotionValue } from 'framer-motion'
 import type { ComponentType } from 'react'
-import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowDown,
   ArrowRight,
@@ -175,7 +175,6 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
         ))}
         <motion.div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: commitmentsOpacity, y: commitmentsY, scale: commitmentsScale, filter: commitmentsFilter, pointerEvents: 'none' }}>
           <div style={{ width: '100%', maxWidth: mobile ? 'min(92vw, 560px)' : 'min(60vw, 720px)', margin: '0 auto', padding: mobile ? '0 20px' : '0 32px' }}>
-            {/* label left-aligned, not centered */}
             <p className="label-caps" style={{ marginBottom: mobile ? '20px' : '28px', textAlign: 'left' }}>Our commitments</p>
             <div style={{ margin: '0 auto', maxWidth: mobile ? '100%' : '660px' }}>
               {advantages.map((item, i) => (
@@ -231,25 +230,35 @@ function DesktopStory() {
 
   const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
 
-  // ─── Hero exit: everything shoots UP and fades ───────────────────────────
-  // Window: static until 0.08, then fast exit by 0.22, One Clear System at 0.26
+  // ─── Hero exit timeline ───────────────────────────────────────────────────
   //
-  // eyebrow + subtitle: fly up -80px, fade out [0.08 → 0.18] (first to go)
-  const eyebrowY       = useTransform(scrollYProgress, [0.08, 0.20], [0, reducedMotion ? 0 : -80])
-  const eyebrowOpacity = useTransform(scrollYProgress, [0, 0.08, 0.18], [1, 1, 0])
+  // Phase 1  [0 → 0.08]   : everything static, user just landed
+  // Phase 2  [0.08 → 0.28] : eyebrow, subtitle, right col fade out in-place (no movement)
+  // Phase 3  [0.08 → 0.30] : h1 smoothly drifts toward horizontal center (x)
+  // Phase 4  [0.22 → 0.34] : h1 floats up and fades (smooth, not abrupt)
+  // Phase 5  [0.30+]        : One Clear System fades in
 
-  // right column: fly up -60px, fade out slightly later [0.10 → 0.22]
-  const rightColY       = useTransform(scrollYProgress, [0.10, 0.22], [0, reducedMotion ? 0 : -60])
-  const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.22], [1, 1, 0])
+  // eyebrow: fade out only, no y movement [0.08 → 0.28]
+  const eyebrowOpacity = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
 
-  // h1: slides right toward center [0.08 → 0.20], then shoots UP and fades [0.18 → 0.26]
-  const h1X       = useTransform(scrollYProgress, [0.08, 0.22], ['0%', '22%'])
-  const h1Y       = useTransform(scrollYProgress, [0.18, 0.26], [0, reducedMotion ? 0 : -120])
-  const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.18, 0.26], [1, 1, 1, 0])
+  // right column: fade out only, no y movement [0.10 → 0.30]
+  const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.30], [1, 1, 0])
 
-  const contentOpacity       = useTransform(scrollYProgress, [0.22, 0.30], [0, 1])
-  const contentY             = useTransform(scrollYProgress, [0.22, 0.30], [24, 0])
-  const presentationProgress = useTransform(scrollYProgress, [0.26, 0.96], [0, 1])
+  // h1 x: drifts from left edge toward center [0.08 → 0.30]
+  // 22% is an approximation that puts NOTHING/RECORDS near the horizontal midpoint
+  // given the left-column flex layout
+  const h1X = useTransform(scrollYProgress, [0.08, 0.30], ['0%', '22%'])
+
+  // h1 y: floats up gently AFTER x centering starts [0.22 → 0.36]
+  const h1Y = useTransform(scrollYProgress, [0.22, 0.36], [0, reducedMotion ? 0 : -90])
+
+  // h1 opacity: visible until 0.24, then smooth long fade [0.24 → 0.36]
+  const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.24, 0.36], [1, 1, 1, 0])
+
+  // presentation fades in after h1 is gone [0.30 → 0.40]
+  const contentOpacity       = useTransform(scrollYProgress, [0.30, 0.40], [0, 1])
+  const contentY             = useTransform(scrollYProgress, [0.30, 0.40], [20, 0])
+  const presentationProgress = useTransform(scrollYProgress, [0.34, 0.96], [0, 1])
 
   return (
     <div ref={containerRef} className="relative hidden md:block" style={{ height: '580vh' }}>
@@ -268,9 +277,13 @@ function DesktopStory() {
 
               <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
 
-                {/* eyebrow shoots up first */}
+                {/* eyebrow: fade out only, stays in place */}
                 <motion.p
-                  style={{ fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.25)', marginBottom: '22px', y: eyebrowY, opacity: eyebrowOpacity }}
+                  style={{
+                    fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase',
+                    color: 'rgba(240,240,240,0.25)', marginBottom: '22px',
+                    opacity: eyebrowOpacity,
+                  }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.9, delay: 0.9 }}
@@ -278,7 +291,7 @@ function DesktopStory() {
                   Independent Electronic Music Label
                 </motion.p>
 
-                {/* h1: centers then shoots up */}
+                {/* h1: drifts to center, then floats up and fades */}
                 <motion.h1
                   style={{
                     fontSize: 'clamp(4.5rem, 9vw, 8rem)',
@@ -299,9 +312,13 @@ function DesktopStory() {
                   <span style={{ color: 'rgba(240,240,240,0.28)' }}>RECORDS</span>
                 </motion.h1>
 
-                {/* subtitle shoots up with eyebrow */}
+                {/* subtitle: fade out only, stays in place */}
                 <motion.p
-                  style={{ fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.46)', marginTop: '28px', maxWidth: '38ch', fontWeight: 300, y: eyebrowY, opacity: eyebrowOpacity }}
+                  style={{
+                    fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.46)',
+                    marginTop: '28px', maxWidth: '38ch', fontWeight: 300,
+                    opacity: eyebrowOpacity,
+                  }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.9, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
@@ -310,8 +327,8 @@ function DesktopStory() {
                 </motion.p>
               </div>
 
-              {/* right column shoots up slightly later */}
-              <motion.div style={{ opacity: rightColOpacity, y: rightColY, width: '300px', flexShrink: 0 }}>
+              {/* right column: fade out only, stays in place */}
+              <motion.div style={{ opacity: rightColOpacity, width: '300px', flexShrink: 0 }}>
                 <motion.div
                   style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}
                   initial={{ opacity: 0, x: 16 }}
