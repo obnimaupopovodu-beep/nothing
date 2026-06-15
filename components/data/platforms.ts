@@ -79,6 +79,47 @@ export const platforms: Platform[] = [
     iconPath:
       'M6 18L18 6H13.5L6 13.5V18zm0-12L18 18h-4.5L6 10.5V6z',
   },
+  // ── extra platforms (shown as side icons, then merged into carousel) ──────
+  {
+    name: 'YouTube Music',
+    desc: 'YouTube Music streaming',
+    href: 'https://music.youtube.com',
+    squareBg: '#FF0000',
+    iconPath:
+      'M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm-2 16.5v-9l7 4.5-7 4.5z',
+  },
+  {
+    name: 'Pandora',
+    desc: 'Internet radio',
+    href: 'https://pandora.com',
+    squareBg: '#3668FF',
+    iconPath:
+      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.85 0 3.58-.5 5.06-1.38L12 12l5.06-1.38A9.96 9.96 0 0022 12c0-5.52-4.48-10-10-10zm1 14H9V8h4c1.66 0 3 1.34 3 3s-1.34 3-3 3z',
+  },
+  {
+    name: 'iHeartRadio',
+    desc: 'Live radio and podcasts',
+    href: 'https://iheart.com',
+    squareBg: '#C6002B',
+    iconPath:
+      'M12 2a10 10 0 100 20A10 10 0 0012 2zm-1 14V8l6 4-6 4z',
+  },
+  {
+    name: 'Napster',
+    desc: 'Music streaming',
+    href: 'https://napster.com',
+    squareBg: '#1CAAD9',
+    iconPath:
+      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
+  },
+  {
+    name: 'Audiomack',
+    desc: 'Free music uploads',
+    href: 'https://audiomack.com',
+    squareBg: '#FFA200',
+    iconPath:
+      'M12 3a9 9 0 100 18A9 9 0 0012 3zm-1 13V8l7 4-7 4z',
+  },
 ]
 
 /** First 9 platforms — one per gap between letters in "everywhere" */
