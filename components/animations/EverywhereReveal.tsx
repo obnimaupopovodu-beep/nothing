@@ -18,6 +18,7 @@ const T = {
   BLUR_PEAK:       0.42,
   TEXT_FADE_END:   0.65,
   BANDS_IN_START:  0.25,
+  BODY_IN_START:   0.50,
 } as const
 
 const SPEED = 60
@@ -102,7 +103,6 @@ function Band({ direction, iconSize, iconInner }: {
   const duration = halfW > 0 ? halfW / SPEED : 18
   const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
 
-  // wider fade mask — icons dissolve gradually over 30% from the outer edge
   const maskImage =
     direction === 'left'
       ? 'linear-gradient(to left,  #050505 0%, transparent 30%)'
@@ -143,10 +143,11 @@ function Band({ direction, iconSize, iconInner }: {
   )
 }
 
-function DualBands({ active, iconSize, iconInner }: {
+function DualBands({ active, iconSize, iconInner, bodyOpacity }: {
   active: boolean
   iconSize: number
   iconInner: number
+  bodyOpacity: ReturnType<typeof useTransform>
 }) {
   return (
     <motion.div
@@ -157,29 +158,56 @@ function DualBands({ active, iconSize, iconInner }: {
         position: 'absolute',
         inset: 0,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         pointerEvents: active ? 'auto' : 'none',
         zIndex: 2,
+        gap: 28,
       }}
     >
-      {/* centre divider — fixed height, soft vertical fade */}
-      <div
-        aria-hidden="true"
+      {/* bands row */}
+      <div style={{ display: 'flex', width: '100%', alignItems: 'center', height: iconSize + 20 }}>
+        {/* centre divider */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 1,
+            height: `${iconSize + 20}px`,
+            background:
+              'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
+            zIndex: 3,
+            pointerEvents: 'none',
+          }}
+        />
+        <Band direction="left"  iconSize={iconSize} iconInner={iconInner} />
+        <Band direction="right" iconSize={iconSize} iconInner={iconInner} />
+      </div>
+
+      {/* static body copy — never blurs, fades in after bands appear */}
+      <motion.p
         style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 1,
-          height: `${iconSize + 20}px`,
-          background:
-            'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
-          zIndex: 3,
+          opacity: bodyOpacity,
+          fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
+          fontWeight: 300,
+          color: 'rgba(255,255,255,0.32)',
+          letterSpacing: '0.01em',
+          lineHeight: 1.75,
+          maxWidth: '44ch',
+          margin: 0,
+          textAlign: 'center',
           pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 4,
         }}
-      />
-      <Band direction="left"  iconSize={iconSize} iconInner={iconInner} />
-      <Band direction="right" iconSize={iconSize} iconInner={iconInner} />
+      >
+        We distribute to all major platforms simultaneously —{' '}
+        <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
+      </motion.p>
     </motion.div>
   )
 }
@@ -212,6 +240,11 @@ export function EverywhereReveal() {
     (p) => lerp(p, T.BLUR_START, T.TEXT_FADE_END, 1, 0)
   )
 
+  // body copy fades in after bands appear, stays at full opacity
+  const bodyOpacity = useTransform(scrollYProgress,
+    (p) => lerp(p, T.BODY_IN_START, T.BODY_IN_START + 0.12, 0, 1)
+  )
+
   const [bandsActive, setBandsActive] = useState(false)
   useEffect(() => {
     if (reducedMotion) return
@@ -234,6 +267,7 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
+        {/* blurred / fading title block */}
         <motion.div
           style={{
             position: 'relative',
@@ -284,22 +318,14 @@ export function EverywhereReveal() {
               everywhere
             </motion.span>
           </div>
-
-          <p style={{
-            fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
-            fontWeight: 300,
-            color: 'rgba(255,255,255,0.32)',
-            letterSpacing: '0.01em',
-            lineHeight: 1.75,
-            maxWidth: '44ch',
-            margin: 0,
-          }}>
-            We distribute to all major platforms simultaneously —{' '}
-            <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
-          </p>
         </motion.div>
 
-        <DualBands active={bandsActive} iconSize={icon} iconInner={inner} />
+        <DualBands
+          active={bandsActive}
+          iconSize={icon}
+          iconInner={inner}
+          bodyOpacity={bodyOpacity}
+        />
       </div>
     </div>
   )

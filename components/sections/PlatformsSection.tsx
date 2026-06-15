@@ -15,7 +15,7 @@ export function PlatformsSection() {
     >
       <EverywhereReveal />
 
-      <div className="section-shell" style={{ padding: '96px 0 96px' }}>
+      <div className="section-shell" style={{ padding: '32px 0 96px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {platforms.map((platform, index) => (
             <motion.a
