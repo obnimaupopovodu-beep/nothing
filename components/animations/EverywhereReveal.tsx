@@ -1,70 +1,34 @@
 'use client'
 
-import { everywherePlatforms, platforms } from '@/components/data/platforms'
+import { platforms } from '@/components/data/platforms'
 import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import {
   motion,
   useMotionTemplate,
-  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
 } from 'framer-motion'
-import { Fragment, useEffect, useRef, useState } from 'react'
-
-// ─── constants ───────────────────────────────────────────────────────────────────
-
-const WORD = 'everywhere'
-const LETTERS = WORD.split('')
+import { useEffect, useRef, useState } from 'react'
 
 // ─── scroll timeline ─────────────────────────────────────────────────────────────
 //
-//  0.00 – 0.08   hold
-//  0.08 – 0.40   inline icons appear, gap opens
-//  0.40 – 0.70   letters blur → fade-out
-//  0.66 – 0.82   side platforms fade-IN  (overlap with text fade-out)
-//  0.84 – 0.94   side platforms fade-OUT (cross-fade into carousel)
-//  0.86 – 1.00   carousel active
+//  0.00 – 0.10   hold
+//  0.10 – 0.55   letters blur up + fade to 0
+//  0.50 – 0.72   dual carousels fade-in (overlap with tail of text fade)
+//  0.72 – 1.00   carousels run at full opacity
 
 const T = {
-  HOLD_END:         0.08,
-  ICONS_IN_END:     0.40,
-  BLUR_PEAK:        0.50,
-  TEXT_FADE_START:  0.54,
-  TEXT_FADE_END:    0.70,
-  SIDE_IN_START:    0.66,
-  SIDE_IN_END:      0.82,
-  SIDE_OUT_START:   0.84,
-  SIDE_OUT_END:     0.94,
-  CAROUSEL_START:   0.86,
-  GAP_COLLAPSE_END: 0.95,
+  HOLD_END:       0.10,
+  BLUR_PEAK:      0.38,
+  TEXT_FADE_END:  0.55,
+  BANDS_IN_START: 0.48,
+  BANDS_IN_END:   0.70,
 } as const
 
-const SPRING        = { type: 'spring' as const, stiffness: 340, damping: 24 }
-const CAROUSEL_SPEED = 80 // px / s
+const SPEED = 60 // px / s  (each band)
 
-// ─── adaptive sizing ─────────────────────────────────────────────────────────────
-
-type Sizes = { gap: number; icon: number; inner: number; carIcon: number }
-
-function useAdaptive(): Sizes {
-  const [v, setV] = useState<Sizes>({ gap: 48, icon: 24, inner: 13, carIcon: 32 })
-  useEffect(() => {
-    const fn = () => {
-      const w = window.innerWidth
-      if (w < 480)       setV({ gap: 14, icon: 18, inner: 10, carIcon: 26 })
-      else if (w < 768)  setV({ gap: 26, icon: 20, inner: 11, carIcon: 28 })
-      else if (w < 1024) setV({ gap: 36, icon: 22, inner: 12, carIcon: 30 })
-      else               setV({ gap: 48, icon: 24, inner: 13, carIcon: 32 })
-    }
-    fn()
-    window.addEventListener('resize', fn)
-    return () => window.removeEventListener('resize', fn)
-  }, [])
-  return v
-}
-
-// ─── lerp ────────────────────────────────────────────────────────────────────────────
+// ─── helpers ─────────────────────────────────────────────────────────────────────
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
   if (p <= a) return from
@@ -72,23 +36,35 @@ function lerp(p: number, a: number, b: number, from: number, to: number) {
   return from + ((p - a) / (b - a)) * (to - from)
 }
 
-// ─── IconBadge ─────────────────────────────────────────────────────────────────
+function useAdaptiveIconSize() {
+  const [size, setSize] = useState({ icon: 32, inner: 16 })
+  useEffect(() => {
+    const fn = () => {
+      const w = window.innerWidth
+      if (w < 480)       setSize({ icon: 24, inner: 12 })
+      else if (w < 768)  setSize({ icon: 28, inner: 14 })
+      else               setSize({ icon: 32, inner: 16 })
+    }
+    fn()
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return size
+}
 
-function IconBadge({
-  platform, size, innerSize,
-}: {
-  platform: (typeof platforms)[0]
+// ─── IconBadge ────────────────────────────────────────────────────────────────
+
+function IconBadge({ platform, size, inner }: {
+  platform: typeof platforms[0]
   size: number
-  innerSize: number
+  inner: number
 }) {
   return (
-    <motion.a
+    <a
       href={platform.href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Listen on ${platform.name}`}
-      whileHover={{ scale: 1.12 }}
-      transition={SPRING}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -100,247 +76,197 @@ function IconBadge({
         border: platform.squareBg === '#000000' ? '1px solid rgba(255,255,255,0.18)' : 'none',
         flexShrink: 0,
         textDecoration: 'none',
+        transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1)',
       }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.13)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}
     >
-      <PlatformIcon platform={platform} size={innerSize} color="#ffffff" />
-    </motion.a>
+      <PlatformIcon platform={platform} size={inner} color="#ffffff" />
+    </a>
   )
 }
 
-// ─── Letter ──────────────────────────────────────────────────────────────────────────
+// ─── Band — one half-width scrolling strip ───────────────────────────────────
+//
+// direction="left"  → track moves from centre outward to the left edge
+//   keyframe:  translateX(0) → translateX(-halfW)
+//   so icons enter from the right (centre) and exit left
+//
+// direction="right" → track moves from left edge back toward centre then beyond
+//   keyframe:  translateX(-halfW) → translateX(0)
+//   so icons enter from the left (centre) and exit right
+//
+// Both bands are overflow:hidden + masked at the outer edge.
 
-function Letter({
-  char, blurPx, opacity,
-}: {
-  char: string
-  blurPx: ReturnType<typeof useTransform>
-  opacity: ReturnType<typeof useTransform>
+function Band({ direction, iconSize, iconInner }: {
+  direction: 'left' | 'right'
+  iconSize: number
+  iconInner: number
 }) {
-  const filter = useMotionTemplate`blur(${blurPx}px)`
-  return (
-    <motion.span
-      aria-hidden="true"
-      style={{
-        display: 'inline-block',
-        flexShrink: 0,
-        lineHeight: 1, // no padding — padding causes visible box during blur
-        filter,
-        opacity,
-      }}
-      whileHover={{ scale: 1.08 }}
-      transition={SPRING}
-    >
-      {char}
-    </motion.span>
-  )
-}
+  const GAP = 12
+  // Give each band its own shuffled order so the two lanes look different
+  const list = direction === 'left' ? platforms : [...platforms].reverse()
+  const doubled = [...list, ...list]
 
-// ─── InlineIconSlot ─────────────────────────────────────────────────────────────
-
-function InlineIconSlot({
-  index, progress, size, inner,
-}: {
-  index: number
-  progress: ReturnType<typeof useMotionValue>
-  size: number
-  inner: number
-}) {
-  const platform = everywherePlatforms[index]
-  const width   = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, size))
-  const opacity = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, 1))
-  const scale   = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0.5, 1))
-
-  return (
-    <motion.div
-      style={{
-        width,
-        opacity,
-        scale,
-        overflow: 'hidden',
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <IconBadge platform={platform} size={size} innerSize={inner} />
-    </motion.div>
-  )
-}
-
-// ─── SideIcons ──────────────────────────────────────────────────────────────────
-
-const sidePlatforms = platforms.slice(everywherePlatforms.length)
-const sideLeft      = sidePlatforms.slice(0, Math.ceil(sidePlatforms.length / 2))
-const sideRight     = sidePlatforms.slice(Math.ceil(sidePlatforms.length / 2))
-
-function SideIcons({
-  list, side, progress, size, inner,
-}: {
-  list: typeof platforms
-  side: 'left' | 'right'
-  progress: ReturnType<typeof useMotionValue>
-  size: number
-  inner: number
-}) {
-  const opacity = useTransform(progress, (p) => {
-    if (p >= T.SIDE_OUT_START) return lerp(p, T.SIDE_OUT_START, T.SIDE_OUT_END, 1, 0)
-    return lerp(p, T.SIDE_IN_START, T.SIDE_IN_END, 0, 1)
-  })
-
-  return (
-    <motion.div
-      style={{
-        position: 'absolute',
-        [side]: 'clamp(12px, 3vw, 40px)',
-        top: '50%',
-        translateY: '-50%',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        opacity,
-        pointerEvents: 'none',
-        zIndex: 1,
-      }}
-    >
-      {list.map((p) => (
-        <IconBadge key={p.name} platform={p} size={size} innerSize={inner} />
-      ))}
-    </motion.div>
-  )
-}
-
-// ─── IconCarousel ──────────────────────────────────────────────────────────────
-
-function IconCarousel({ active, size, inner }: { active: boolean; size: number; inner: number }) {
-  const doubled = [...platforms, ...platforms]
   const trackRef = useRef<HTMLDivElement>(null)
-  const [trackW, setTrackW] = useState(0)
+  const [halfW, setHalfW] = useState(0)
 
   useEffect(() => {
-    if (!active || !trackRef.current) return
-    const gap = 10
+    if (!trackRef.current) return
     const items = Array.from(trackRef.current.children) as HTMLElement[]
-    const half = platforms.length
     let w = 0
-    for (let i = 0; i < half; i++) {
-      w += (items[i]?.getBoundingClientRect().width ?? size) + gap
+    for (let i = 0; i < list.length; i++) {
+      w += (items[i]?.getBoundingClientRect().width ?? iconSize) + GAP
     }
-    setTrackW(w)
+    setHalfW(w)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active])
+  }, [iconSize])
 
-  const duration = trackW > 0 ? trackW / CAROUSEL_SPEED : 20
+  const duration = halfW > 0 ? halfW / SPEED : 18
 
+  // left band: right-side mask (outer edge) fades out; centre side stays sharp
+  // right band: left-side mask (outer edge) fades out
+  const maskImage =
+    direction === 'left'
+      ? 'linear-gradient(to left,  #050505 0%, transparent 14%)'
+      : 'linear-gradient(to right, #050505 0%, transparent 14%)'
+
+  // left band: icons start at centre (translateX 0) and animate to -halfW (leftward)
+  // right band: icons start offset by -halfW (so centre is the "source") and animate to 0 (rightward)
+  const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
+
+  return (
+    <div
+      style={{
+        width: '50%',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        // clip outer edge with a mask gradient
+        WebkitMaskImage: maskImage,
+        maskImage,
+      }}
+    >
+      <div
+        ref={trackRef}
+        style={{
+          display: 'flex',
+          gap: GAP,
+          willChange: 'transform',
+          // right band starts pre-offset so the "start" of its content sits at centre
+          animation:
+            halfW > 0
+              ? `${animName} ${duration}s linear infinite`
+              : 'none',
+        }}
+      >
+        {doubled.map((p, i) => (
+          <IconBadge key={i} platform={p} size={iconSize} inner={iconInner} />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes bandLeft {
+          from { transform: translateX(0px); }
+          to   { transform: translateX(-${halfW}px); }
+        }
+        @keyframes bandRight {
+          from { transform: translateX(-${halfW}px); }
+          to   { transform: translateX(0px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes bandLeft  { from, to { transform: none; } }
+          @keyframes bandRight { from, to { transform: none; } }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ─── DualBands ─────────────────────────────────────────────────────────────────
+
+function DualBands({ active, iconSize, iconInner }: {
+  active: boolean
+  iconSize: number
+  iconInner: number
+}) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: active ? 1 : 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
       style={{
         position: 'absolute',
         inset: 0,
         display: 'flex',
         alignItems: 'center',
-        overflow: 'hidden',
         pointerEvents: active ? 'auto' : 'none',
         zIndex: 2,
+        // tiny hairline at centre so the split is subtly visible
+        // using a pseudo-element via box-shadow trick on inner div instead
       }}
     >
-      {/* edge fade masks */}
+      {/* centre divider — 1px line */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          inset: 0,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 1,
+          height: iconSize + 16,
+          background: 'rgba(255,255,255,0.08)',
           zIndex: 3,
           pointerEvents: 'none',
-          background:
-            'linear-gradient(to right, #050505 0%, transparent 10%, transparent 90%, #050505 100%)',
         }}
       />
 
-      {/* scrolling track — doubled for seamless loop */}
-      {/* translateX: 0 → -trackW so icons travel left, entering from left edge */}
-      <div
-        ref={trackRef}
-        style={{
-          display: 'flex',
-          gap: 10,
-          willChange: 'transform',
-          animation:
-            active && trackW > 0
-              ? `evCarousel ${duration}s linear infinite`
-              : 'none',
-        }}
-      >
-        {doubled.map((p, i) => (
-          <IconBadge key={i} platform={p} size={size} innerSize={inner} />
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes evCarousel {
-          from { transform: translateX(0px); }
-          to   { transform: translateX(-${trackW}px); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes evCarousel { from, to { transform: none; } }
-        }
-      `}</style>
+      <Band direction="left"  iconSize={iconSize} iconInner={iconInner} />
+      <Band direction="right" iconSize={iconSize} iconInner={iconInner} />
     </motion.div>
   )
 }
 
-// ─── EverywhereReveal (main) ───────────────────────────────────────────────────────
+// ─── EverywhereReveal ───────────────────────────────────────────────────────────
 
 export function EverywhereReveal() {
   const containerRef  = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
-  const { gap: maxGap, icon, inner, carIcon } = useAdaptive()
+  const { icon, inner } = useAdaptiveIconSize()
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
-  // letter gap
-  const gapPx = useTransform(scrollYProgress, (p) => {
-    if (p <= T.HOLD_END)          return 0
-    if (p <= T.ICONS_IN_END)      return lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, maxGap)
-    if (p <= T.TEXT_FADE_START)   return maxGap
-    if (p <= T.GAP_COLLAPSE_END)  return lerp(p, T.TEXT_FADE_START, T.GAP_COLLAPSE_END, maxGap, 0)
-    return 0
-  })
-  const gap = useMotionTemplate`${gapPx}px`
-
-  // letter blur: ramp up then back down, opacity handles the final disappearance
-  const letterBlur = useTransform(scrollYProgress, (p) => {
+  // ── letter blur
+  const blurPx = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
-    if (p <= T.HOLD_END)      return 0
-    if (p <= T.BLUR_PEAK)     return lerp(p, T.HOLD_END,  T.BLUR_PEAK,     0,  10)
-    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 10, 0)
+    if (p <= T.HOLD_END)     return 0
+    if (p <= T.BLUR_PEAK)    return lerp(p, T.HOLD_END,  T.BLUR_PEAK,    0,  12)
+    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 12, 0)
     return 0
   })
-
-  // letter opacity
-  const letterOpacity = useTransform(scrollYProgress, (p) =>
-    lerp(p, T.TEXT_FADE_START, T.TEXT_FADE_END, 1, 0)
+  const textFilter  = useMotionTemplate`blur(${blurPx}px)`
+  const textOpacity = useTransform(scrollYProgress, (p) =>
+    lerp(p, T.HOLD_END, T.TEXT_FADE_END, 1, 0)
   )
 
-  // carousel gate
-  const [carouselActive, setCarouselActive] = useState(false)
+  // ── bands gate
+  const [bandsActive, setBandsActive] = useState(false)
   useEffect(() => {
     if (reducedMotion) return
     return scrollYProgress.on('change', (p) => {
-      setCarouselActive(p >= T.CAROUSEL_START)
+      setBandsActive(p >= T.BANDS_IN_START)
     })
   }, [scrollYProgress, reducedMotion])
 
   return (
-    <div ref={containerRef} style={{ height: '260vh', position: 'relative' }}>
+    <div ref={containerRef} style={{ height: '220vh', position: 'relative' }}>
       <div
-        aria-label="Everywhere — available on all major platforms"
+        aria-label="everywhere — available on all major platforms"
         style={{
           position: 'sticky',
           top: 0,
@@ -352,63 +278,28 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/* side icons: appear after text is gone, fade out before carousel */}
-        {sidePlatforms.length > 0 && (
-          <>
-            <SideIcons list={sideLeft}  side="left"  progress={scrollYProgress} size={icon} inner={inner} />
-            <SideIcons list={sideRight} side="right" progress={scrollYProgress} size={icon} inner={inner} />
-          </>
-        )}
-
-        {/* word + inline icons */}
-        <div
+        {/* word */}
+        <motion.p
+          aria-hidden="true"
           style={{
-            width: '100%',
-            padding: '0 clamp(16px, 5vw, 48px)',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch',
+            fontSize: 'clamp(2rem, 7vw, 6rem)',
+            fontWeight: 300,
+            letterSpacing: '-0.03em',
+            color: '#f0f0f0',
+            lineHeight: 1,
+            margin: 0,
+            filter: textFilter,
+            opacity: textOpacity,
+            userSelect: 'none',
+            zIndex: 1,
+            position: 'relative',
           }}
         >
-          <motion.div
-            role="presentation"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 'max-content',
-              minWidth: '100%',
-              margin: '0 auto',
-              gap,
-              fontSize: 'clamp(1.5rem, 5.5vw, 4.5rem)',
-              fontWeight: 300,
-              letterSpacing: '-0.03em',
-              color: '#f0f0f0',
-              lineHeight: 1,
-            }}
-          >
-            {LETTERS.map((char, i) => (
-              <Fragment key={`${char}-${i}`}>
-                <Letter
-                  char={char}
-                  blurPx={letterBlur as ReturnType<typeof useTransform>}
-                  opacity={letterOpacity as ReturnType<typeof useTransform>}
-                />
-                {i < everywherePlatforms.length && (
-                  <InlineIconSlot
-                    index={i}
-                    progress={scrollYProgress}
-                    size={icon}
-                    inner={inner}
-                  />
-                )}
-              </Fragment>
-            ))}
-          </motion.div>
-        </div>
+          everywhere
+        </motion.p>
 
-        {/* carousel fades in over everything */}
-        <IconCarousel active={carouselActive} size={carIcon} inner={inner + 2} />
+        {/* dual bands appear after text fades */}
+        <DualBands active={bandsActive} iconSize={icon} iconInner={inner} />
       </div>
     </div>
   )
