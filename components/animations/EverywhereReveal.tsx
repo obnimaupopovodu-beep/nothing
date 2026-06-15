@@ -5,305 +5,399 @@ import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import {
   motion,
   useMotionTemplate,
+  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
 } from 'framer-motion'
 import { Fragment, useEffect, useRef, useState } from 'react'
 
+// ─── constants ────────────────────────────────────────────────────────────────
+
 const WORD = 'everywhere'
 const LETTERS = WORD.split('')
 
-const HOVER_SPRING = { type: 'spring' as const, stiffness: 380, damping: 22 }
+// Scroll timeline  (scrollYProgress 0 → 1)
+//  0.00 – 0.08  hold: nothing moves
+//  0.08 – 0.40  icons fade+expand into gaps, gap between letters widens
+//  0.40 – 0.65  letters blur up then fade out; icons start to compress
+//  0.65 – 0.85  letters fully gone; side icons fade in
+//  0.85 – 1.00  all icons collapse gap → carousel fires
 
-// Scroll timeline (0 → 1 while the sticky block travels through the track)
-const HOLD_END = 0.12
-const SPREAD_END = 0.58
-const BLUR_PEAK = 0.5
-const BLUR_FADE_END = 0.78
-const ICONS_IN_START = 0.18
-const ICONS_IN_END = 0.52
-const TEXT_FADE_START = 0.65
-const TEXT_FADE_END = 0.85
-const TAPE_GAP_START = 0.55
-const TAPE_GAP_END = 0.8
+const T = {
+  HOLD_END:          0.08,
+  ICONS_IN_END:      0.40,
+  BLUR_PEAK:         0.52,
+  TEXT_FADE_START:   0.56,
+  TEXT_FADE_END:     0.72,
+  SIDE_IN_START:     0.68,
+  SIDE_IN_END:       0.84,
+  GAP_COLLAPSE_END:  0.95,
+  CAROUSEL_START:    0.88,
+} as const
 
-function useExpandedGapPx() {
-  const [gap, setGap] = useState(52)
+const SPRING = { type: 'spring' as const, stiffness: 340, damping: 24 }
+
+// ─── adaptive sizing ──────────────────────────────────────────────────────────
+
+function useAdaptive() {
+  const [v, setV] = useState({ gap: 48, iconSize: 24, iconInner: 13, carouselIconSize: 32 })
 
   useEffect(() => {
     const update = () => {
-      if (window.innerWidth < 640) setGap(16)
-      else if (window.innerWidth < 1024) setGap(32)
-      else setGap(52)
+      const w = window.innerWidth
+      if (w < 480) setV({ gap: 14, iconSize: 18, iconInner: 10, carouselIconSize: 26 })
+      else if (w < 768) setV({ gap: 26, iconSize: 20, iconInner: 11, carouselIconSize: 28 })
+      else if (w < 1024) setV({ gap: 36, iconSize: 22, iconInner: 12, carouselIconSize: 30 })
+      else setV({ gap: 48, iconSize: 24, iconInner: 13, carouselIconSize: 32 })
     }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  return gap
+  return v
 }
 
-function Letter({
-  letter,
-  letterBlur,
-  letterOpacity,
-}: {
-  letter: string
-  letterBlur: ReturnType<typeof useTransform<number, number>>
-  letterOpacity: ReturnType<typeof useTransform<number, number>>
-}) {
-  const filter = useMotionTemplate`blur(${letterBlur}px)`
+// ─── lerp helper ──────────────────────────────────────────────────────────────
 
+function lerp(p: number, a: number, b: number, from: number, to: number) {
+  if (p <= a) return from
+  if (p >= b) return to
+  return from + ((p - a) / (b - a)) * (to - from)
+}
+
+// ─── sub-components ───────────────────────────────────────────────────────────
+
+function Letter({
+  char,
+  blurPx,
+  opacity,
+}: {
+  char: string
+  blurPx: ReturnType<typeof useTransform>
+  opacity: ReturnType<typeof useTransform>
+}) {
+  const filter = useMotionTemplate`blur(${blurPx}px)`
   return (
     <motion.span
       aria-hidden="true"
-      style={{ 
-        display: 'inline-block', 
-        flexShrink: 0, 
-        cursor: 'default', 
+      style={{
+        display: 'inline-block',
+        flexShrink: 0,
         filter,
-        opacity: letterOpacity,
-        padding: '8px 4px',
+        opacity,
+        // No extra padding — padding causes the "visible box during blur" artifact.
+        // The letter naturally has enough optical size from font metrics.
+        lineHeight: 1,
       }}
-      whileHover={{ scale: 1.1 }}
-      transition={HOVER_SPRING}
+      whileHover={{ scale: 1.08 }}
+      transition={SPRING}
     >
-      {letter}
+      {char}
     </motion.span>
   )
 }
 
-function IconSlot({
+function IconBadge({
+  platform,
+  size,
+  innerSize,
+}: {
+  platform: (typeof platforms)[0]
+  size: number
+  innerSize: number
+}) {
+  return (
+    <motion.a
+      href={platform.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Listen on ${platform.name}`}
+      whileHover={{ scale: 1.12 }}
+      transition={SPRING}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: size,
+        height: size,
+        borderRadius: Math.round(size * 0.22),
+        background: platform.squareBg,
+        border:
+          platform.squareBg === '#000000'
+            ? '1px solid rgba(255,255,255,0.18)'
+            : 'none',
+        flexShrink: 0,
+        textDecoration: 'none',
+      }}
+    >
+      <PlatformIcon platform={platform} size={innerSize} color="#ffffff" />
+    </motion.a>
+  )
+}
+
+// Icon that lives between letters — expands from width:0 and fades in.
+function InlineIconSlot({
   index,
-  iconWidth,
-  iconOpacity,
-  iconScale,
-  tapeGap,
-  textOpacity,
+  progress,
+  iconSize,
+  iconInner,
 }: {
   index: number
-  iconWidth: ReturnType<typeof useTransform<number, number>>
-  iconOpacity: ReturnType<typeof useTransform<number, number>>
-  iconScale: ReturnType<typeof useTransform<number, number>>
-  tapeGap: ReturnType<typeof useTransform<number, number>>
-  textOpacity: ReturnType<typeof useTransform<number, number>>
+  progress: ReturnType<typeof useMotionValue>
+  iconSize: number
+  iconInner: number
 }) {
   const platform = everywherePlatforms[index]
+
+  const width = useTransform(progress, (p) =>
+    lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, iconSize)
+  )
+  const opacity = useTransform(progress, (p) =>
+    lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, 1)
+  )
+  const scale = useTransform(progress, (p) =>
+    lerp(p, T.HOLD_END, T.ICONS_IN_END, 0.6, 1)
+  )
 
   return (
     <motion.div
       style={{
-        width: iconWidth,
-        opacity: iconOpacity,
-        scale: iconScale,
+        width,
+        opacity,
+        scale,
         overflow: 'hidden',
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: tapeGap,
       }}
     >
-      <motion.a
-        href={platform.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Listen on ${platform.name}`}
-        whileHover={{ scale: 1.1 }}
-        transition={HOVER_SPRING}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 24,
-          height: 24,
-          borderRadius: 5,
-          background: platform.squareBg,
-          border: platform.squareBg === '#000000' ? '1px solid rgba(255,255,255,0.15)' : 'none',
-          flexShrink: 0,
-          textDecoration: 'none',
-        }}
-      >
-        <PlatformIcon platform={platform} size={13} color="#ffffff" />
-      </motion.a>
+      <IconBadge platform={platform} size={iconSize} innerSize={iconInner} />
     </motion.div>
   )
 }
 
-function IconCarousel({ isActive }: { isActive: boolean }) {
+// ─── Seamless carousel ────────────────────────────────────────────────────────
+
+const CAROUSEL_SPEED_PX_PER_S = 80 // px/s, rightward
+
+function IconCarousel({
+  active,
+  iconSize,
+  iconInner,
+}: {
+  active: boolean
+  iconSize: number
+  iconInner: number
+}) {
   const allPlatforms = [...everywherePlatforms, ...platforms.slice(everywherePlatforms.length)]
+  // Double the array so the two halves tile seamlessly
+  const doubled = [...allPlatforms, ...allPlatforms]
+
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [trackW, setTrackW] = useState(0)
+
+  useEffect(() => {
+    if (!trackRef.current) return
+    const half = allPlatforms.length
+    // measure one full set width
+    const items = trackRef.current.children
+    let w = 0
+    for (let i = 0; i < half; i++) {
+      const el = items[i] as HTMLElement
+      if (el) w += el.getBoundingClientRect().width + 8 // 8 = gap
+    }
+    setTrackW(w)
+  }, [active, allPlatforms.length])
+
+  const duration = trackW > 0 ? trackW / CAROUSEL_SPEED_PX_PER_S : 25
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: isActive ? 1 : 0 }}
-      transition={{ duration: 0.6 }}
+      animate={{ opacity: active ? 1 : 0 }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
       style={{
         position: 'absolute',
-        left: 0,
-        right: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        pointerEvents: 'auto',
+        inset: 0,
         display: 'flex',
         alignItems: 'center',
         overflow: 'hidden',
-        height: 48,
+        pointerEvents: active ? 'auto' : 'none',
       }}
     >
+      {/* left + right edge masks */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 2,
+          pointerEvents: 'none',
+          background:
+            'linear-gradient(to right, #050505 0%, transparent 12%, transparent 88%, #050505 100%)',
+        }}
+      />
+
+      {/* scrolling track */}
+      <div
+        ref={trackRef}
+        style={{
+          display: 'flex',
+          gap: 8,
+          willChange: 'transform',
+          animation: active
+            ? `evCarousel ${duration}s linear infinite`
+            : 'none',
+        }}
+      >
+        {doubled.map((platform, i) => (
+          <IconBadge
+            key={i}
+            platform={platform}
+            size={iconSize}
+            innerSize={iconInner}
+          />
+        ))}
+      </div>
+
       <style>{`
-        @keyframes carouselScroll {
-                  from { transform: translateX(-50%); }
-                  to { transform: translateX(0); }
+        @keyframes evCarousel {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-${trackW}px); }
         }
-        .carouselTrack {
-          display: flex;
-          gap: 8px;
-          animation: carouselScroll 30s linear infinite;
-          will-change: transform;
+        @media (prefers-reduced-motion: reduce) {
+          [style*="evCarousel"] { animation: none !important; }
         }
       `}</style>
-
-      <div style={{ width: '100%', overflow: 'hidden' }}>
-        <div className="carouselTrack">
-          {[...allPlatforms, ...allPlatforms].map((platform, i) => (
-            <motion.a
-              key={i}
-              href={platform.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.15 }}
-              transition={HOVER_SPRING}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 32,
-                height: 32,
-                borderRadius: 6,
-                background: platform.squareBg,
-                border: platform.squareBg === '#000000' ? '1px solid rgba(255,255,255,0.15)' : 'none',
-                flexShrink: 0,
-                textDecoration: 'none',
-                cursor: 'pointer',
-              }}
-              aria-label={platform.name}
-            >
-              <PlatformIcon platform={platform} size={14} color="#ffffff" />
-            </motion.a>
-          ))}
-        </div>
-      </div>
     </motion.div>
   )
 }
 
+// ─── main export ──────────────────────────────────────────────────────────────
+
 export function EverywhereReveal() {
   const containerRef = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
-  const expandedGapPx = useExpandedGapPx()
+  const { gap: maxGap, iconSize, iconInner, carouselIconSize } = useAdaptive()
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
+  // ── letter gap (px, via motion template) ────────────────────────────────
   const gapPx = useTransform(scrollYProgress, (p) => {
-    if (p <= HOLD_END) return 0
-    if (p >= SPREAD_END) return expandedGapPx
-    return ((p - HOLD_END) / (SPREAD_END - HOLD_END)) * expandedGapPx
+    // expand 0 → maxGap as icons appear, then collapse back to 0 when text fades
+    if (p <= T.HOLD_END) return 0
+    if (p <= T.ICONS_IN_END) return lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, maxGap)
+    if (p <= T.TEXT_FADE_START) return maxGap
+    if (p <= T.GAP_COLLAPSE_END) return lerp(p, T.TEXT_FADE_START, T.GAP_COLLAPSE_END, maxGap, 0)
+    return 0
   })
+  const gap = useMotionTemplate`${gapPx}px`
 
-  const gap = useTransform(gapPx, (v) => `${v}px`)
-
+  // ── letter blur (px) ─────────────────────────────────────────────────────
   const letterBlur = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
-    if (p <= HOLD_END) return 0
-    if (p <= BLUR_PEAK) return ((p - HOLD_END) / (BLUR_PEAK - HOLD_END)) * 8
-    if (p <= BLUR_FADE_END) return 8 - ((p - BLUR_PEAK) / (BLUR_FADE_END - BLUR_PEAK)) * 8
+    // ramp up to 10px at BLUR_PEAK, then fade back to 0 but text opacity takes over
+    if (p <= T.HOLD_END) return 0
+    if (p <= T.BLUR_PEAK) return lerp(p, T.HOLD_END, T.BLUR_PEAK, 0, 10)
+    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 10, 0)
     return 0
   })
 
-  const letterOpacity = useTransform(scrollYProgress, (p) => {
-    if (p <= TEXT_FADE_START) return 1
-    if (p >= TEXT_FADE_END) return 0
-    return 1 - ((p - TEXT_FADE_START) / (TEXT_FADE_END - TEXT_FADE_START))
-  })
+  // ── letter opacity ───────────────────────────────────────────────────────
+  const letterOpacity = useTransform(scrollYProgress, (p) =>
+    lerp(p, T.TEXT_FADE_START, T.TEXT_FADE_END, 1, 0)
+  )
 
-  const tapeGap = useTransform(scrollYProgress, (p) => {
-    if (p <= TAPE_GAP_START) return expandedGapPx
-    if (p >= TAPE_GAP_END) return 8
-    return expandedGapPx - ((p - TAPE_GAP_START) / (TAPE_GAP_END - TAPE_GAP_START)) * (expandedGapPx - 8)
-  })
+  // ── side platforms fade-in ───────────────────────────────────────────────
+  // the "extra" platforms that were NOT between letters appear left+right
+  const sideOpacity = useTransform(scrollYProgress, (p) =>
+    lerp(p, T.SIDE_IN_START, T.SIDE_IN_END, 0, 1)
+  )
 
-  const iconWidth = useTransform(scrollYProgress, (p) => {
-    if (p <= ICONS_IN_START) return 0
-    if (p >= ICONS_IN_END) return 24
-    return ((p - ICONS_IN_START) / (ICONS_IN_END - ICONS_IN_START)) * 24
-  })
-
-  const iconOpacity = useTransform(scrollYProgress, (p) => {
-    if (p <= ICONS_IN_START) return 0
-    if (p >= ICONS_IN_END) return 0.7
-    return ((p - ICONS_IN_START) / (ICONS_IN_END - ICONS_IN_START)) * 0.7
-  })
-
-  const iconScale = useTransform(scrollYProgress, (p) => {
-    if (p <= ICONS_IN_START) return 0.7
-    if (p >= ICONS_IN_END) return 1
-    return 0.7 + ((p - ICONS_IN_START) / (ICONS_IN_END - ICONS_IN_START)) * 0.3
-  })
-
-  const textOpacity = useTransform(scrollYProgress, (p) => {
-    if (p <= TEXT_FADE_START) return 1
-    if (p >= TEXT_FADE_END) return 0
-    return 1 - ((p - TEXT_FADE_START) / (TEXT_FADE_END - TEXT_FADE_START))
-  })
-
+  // ── carousel phase ────────────────────────────────────────────────────────
   const [carouselActive, setCarouselActive] = useState(false)
-
   useEffect(() => {
     if (reducedMotion) return
-    const unsub = scrollYProgress.onChange((p) => {
-      setCarouselActive(p >= TEXT_FADE_END)
+    return scrollYProgress.on('change', (p) => {
+      setCarouselActive(p >= T.CAROUSEL_START)
     })
-    return unsub
   }, [scrollYProgress, reducedMotion])
+
+  // ── extra side platforms (those not used inline) ─────────────────────────
+  const sidePlatforms = platforms.slice(everywherePlatforms.length)
 
   return (
     <div
       ref={containerRef}
-      style={{
-        height: '220vh',
-        position: 'relative',
-      }}
+      style={{ height: '250vh', position: 'relative' }}
     >
       <div
-        aria-label="Everywhere — available on major streaming platforms"
+        aria-label="Everywhere — available on all major platforms"
         style={{
           position: 'sticky',
           top: 0,
           height: '100vh',
-          minHeight: 'clamp(220px, 38vh, 420px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           background: '#050505',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
           overflow: 'hidden',
         }}
       >
+        {/* ── word row ──────────────────────────────────────────────────── */}
         <div
           style={{
             width: '100%',
-            padding: '0 clamp(16px, 4vw, 32px)',
+            padding: '0 clamp(16px, 5vw, 48px)',
             overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
+          {/* Side icons — left */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              left: 'clamp(12px, 3vw, 32px)',
+              top: '50%',
+              translateY: '-50%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              opacity: sideOpacity,
+              pointerEvents: carouselActive ? 'none' : 'auto',
+            }}
+          >
+            {sidePlatforms.slice(0, Math.ceil(sidePlatforms.length / 2)).map((p) => (
+              <IconBadge key={p.name} platform={p} size={iconSize} innerSize={iconInner} />
+            ))}
+          </motion.div>
+
+          {/* Side icons — right */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              right: 'clamp(12px, 3vw, 32px)',
+              top: '50%',
+              translateY: '-50%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              opacity: sideOpacity,
+              pointerEvents: carouselActive ? 'none' : 'auto',
+            }}
+          >
+            {sidePlatforms.slice(Math.ceil(sidePlatforms.length / 2)).map((p) => (
+              <IconBadge key={p.name} platform={p} size={iconSize} innerSize={iconInner} />
+            ))}
+          </motion.div>
+
+          {/* Word */}
           <motion.div
             role="presentation"
             style={{
@@ -314,34 +408,42 @@ export function EverywhereReveal() {
               minWidth: '100%',
               margin: '0 auto',
               gap,
-              fontSize: 'clamp(1.6rem, 6vw, 4.5rem)',
+              fontSize: 'clamp(1.5rem, 5.5vw, 4.5rem)',
               fontWeight: 300,
               letterSpacing: '-0.03em',
               color: '#f0f0f0',
               lineHeight: 1,
+              opacity: carouselActive ? 0 : 1,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: carouselActive ? 'none' : 'auto',
             }}
           >
-            {LETTERS.map((letter, index) => (
-              <Fragment key={`${letter}-${index}`}>
-                <Letter letter={letter} letterBlur={letterBlur} letterOpacity={letterOpacity} />
-
-                {index < everywherePlatforms.length && !carouselActive && (
-                  <IconSlot
-                    index={index}
-                    iconWidth={iconWidth}
-                    iconOpacity={iconOpacity}
-                    iconScale={iconScale}
-                    tapeGap={tapeGap}
-                    textOpacity={textOpacity}
+            {LETTERS.map((char, i) => (
+              <Fragment key={`${char}-${i}`}>
+                <Letter
+                  char={char}
+                  blurPx={letterBlur as ReturnType<typeof useTransform>}
+                  opacity={letterOpacity as ReturnType<typeof useTransform>}
+                />
+                {i < everywherePlatforms.length && (
+                  <InlineIconSlot
+                    index={i}
+                    progress={scrollYProgress}
+                    iconSize={iconSize}
+                    iconInner={iconInner}
                   />
                 )}
               </Fragment>
             ))}
           </motion.div>
-
-          {/* Carousel overlay - appears after text fades */}
-          <IconCarousel isActive={carouselActive} />
         </div>
+
+        {/* ── carousel overlay ─────────────────────────────────────────── */}
+        <IconCarousel
+          active={carouselActive}
+          iconSize={carouselIconSize}
+          iconInner={iconInner + 1}
+        />
       </div>
     </div>
   )
