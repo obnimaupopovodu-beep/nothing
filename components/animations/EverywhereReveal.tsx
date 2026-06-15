@@ -12,31 +12,35 @@ import {
 } from 'framer-motion'
 import { Fragment, useEffect, useRef, useState } from 'react'
 
+// ─── constants ───────────────────────────────────────────────────────────────────
+
+const WORD = 'everywhere'
+const LETTERS = WORD.split('')
+
 // ─── scroll timeline ─────────────────────────────────────────────────────────────
 //
 //  0.00 – 0.08   hold
 //  0.08 – 0.40   inline icons appear, gap opens
-//  0.40 – 0.72   letters blur → fade-out
-//  0.68 – 0.84   side platforms fade-IN (after text gone)
-//  0.84 – 0.92   side platforms fade-OUT  }
-//  0.88           carousel activates         } overlapping cross-fade
-//  0.88 – 1.00   carousel runs
+//  0.40 – 0.70   letters blur → fade-out
+//  0.66 – 0.82   side platforms fade-IN  (overlap with text fade-out)
+//  0.84 – 0.94   side platforms fade-OUT (cross-fade into carousel)
+//  0.86 – 1.00   carousel active
 
 const T = {
-  HOLD_END:        0.08,
-  ICONS_IN_END:    0.40,
-  BLUR_PEAK:       0.50,
-  TEXT_FADE_START: 0.54,
-  TEXT_FADE_END:   0.70,
-  SIDE_IN_START:   0.66,  // starts fading in while text still disappearing
-  SIDE_IN_END:     0.82,  // fully visible
-  SIDE_OUT_START:  0.84,  // starts fading out as carousel comes in
-  SIDE_OUT_END:    0.94,  // fully gone
-  CAROUSEL_START:  0.86,  // carousel opacity ramps from here
+  HOLD_END:         0.08,
+  ICONS_IN_END:     0.40,
+  BLUR_PEAK:        0.50,
+  TEXT_FADE_START:  0.54,
+  TEXT_FADE_END:    0.70,
+  SIDE_IN_START:    0.66,
+  SIDE_IN_END:      0.82,
+  SIDE_OUT_START:   0.84,
+  SIDE_OUT_END:     0.94,
+  CAROUSEL_START:   0.86,
   GAP_COLLAPSE_END: 0.95,
 } as const
 
-const SPRING = { type: 'spring' as const, stiffness: 340, damping: 24 }
+const SPRING        = { type: 'spring' as const, stiffness: 340, damping: 24 }
 const CAROUSEL_SPEED = 80 // px / s
 
 // ─── adaptive sizing ─────────────────────────────────────────────────────────────
@@ -60,7 +64,7 @@ function useAdaptive(): Sizes {
   return v
 }
 
-// ─── helpers ────────────────────────────────────────────────────────────────────
+// ─── lerp ────────────────────────────────────────────────────────────────────────────
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
   if (p <= a) return from
@@ -71,9 +75,7 @@ function lerp(p: number, a: number, b: number, from: number, to: number) {
 // ─── IconBadge ─────────────────────────────────────────────────────────────────
 
 function IconBadge({
-  platform,
-  size,
-  innerSize,
+  platform, size, innerSize,
 }: {
   platform: (typeof platforms)[0]
   size: number
@@ -105,12 +107,10 @@ function IconBadge({
   )
 }
 
-// ─── Letter ─────────────────────────────────────────────────────────────────────────
+// ─── Letter ──────────────────────────────────────────────────────────────────────────
 
 function Letter({
-  char,
-  blurPx,
-  opacity,
+  char, blurPx, opacity,
 }: {
   char: string
   blurPx: ReturnType<typeof useTransform>
@@ -123,8 +123,7 @@ function Letter({
       style={{
         display: 'inline-block',
         flexShrink: 0,
-        // no padding — padding creates a visible bounding-box during blur
-        lineHeight: 1,
+        lineHeight: 1, // no padding — padding causes visible box during blur
         filter,
         opacity,
       }}
@@ -139,10 +138,7 @@ function Letter({
 // ─── InlineIconSlot ─────────────────────────────────────────────────────────────
 
 function InlineIconSlot({
-  index,
-  progress,
-  size,
-  inner,
+  index, progress, size, inner,
 }: {
   index: number
   progress: ReturnType<typeof useMotionValue>
@@ -150,7 +146,6 @@ function InlineIconSlot({
   inner: number
 }) {
   const platform = everywherePlatforms[index]
-
   const width   = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, size))
   const opacity = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, 1))
   const scale   = useTransform(progress, (p) => lerp(p, T.HOLD_END, T.ICONS_IN_END, 0.5, 1))
@@ -175,17 +170,12 @@ function InlineIconSlot({
 
 // ─── SideIcons ──────────────────────────────────────────────────────────────────
 
-// Extra platforms not used inline — fade in as side columns, then fade out into carousel.
 const sidePlatforms = platforms.slice(everywherePlatforms.length)
-const sideLeft  = sidePlatforms.slice(0, Math.ceil(sidePlatforms.length / 2))
-const sideRight = sidePlatforms.slice(Math.ceil(sidePlatforms.length / 2))
+const sideLeft      = sidePlatforms.slice(0, Math.ceil(sidePlatforms.length / 2))
+const sideRight     = sidePlatforms.slice(Math.ceil(sidePlatforms.length / 2))
 
 function SideIcons({
-  list,
-  side,
-  progress,
-  size,
-  inner,
+  list, side, progress, size, inner,
 }: {
   list: typeof platforms
   side: 'left' | 'right'
@@ -193,13 +183,9 @@ function SideIcons({
   size: number
   inner: number
 }) {
-  // fade in then fade out
   const opacity = useTransform(progress, (p) => {
-    const fadeIn  = lerp(p, T.SIDE_IN_START,  T.SIDE_IN_END,   0, 1)
-    const fadeOut = lerp(p, T.SIDE_OUT_START, T.SIDE_OUT_END,  1, 0)
-    // when in fade-out range take fade-out value, otherwise fade-in
-    if (p >= T.SIDE_OUT_START) return fadeOut
-    return fadeIn
+    if (p >= T.SIDE_OUT_START) return lerp(p, T.SIDE_OUT_START, T.SIDE_OUT_END, 1, 0)
+    return lerp(p, T.SIDE_IN_START, T.SIDE_IN_END, 0, 1)
   })
 
   return (
@@ -213,7 +199,7 @@ function SideIcons({
         flexDirection: 'column',
         gap: 10,
         opacity,
-        pointerEvents: 'none', // carousel handles clicks
+        pointerEvents: 'none',
         zIndex: 1,
       }}
     >
@@ -226,28 +212,16 @@ function SideIcons({
 
 // ─── IconCarousel ──────────────────────────────────────────────────────────────
 
-function IconCarousel({
-  active,
-  size,
-  inner,
-}: {
-  active: boolean
-  size: number
-  inner: number
-}) {
-  // all platforms merged: inline ones + side ones
-  const all = platforms // already the full array
-  const doubled = [...all, ...all]
-
+function IconCarousel({ active, size, inner }: { active: boolean; size: number; inner: number }) {
+  const doubled = [...platforms, ...platforms]
   const trackRef = useRef<HTMLDivElement>(null)
   const [trackW, setTrackW] = useState(0)
 
-  // measure half-track width once active and DOM is ready
   useEffect(() => {
     if (!active || !trackRef.current) return
     const gap = 10
     const items = Array.from(trackRef.current.children) as HTMLElement[]
-    const half = all.length
+    const half = platforms.length
     let w = 0
     for (let i = 0; i < half; i++) {
       w += (items[i]?.getBoundingClientRect().width ?? size) + gap
@@ -286,17 +260,18 @@ function IconCarousel({
         }}
       />
 
-      {/* track — doubled for seamless loop */}
-      {/* direction: items exit RIGHT, enter from LEFT → translateX goes from 0 → -trackW */}
+      {/* scrolling track — doubled for seamless loop */}
+      {/* translateX: 0 → -trackW so icons travel left, entering from left edge */}
       <div
         ref={trackRef}
         style={{
           display: 'flex',
           gap: 10,
           willChange: 'transform',
-          animation: active && trackW > 0
-            ? `evCarousel ${duration}s linear infinite`
-            : 'none',
+          animation:
+            active && trackW > 0
+              ? `evCarousel ${duration}s linear infinite`
+              : 'none',
         }}
       >
         {doubled.map((p, i) => (
@@ -317,7 +292,7 @@ function IconCarousel({
   )
 }
 
-// ─── EverywhereReveal ────────────────────────────────────────────────────────────
+// ─── EverywhereReveal (main) ───────────────────────────────────────────────────────
 
 export function EverywhereReveal() {
   const containerRef  = useRef<HTMLDivElement>(null)
@@ -331,19 +306,19 @@ export function EverywhereReveal() {
 
   // letter gap
   const gapPx = useTransform(scrollYProgress, (p) => {
-    if (p <= T.HOLD_END)       return 0
-    if (p <= T.ICONS_IN_END)   return lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, maxGap)
-    if (p <= T.TEXT_FADE_START) return maxGap
-    if (p <= T.GAP_COLLAPSE_END) return lerp(p, T.TEXT_FADE_START, T.GAP_COLLAPSE_END, maxGap, 0)
+    if (p <= T.HOLD_END)          return 0
+    if (p <= T.ICONS_IN_END)      return lerp(p, T.HOLD_END, T.ICONS_IN_END, 0, maxGap)
+    if (p <= T.TEXT_FADE_START)   return maxGap
+    if (p <= T.GAP_COLLAPSE_END)  return lerp(p, T.TEXT_FADE_START, T.GAP_COLLAPSE_END, maxGap, 0)
     return 0
   })
   const gap = useMotionTemplate`${gapPx}px`
 
-  // letter blur — peaks then descends so opacity carries the final fade
+  // letter blur: ramp up then back down, opacity handles the final disappearance
   const letterBlur = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
-    if (p <= T.HOLD_END) return 0
-    if (p <= T.BLUR_PEAK) return lerp(p, T.HOLD_END, T.BLUR_PEAK, 0, 10)
+    if (p <= T.HOLD_END)      return 0
+    if (p <= T.BLUR_PEAK)     return lerp(p, T.HOLD_END,  T.BLUR_PEAK,     0,  10)
     if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 10, 0)
     return 0
   })
@@ -377,23 +352,11 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/* side icons: fade-in then fade-out before carousel */}
+        {/* side icons: appear after text is gone, fade out before carousel */}
         {sidePlatforms.length > 0 && (
           <>
-            <SideIcons
-              list={sideLeft}
-              side="left"
-              progress={scrollYProgress}
-              size={icon}
-              inner={inner}
-            />
-            <SideIcons
-              list={sideRight}
-              side="right"
-              progress={scrollYProgress}
-              size={icon}
-              inner={inner}
-            />
+            <SideIcons list={sideLeft}  side="left"  progress={scrollYProgress} size={icon} inner={inner} />
+            <SideIcons list={sideRight} side="right" progress={scrollYProgress} size={icon} inner={inner} />
           </>
         )}
 
@@ -444,12 +407,9 @@ export function EverywhereReveal() {
           </motion.div>
         </div>
 
-        {/* carousel — fades in, covers everything */}
+        {/* carousel fades in over everything */}
         <IconCarousel active={carouselActive} size={carIcon} inner={inner + 2} />
       </div>
     </div>
   )
 }
-
-const WORD   = 'everywhere'
-const LETTERS = WORD.split('')
