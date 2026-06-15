@@ -13,22 +13,25 @@ import { useEffect, useRef, useState } from 'react'
 
 // ─── scroll timeline ─────────────────────────────────────────────────────────────
 //
-//  0.00 – 0.10   hold
-//  0.10 – 0.55   letters blur up + fade to 0
-//  0.50 – 0.72   dual carousels fade-in (overlap with tail of text fade)
-//  0.72 – 1.00   carousels run at full opacity
+//  0.00 – 0.08   hold
+//  0.08 – 0.50   word letter-spacing stretches wide
+//  0.20 – 0.65   word blurs up then fades to 0
+//  0.25 – 0.65   BOTH bands fade in simultaneously (during blur phase)
+//  0.65 – 1.00   bands at full opacity, word fully gone
 
 const T = {
-  HOLD_END:       0.10,
-  BLUR_PEAK:      0.38,
-  TEXT_FADE_END:  0.55,
-  BANDS_IN_START: 0.48,
-  BANDS_IN_END:   0.70,
+  HOLD_END:        0.08,
+  STRETCH_END:     0.50,
+  BLUR_START:      0.20,
+  BLUR_PEAK:       0.42,
+  TEXT_FADE_END:   0.65,
+  BANDS_IN_START:  0.25,  // starts during blur, both bands together
+  BANDS_IN_END:    0.62,
 } as const
 
-const SPEED = 60 // px / s  (each band)
+const SPEED = 60 // px / s
 
-// ─── helpers ─────────────────────────────────────────────────────────────────────
+// ─── helpers ────────────────────────────────────────────────────────────────────
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
   if (p <= a) return from
@@ -36,20 +39,20 @@ function lerp(p: number, a: number, b: number, from: number, to: number) {
   return from + ((p - a) / (b - a)) * (to - from)
 }
 
-function useAdaptiveIconSize() {
-  const [size, setSize] = useState({ icon: 32, inner: 16 })
+function useAdaptive() {
+  const [v, setV] = useState({ icon: 32, inner: 16, maxSpacing: '0.55em' })
   useEffect(() => {
     const fn = () => {
       const w = window.innerWidth
-      if (w < 480)       setSize({ icon: 24, inner: 12 })
-      else if (w < 768)  setSize({ icon: 28, inner: 14 })
-      else               setSize({ icon: 32, inner: 16 })
+      if (w < 480)       setV({ icon: 24, inner: 12, maxSpacing: '0.2em' })
+      else if (w < 768)  setV({ icon: 28, inner: 14, maxSpacing: '0.35em' })
+      else               setV({ icon: 32, inner: 16, maxSpacing: '0.55em' })
     }
     fn()
     window.addEventListener('resize', fn)
     return () => window.removeEventListener('resize', fn)
   }, [])
-  return size
+  return v
 }
 
 // ─── IconBadge ────────────────────────────────────────────────────────────────
@@ -86,17 +89,7 @@ function IconBadge({ platform, size, inner }: {
   )
 }
 
-// ─── Band — one half-width scrolling strip ───────────────────────────────────
-//
-// direction="left"  → track moves from centre outward to the left edge
-//   keyframe:  translateX(0) → translateX(-halfW)
-//   so icons enter from the right (centre) and exit left
-//
-// direction="right" → track moves from left edge back toward centre then beyond
-//   keyframe:  translateX(-halfW) → translateX(0)
-//   so icons enter from the left (centre) and exit right
-//
-// Both bands are overflow:hidden + masked at the outer edge.
+// ─── Band ───────────────────────────────────────────────────────────────────────────
 
 function Band({ direction, iconSize, iconInner }: {
   direction: 'left' | 'right'
@@ -104,7 +97,6 @@ function Band({ direction, iconSize, iconInner }: {
   iconInner: number
 }) {
   const GAP = 12
-  // Give each band its own shuffled order so the two lanes look different
   const list = direction === 'left' ? platforms : [...platforms].reverse()
   const doubled = [...list, ...list]
 
@@ -123,17 +115,13 @@ function Band({ direction, iconSize, iconInner }: {
   }, [iconSize])
 
   const duration = halfW > 0 ? halfW / SPEED : 18
+  const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
 
-  // left band: right-side mask (outer edge) fades out; centre side stays sharp
-  // right band: left-side mask (outer edge) fades out
+  // outer edge fades to bg colour, inner (centre) edge stays sharp
   const maskImage =
     direction === 'left'
-      ? 'linear-gradient(to left,  #050505 0%, transparent 14%)'
-      : 'linear-gradient(to right, #050505 0%, transparent 14%)'
-
-  // left band: icons start at centre (translateX 0) and animate to -halfW (leftward)
-  // right band: icons start offset by -halfW (so centre is the "source") and animate to 0 (rightward)
-  const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
+      ? 'linear-gradient(to left,  #050505 0%, transparent 18%)'
+      : 'linear-gradient(to right, #050505 0%, transparent 18%)'
 
   return (
     <div
@@ -143,7 +131,6 @@ function Band({ direction, iconSize, iconInner }: {
         display: 'flex',
         alignItems: 'center',
         height: '100%',
-        // clip outer edge with a mask gradient
         WebkitMaskImage: maskImage,
         maskImage,
       }}
@@ -154,11 +141,7 @@ function Band({ direction, iconSize, iconInner }: {
           display: 'flex',
           gap: GAP,
           willChange: 'transform',
-          // right band starts pre-offset so the "start" of its content sits at centre
-          animation:
-            halfW > 0
-              ? `${animName} ${duration}s linear infinite`
-              : 'none',
+          animation: halfW > 0 ? `${animName} ${duration}s linear infinite` : 'none',
         }}
       >
         {doubled.map((p, i) => (
@@ -195,7 +178,7 @@ function DualBands({ active, iconSize, iconInner }: {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: active ? 1 : 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
       style={{
         position: 'absolute',
         inset: 0,
@@ -203,11 +186,9 @@ function DualBands({ active, iconSize, iconInner }: {
         alignItems: 'center',
         pointerEvents: active ? 'auto' : 'none',
         zIndex: 2,
-        // tiny hairline at centre so the split is subtly visible
-        // using a pseudo-element via box-shadow trick on inner div instead
       }}
     >
-      {/* centre divider — 1px line */}
+      {/* 1px centre divider */}
       <div
         aria-hidden="true"
         style={{
@@ -222,7 +203,7 @@ function DualBands({ active, iconSize, iconInner }: {
           pointerEvents: 'none',
         }}
       />
-
+      {/* both bands rendered together — they appear simultaneously */}
       <Band direction="left"  iconSize={iconSize} iconInner={iconInner} />
       <Band direction="right" iconSize={iconSize} iconInner={iconInner} />
     </motion.div>
@@ -234,27 +215,45 @@ function DualBands({ active, iconSize, iconInner }: {
 export function EverywhereReveal() {
   const containerRef  = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
-  const { icon, inner } = useAdaptiveIconSize()
+  const { icon, inner, maxSpacing } = useAdaptive()
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
-  // ── letter blur
+  // letter-spacing: “-0.03em” at rest → maxSpacing at STRETCH_END
+  const letterSpacing = useTransform(scrollYProgress, (p) => {
+    const pct = lerp(p, T.HOLD_END, T.STRETCH_END, 0, 1)
+    // interpolate from -0.03em to maxSpacing numerically isn’t trivial in CSS,
+    // so we scale font via word-spacing trick: use letter-spacing directly as a
+    // MotionValue string via useMotionTemplate
+    return pct
+  })
+  // encode as actual em value: -0.03 + pct * (maxSpacingNum + 0.03)
+  // We parse maxSpacing to get its number part
+  const maxSpacingNum = parseFloat(maxSpacing) // e.g. 0.55
+  const letterSpacingEm = useMotionTemplate`${useTransform(
+    letterSpacing,
+    (pct) => ((-0.03 + pct * (maxSpacingNum + 0.03)).toFixed(4))
+  )}em`
+
+  // blur
   const blurPx = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
-    if (p <= T.HOLD_END)     return 0
-    if (p <= T.BLUR_PEAK)    return lerp(p, T.HOLD_END,  T.BLUR_PEAK,    0,  12)
-    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 12, 0)
+    if (p <= T.BLUR_START)   return 0
+    if (p <= T.BLUR_PEAK)    return lerp(p, T.BLUR_START, T.BLUR_PEAK,    0,  14)
+    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 14, 0)
     return 0
   })
-  const textFilter  = useMotionTemplate`blur(${blurPx}px)`
+  const textFilter = useMotionTemplate`blur(${blurPx}px)`
+
+  // opacity
   const textOpacity = useTransform(scrollYProgress, (p) =>
-    lerp(p, T.HOLD_END, T.TEXT_FADE_END, 1, 0)
+    lerp(p, T.BLUR_START, T.TEXT_FADE_END, 1, 0)
   )
 
-  // ── bands gate
+  // bands gate — both bands appear at the same time, triggered by same threshold
   const [bandsActive, setBandsActive] = useState(false)
   useEffect(() => {
     if (reducedMotion) return
@@ -264,7 +263,7 @@ export function EverywhereReveal() {
   }, [scrollYProgress, reducedMotion])
 
   return (
-    <div ref={containerRef} style={{ height: '220vh', position: 'relative' }}>
+    <div ref={containerRef} style={{ height: '230vh', position: 'relative' }}>
       <div
         aria-label="everywhere — available on all major platforms"
         style={{
@@ -278,27 +277,28 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/* word */}
+        {/* word with stretching letter-spacing */}
         <motion.p
           aria-hidden="true"
           style={{
             fontSize: 'clamp(2rem, 7vw, 6rem)',
             fontWeight: 300,
-            letterSpacing: '-0.03em',
+            letterSpacing: letterSpacingEm,
             color: '#f0f0f0',
             lineHeight: 1,
             margin: 0,
             filter: textFilter,
             opacity: textOpacity,
             userSelect: 'none',
-            zIndex: 1,
+            whiteSpace: 'nowrap',
             position: 'relative',
+            zIndex: 1,
           }}
         >
           everywhere
         </motion.p>
 
-        {/* dual bands appear after text fades */}
+        {/* dual bands — both appear simultaneously during blur */}
         <DualBands active={bandsActive} iconSize={icon} iconInner={inner} />
       </div>
     </div>
