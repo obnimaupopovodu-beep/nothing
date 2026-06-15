@@ -11,14 +11,6 @@ import {
 } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
-// ─── scroll timeline ───────────────────────────────────────────────────────
-//
-//  0.00 – 0.08   hold
-//  0.08 – 0.50   word letter-spacing stretches wide
-//  0.20 – 0.65   whole block blurs up then fades to 0
-//  0.25 – 0.65   BOTH bands fade in simultaneously (during blur phase)
-//  0.65 – 1.00   bands at full opacity, text fully gone
-
 const T = {
   HOLD_END:        0.08,
   STRETCH_END:     0.50,
@@ -26,12 +18,9 @@ const T = {
   BLUR_PEAK:       0.42,
   TEXT_FADE_END:   0.65,
   BANDS_IN_START:  0.25,
-  BANDS_IN_END:    0.62,
 } as const
 
 const SPEED = 60
-
-// ─── helpers ───────────────────────────────────────────────────────────────
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
   if (p <= a) return from
@@ -54,8 +43,6 @@ function useAdaptive() {
   }, [])
   return v
 }
-
-// ─── IconBadge ────────────────────────────────────────────────────────────
 
 function IconBadge({ platform, size, inner }: {
   platform: typeof platforms[0]
@@ -89,8 +76,6 @@ function IconBadge({ platform, size, inner }: {
   )
 }
 
-// ─── Band ───────────────────────────────────────────────────────────────────
-
 function Band({ direction, iconSize, iconInner }: {
   direction: 'left' | 'right'
   iconSize: number
@@ -116,16 +101,31 @@ function Band({ direction, iconSize, iconInner }: {
 
   const duration = halfW > 0 ? halfW / SPEED : 18
   const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
+
+  // wider fade mask — icons dissolve gradually over 30% from the outer edge
   const maskImage =
     direction === 'left'
-      ? 'linear-gradient(to left,  #050505 0%, transparent 18%)'
-      : 'linear-gradient(to right, #050505 0%, transparent 18%)'
+      ? 'linear-gradient(to left,  #050505 0%, transparent 30%)'
+      : 'linear-gradient(to right, #050505 0%, transparent 30%)'
 
   return (
-    <div style={{ width: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', height: '100%', WebkitMaskImage: maskImage, maskImage }}>
+    <div style={{
+      width: '50%',
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+      WebkitMaskImage: maskImage,
+      maskImage,
+    }}>
       <div
         ref={trackRef}
-        style={{ display: 'flex', gap: GAP, willChange: 'transform', animation: halfW > 0 ? `${animName} ${duration}s linear infinite` : 'none' }}
+        style={{
+          display: 'flex',
+          gap: GAP,
+          willChange: 'transform',
+          animation: halfW > 0 ? `${animName} ${duration}s linear infinite` : 'none',
+        }}
       >
         {doubled.map((p, i) => (
           <IconBadge key={i} platform={p} size={iconSize} inner={iconInner} />
@@ -135,14 +135,13 @@ function Band({ direction, iconSize, iconInner }: {
         @keyframes bandLeft  { from { transform: translateX(0px); }        to { transform: translateX(-${halfW}px); } }
         @keyframes bandRight { from { transform: translateX(-${halfW}px); } to { transform: translateX(0px); } }
         @media (prefers-reduced-motion: reduce) {
-          @keyframes bandLeft, @keyframes bandRight { from, to { transform: none; } }
+          @keyframes bandLeft  { from, to { transform: none; } }
+          @keyframes bandRight { from, to { transform: none; } }
         }
       `}</style>
     </div>
   )
 }
-
-// ─── DualBands ────────────────────────────────────────────────────────────
 
 function DualBands({ active, iconSize, iconInner }: {
   active: boolean
@@ -163,18 +162,18 @@ function DualBands({ active, iconSize, iconInner }: {
         zIndex: 2,
       }}
     >
-      {/* centre divider — full viewport height with soft fade at edges */}
+      {/* centre divider — fixed height, soft vertical fade */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           left: '50%',
-          top: 0,
-          bottom: 0,
-          transform: 'translateX(-50%)',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
           width: 1,
+          height: `${iconSize + 20}px`,
           background:
-            'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.12) 15%, rgba(255,255,255,0.12) 85%, transparent 100%)',
+            'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
           zIndex: 3,
           pointerEvents: 'none',
         }}
@@ -184,8 +183,6 @@ function DualBands({ active, iconSize, iconInner }: {
     </motion.div>
   )
 }
-
-// ─── EverywhereReveal ──────────────────────────────────────────────────────
 
 export function EverywhereReveal() {
   const containerRef  = useRef<HTMLDivElement>(null)
@@ -197,14 +194,12 @@ export function EverywhereReveal() {
     offset: ['start start', 'end end'],
   })
 
-  // letter-spacing stretch
   const maxSpacingNum = parseFloat(maxSpacing)
   const letterSpacingEm = useMotionTemplate`${useTransform(
     scrollYProgress,
     (p) => ((-0.03 + lerp(p, T.HOLD_END, T.STRETCH_END, 0, 1) * (maxSpacingNum + 0.03)).toFixed(4))
   )}em`
 
-  // blur + opacity applied to the whole text block
   const blurPx = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
     if (p <= T.BLUR_START)    return 0
@@ -217,7 +212,6 @@ export function EverywhereReveal() {
     (p) => lerp(p, T.BLUR_START, T.TEXT_FADE_END, 1, 0)
   )
 
-  // bands gate
   const [bandsActive, setBandsActive] = useState(false)
   useEffect(() => {
     if (reducedMotion) return
@@ -240,7 +234,6 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/* ── full text block: eyebrow + headline + animated word + body ── */}
         <motion.div
           style={{
             position: 'relative',
@@ -257,7 +250,6 @@ export function EverywhereReveal() {
             pointerEvents: 'none',
           }}
         >
-          {/* eyebrow */}
           <span style={{
             fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
             fontWeight: 500,
@@ -268,7 +260,6 @@ export function EverywhereReveal() {
             Distribution
           </span>
 
-          {/* "Your audience is" + "everywhere" stacked */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
             <span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)',
@@ -278,8 +269,6 @@ export function EverywhereReveal() {
             }}>
               Your audience is
             </span>
-
-            {/* animated “everywhere” */}
             <motion.span
               aria-label="everywhere"
               style={{
@@ -296,7 +285,6 @@ export function EverywhereReveal() {
             </motion.span>
           </div>
 
-          {/* body copy */}
           <p style={{
             fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
             fontWeight: 300,
@@ -311,7 +299,6 @@ export function EverywhereReveal() {
           </p>
         </motion.div>
 
-        {/* dual bands appear during blur */}
         <DualBands active={bandsActive} iconSize={icon} iconInner={inner} />
       </div>
     </div>
