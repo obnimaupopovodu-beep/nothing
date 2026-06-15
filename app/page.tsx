@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/Footer'
 import { StorySection } from '@/components/sections/StorySection'
 import { PlatformsSection } from '@/components/sections/PlatformsSection'
 import { SocialSection } from '@/components/sections/SocialSection'
+import { PlaylistsSection } from '@/components/sections/PlaylistsSection'
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <StorySection />
       <PlatformsSection />
       <SocialSection />
+      <PlaylistsSection />
       <Footer />
     </main>
   )
