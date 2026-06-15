@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import type { MotionValue } from 'framer-motion'
 import type { ComponentType } from 'react'
-import { motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowDown,
   ArrowRight,
@@ -83,6 +83,23 @@ const advantages = [
   },
 ]
 
+// Timing constants
+// Slides occupy [0, 0.72], each slot = 0.18
+// fade-in: 0→25% of slot, hold: 25→75%, fade-out: 75→95%
+const SLIDES_END = 0.72
+const SLIDE_SLOT = SLIDES_END / 4
+const FADE_IN_END   = 0.25  // fraction of slot
+const HOLD_END      = 0.75  // fraction of slot
+const FADE_OUT_END  = 0.95  // fraction of slot
+
+const COMMIT_START       = 0.72
+const COMMIT_ROWS_START  = 0.76
+const COMMIT_ROW_STAGGER = 0.07
+const COMMIT_ROW_DURATION = 0.08
+
+// Total steps shown in progress bar: 4 slides + 1 commitments = 5
+const TOTAL_STEPS = 5
+
 function ActionRow({
   label,
   href,
@@ -136,10 +153,86 @@ function ActionRow({
   )
 }
 
-// Slides 0-3 occupy [0, 0.72]. Commitments start at 0.72.
-// Each slide slot = 0.72 / 4 = 0.18. All slides fade OUT before 0.72.
-const SLIDES_END = 0.72
-const SLIDE_SLOT = SLIDES_END / 4
+// ─── Progress bar ──────────────────────────────────────────────────────────
+// Shows 5 pill segments, each fills as its corresponding section is active
+function ProgressBar({
+  progress,
+  visible,
+}: {
+  progress: MotionValue<number>
+  visible: MotionValue<number>
+}) {
+  // Step boundaries in presentation progress [0,1]:
+  // slides 0-3 each occupy SLIDE_SLOT (0.18), commitments = [0.72, 1.0]
+  const stepRanges = [
+    [0, SLIDE_SLOT],
+    [SLIDE_SLOT, SLIDE_SLOT * 2],
+    [SLIDE_SLOT * 2, SLIDE_SLOT * 3],
+    [SLIDE_SLOT * 3, SLIDES_END],
+    [COMMIT_START, 1.0],
+  ]
+
+  return (
+    <motion.div
+      style={{
+        position: 'absolute',
+        bottom: '32px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 30,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        opacity: visible,
+      }}
+    >
+      {stepRanges.map(([start, end], i) => (
+        <ProgressSegment key={i} progress={progress} start={start} end={end} />
+      ))}
+    </motion.div>
+  )
+}
+
+function ProgressSegment({
+  progress,
+  start,
+  end,
+}: {
+  progress: MotionValue<number>
+  start: number
+  end: number
+}) {
+  // fill goes 0→1 as progress moves through [start, end]
+  const fill = useTransform(progress, [start, end], [0, 1])
+  const width = useTransform(fill, (v) => `${Math.min(100, Math.max(0, v * 100))}%`)
+
+  // segment glows slightly when active (fill > 0 and < 1)
+  const segOpacity = useTransform(progress, [start - 0.02, start, end, end + 0.02], [0.25, 1, 1, 0.25])
+
+  return (
+    <motion.div
+      style={{
+        width: '28px',
+        height: '2px',
+        borderRadius: '2px',
+        background: 'rgba(255,255,255,0.1)',
+        overflow: 'hidden',
+        opacity: segOpacity,
+        flexShrink: 0,
+      }}
+    >
+      <motion.div
+        style={{
+          height: '100%',
+          width,
+          background: 'rgba(127,176,255,0.7)',
+          borderRadius: '2px',
+          boxShadow: '0 0 4px rgba(127,176,255,0.4)',
+        }}
+      />
+    </motion.div>
+  )
+}
 
 function SystemSlide({
   progress,
@@ -156,15 +249,15 @@ function SystemSlide({
   body: string
   mobile?: boolean
 }) {
-  const start = index * SLIDE_SLOT
-  const mid = start + SLIDE_SLOT * 0.35
-  const hold = start + SLIDE_SLOT * 0.60
-  const end = start + SLIDE_SLOT * 0.88
+  const start      = index * SLIDE_SLOT
+  const fadeInEnd  = start + SLIDE_SLOT * FADE_IN_END
+  const holdEnd    = start + SLIDE_SLOT * HOLD_END
+  const fadeOutEnd = start + SLIDE_SLOT * FADE_OUT_END
 
-  const opacity = useTransform(progress, [start, mid, hold, end], [0, 1, 1, 0])
-  const y = useTransform(progress, [start, mid, hold, end], [40, 0, 0, -32])
-  const blur = useTransform(progress, [start, mid, hold, end], [20, 0, 0, 16])
-  const filter = useMotionTemplate`blur(${blur}px)`
+  const opacity = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [0, 1, 1, 0])
+  const y       = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [40, 0, 0, -32])
+  const blur    = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [20, 0, 0, 16])
+  const filter  = useMotionTemplate`blur(${blur}px)`
 
   return (
     <motion.div
@@ -190,13 +283,7 @@ function SystemSlide({
         }}
       >
         {eyebrow ? (
-          <p
-            className="label-caps"
-            style={{
-              marginBottom: mobile ? '14px' : '20px',
-              color: 'rgba(127,176,255,0.55)',
-            }}
-          >
+          <p className="label-caps" style={{ marginBottom: mobile ? '14px' : '20px', color: 'rgba(127,176,255,0.55)' }}>
             {eyebrow}
           </p>
         ) : null}
@@ -232,13 +319,6 @@ function SystemSlide({
   )
 }
 
-// Commitments: block fades in at 0.72, rows stagger within [0.76, 0.97]
-// 3 rows, stagger = 0.07 each → last row ends at 0.76 + 2*0.07 + 0.08 = 0.97 ✓
-const COMMIT_START = 0.72
-const COMMIT_ROWS_START = 0.76
-const COMMIT_ROW_STAGGER = 0.07
-const COMMIT_ROW_DURATION = 0.08
-
 function CommitmentRevealRow({
   progress,
   index,
@@ -255,12 +335,12 @@ function CommitmentRevealRow({
   mobile?: boolean
 }) {
   const start = COMMIT_ROWS_START + index * COMMIT_ROW_STAGGER
-  const end = start + COMMIT_ROW_DURATION
+  const end   = start + COMMIT_ROW_DURATION
 
   const opacity = useTransform(progress, [start, end], [0, 1])
-  const y = useTransform(progress, [start, end], [28, 0])
-  const blur = useTransform(progress, [start, end], [14, 0])
-  const filter = useMotionTemplate`blur(${blur}px)`
+  const y       = useTransform(progress, [start, end], [28, 0])
+  const blur    = useTransform(progress, [start, end], [14, 0])
+  const filter  = useMotionTemplate`blur(${blur}px)`
 
   return (
     <motion.div
@@ -275,31 +355,12 @@ function CommitmentRevealRow({
         borderBottom: index < advantages.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
       }}
     >
-      <Icon
-        size={mobile ? 14 : 15}
-        weight="regular"
-        style={{ color: 'rgba(127,176,255,0.55)', flexShrink: 0, marginTop: '2px' }}
-      />
+      <Icon size={mobile ? 14 : 15} weight="regular" style={{ color: 'rgba(127,176,255,0.55)', flexShrink: 0, marginTop: '2px' }} />
       <div>
-        <h3
-          style={{
-            fontSize: mobile ? '13px' : '14px',
-            fontWeight: 600,
-            color: 'rgba(240,240,240,0.9)',
-            marginBottom: '4px',
-            letterSpacing: '-0.01em',
-          }}
-        >
+        <h3 style={{ fontSize: mobile ? '13px' : '14px', fontWeight: 600, color: 'rgba(240,240,240,0.9)', marginBottom: '4px', letterSpacing: '-0.01em' }}>
           {title}
         </h3>
-        <p
-          style={{
-            fontSize: mobile ? '12px' : '13px',
-            lineHeight: 1.72,
-            color: 'rgba(240,240,240,0.38)',
-            maxWidth: '44ch',
-          }}
-        >
+        <p style={{ fontSize: mobile ? '12px' : '13px', lineHeight: 1.72, color: 'rgba(240,240,240,0.38)', maxWidth: '44ch' }}>
           {body}
         </p>
       </div>
@@ -315,40 +376,22 @@ function SystemPresentation({
   mobile?: boolean
 }) {
   const commitmentsOpacity = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0, 1])
-  const commitmentsY = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [48, 0])
-  const commitmentsScale = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0.96, 1])
-  const commitmentsBlur = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [18, 0])
-  const commitmentsFilter = useMotionTemplate`blur(${commitmentsBlur}px)`
+  const commitmentsY       = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [48, 0])
+  const commitmentsScale   = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0.96, 1])
+  const commitmentsBlur    = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [18, 0])
+  const commitmentsFilter  = useMotionTemplate`blur(${commitmentsBlur}px)`
+
+  // progress bar: visible once we enter the presentation, hides near the end
+  const barVisible = useTransform(progress, [0.02, 0.08, 0.92, 0.98], [0, 1, 1, 0])
 
   return (
     <div className="absolute inset-0">
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <SystemSlide
-          progress={progress}
-          index={0}
-          title={'One clear\nsystem.'}
-          body="Every artist gets the same honest framework — choose how much support you need."
-          mobile={mobile}
-        />
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+        <SystemSlide progress={progress} index={0} title={'One clear\nsystem.'} body="Every artist gets the same honest framework — choose how much support you need." mobile={mobile} />
 
         {releaseModes.map((mode, i) => (
-          <SystemSlide
-            key={mode.eyebrow}
-            progress={progress}
-            index={i + 1}
-            eyebrow={mode.eyebrow}
-            title={mode.title}
-            body={mode.body}
-            mobile={mobile}
-          />
+          <SystemSlide key={mode.eyebrow} progress={progress} index={i + 1} eyebrow={mode.eyebrow} title={mode.title} body={mode.body} mobile={mobile} />
         ))}
 
         <motion.div
@@ -365,40 +408,18 @@ function SystemPresentation({
             pointerEvents: 'none',
           }}
         >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: mobile ? 'min(92vw, 560px)' : 'min(60vw, 720px)',
-              margin: '0 auto',
-              padding: mobile ? '0 20px' : '0 32px',
-            }}
-          >
-            <p
-              className="label-caps"
-              style={{
-                marginBottom: mobile ? '20px' : '28px',
-                textAlign: 'center',
-              }}
-            >
-              Our commitments
-            </p>
-
+          <div style={{ width: '100%', maxWidth: mobile ? 'min(92vw, 560px)' : 'min(60vw, 720px)', margin: '0 auto', padding: mobile ? '0 20px' : '0 32px' }}>
+            <p className="label-caps" style={{ marginBottom: mobile ? '20px' : '28px', textAlign: 'center' }}>Our commitments</p>
             <div style={{ margin: '0 auto', maxWidth: mobile ? '100%' : '660px' }}>
               {advantages.map((item, i) => (
-                <CommitmentRevealRow
-                  key={item.title}
-                  progress={progress}
-                  index={i}
-                  title={item.title}
-                  body={item.body}
-                  Icon={item.Icon}
-                  mobile={mobile}
-                />
+                <CommitmentRevealRow key={item.title} progress={progress} index={i} title={item.title} body={item.body} Icon={item.Icon} mobile={mobile} />
               ))}
             </div>
           </div>
         </motion.div>
       </div>
+
+      <ProgressBar progress={progress} visible={barVisible} />
     </div>
   )
 }
@@ -414,44 +435,33 @@ function MobileStory() {
     <section className="relative overflow-hidden md:hidden" aria-label="Nothing Records story">
       <div
         className="absolute inset-x-0 top-0"
-        style={{
-          height: '50%',
-          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127,176,255,0.09), transparent 70%)',
-        }}
+        style={{ height: '50%', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127,176,255,0.09), transparent 70%)' }}
       />
 
       <div className="relative min-h-[100dvh] px-5 pb-10 pt-[80px]">
         <div className="flex min-h-[calc(100dvh-110px)] flex-col justify-center">
           <motion.p
             style={{ fontSize: '9px', letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.25)', marginBottom: '16px' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}
           >
             Independent Electronic Music Label
           </motion.p>
           <motion.h1
             style={{ fontSize: 'clamp(3rem, 15vw, 4.5rem)', fontWeight: 200, lineHeight: 0.92, letterSpacing: '-0.04em', color: '#f0f0f0' }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
             NOTHING<br />
             <span style={{ color: 'rgba(240,240,240,0.32)' }}>RECORDS</span>
           </motion.h1>
           <motion.p
             style={{ fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.44)', marginTop: '20px', maxWidth: '32ch', fontWeight: 300 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
           >
             Premium distribution, optional promotion, and direct answers for electronic artists.
           </motion.p>
           <motion.div
             style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '32px' }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
           >
             {actions.map(({ label, description, Icon }, index) => (
               <ActionRow key={label} label={label} href="#mobile-presentation" description={description} Icon={Icon} index={index} />
@@ -460,24 +470,8 @@ function MobileStory() {
         </div>
       </div>
 
-      <div
-        id="mobile-presentation"
-        ref={presentationRef}
-        style={{
-          height: '400dvh',
-          position: 'relative',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <div
-          style={{
-            position: 'sticky',
-            top: 0,
-            height: '100dvh',
-            overflow: 'hidden',
-            background: 'linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.99))',
-          }}
-        >
+      <div id="mobile-presentation" ref={presentationRef} style={{ height: '400dvh', position: 'relative', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ position: 'sticky', top: 0, height: '100dvh', overflow: 'hidden', background: 'linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.99))' }}>
           <SystemPresentation progress={scrollYProgress} mobile />
         </div>
       </div>
@@ -493,16 +487,13 @@ function DesktopStory() {
   })
   const reducedMotion = useReducedMotion()
 
-  const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
-
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.08, 0.18, 0.26], [1, 1, 1, 0])
-  const titleY = useTransform(scrollYProgress, [0.18, 0.26], ['0%', '-6%'])
-  const titleBlurVal = useTransform(scrollYProgress, [0.18, 0.26], [0, reducedMotion ? 0 : 10])
-  const titleFilter = useMotionTemplate`blur(${titleBlurVal}px)`
-
+  const sceneOpacity   = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
+  const titleOpacity   = useTransform(scrollYProgress, [0, 0.08, 0.18, 0.26], [1, 1, 1, 0])
+  const titleY         = useTransform(scrollYProgress, [0.18, 0.26], ['0%', '-6%'])
+  const titleBlurVal   = useTransform(scrollYProgress, [0.18, 0.26], [0, reducedMotion ? 0 : 10])
+  const titleFilter    = useMotionTemplate`blur(${titleBlurVal}px)`
   const contentOpacity = useTransform(scrollYProgress, [0.22, 0.3], [0, 1])
-  const contentY = useTransform(scrollYProgress, [0.22, 0.3], [24, 0])
-
+  const contentY       = useTransform(scrollYProgress, [0.22, 0.3], [24, 0])
   const presentationProgress = useTransform(scrollYProgress, [0.26, 0.96], [0, 1])
 
   return (
@@ -513,14 +504,8 @@ function DesktopStory() {
           <Scene mouseX={0} mouseY={0} />
         </motion.div>
 
-        <div
-          className="absolute inset-0 z-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 25%, rgba(5,5,5,0.6) 65%, #050505 100%)' }}
-        />
-        <div
-          className="absolute bottom-0 inset-x-0 z-10 pointer-events-none"
-          style={{ height: '32%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,5,0.92) 80%, #050505)' }}
-        />
+        <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 25%, rgba(5,5,5,0.6) 65%, #050505 100%)' }} />
+        <div className="absolute bottom-0 inset-x-0 z-10 pointer-events-none" style={{ height: '32%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,5,0.92) 80%, #050505)' }} />
 
         <div className="relative z-20 flex h-full items-center">
           <div className="section-shell w-full">
@@ -529,58 +514,35 @@ function DesktopStory() {
               <motion.div style={{ opacity: titleOpacity, y: titleY, filter: titleFilter, flex: 1, minWidth: 0 }}>
                 <motion.p
                   style={{ fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.25)', marginBottom: '22px' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 0.9 }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.9 }}
                 >
                   Independent Electronic Music Label
                 </motion.p>
-
                 <motion.h1
-                  style={{
-                    fontSize: 'clamp(4.5rem, 9vw, 8rem)',
-                    fontWeight: 200,
-                    lineHeight: 0.92,
-                    letterSpacing: '-0.04em',
-                    color: '#f0f0f0',
-                    userSelect: 'none',
-                  }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ fontSize: 'clamp(4.5rem, 9vw, 8rem)', fontWeight: 200, lineHeight: 0.92, letterSpacing: '-0.04em', color: '#f0f0f0', userSelect: 'none' }}
+                  initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   NOTHING<br />
                   <span style={{ color: 'rgba(240,240,240,0.28)' }}>RECORDS</span>
                 </motion.h1>
-
                 <motion.p
                   style={{ fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.46)', marginTop: '28px', maxWidth: '38ch', fontWeight: 300 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.9, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  Premium distribution, optional promotion,
-                  and direct answers for electronic artists.
+                  Premium distribution, optional promotion, and direct answers for electronic artists.
                 </motion.p>
               </motion.div>
 
               <motion.div style={{ opacity: titleOpacity, filter: titleFilter, width: '300px', flexShrink: 0 }}>
                 <motion.div
                   style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.9, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  {actions.map((card, i) => (
-                    <ActionRow key={card.label} {...card} index={i} />
-                  ))}
+                  {actions.map((card, i) => (<ActionRow key={card.label} {...card} index={i} />))}
                 </motion.div>
-
                 <motion.div
                   style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 2.0 }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.0 }}
                 >
                   <motion.span
                     style={{ fontSize: '9px', letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.16)' }}
@@ -595,10 +557,7 @@ function DesktopStory() {
           </div>
         </div>
 
-        <motion.div
-          className="absolute inset-0 z-20"
-          style={{ opacity: contentOpacity, y: contentY }}
-        >
+        <motion.div className="absolute inset-0 z-20" style={{ opacity: contentOpacity, y: contentY }}>
           <SystemPresentation progress={presentationProgress} />
         </motion.div>
 
