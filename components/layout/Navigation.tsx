@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 
 const navLinks = [
-  { label: 'Explore', href: '#explore' },
-  { label: 'Platforms', href: '#platforms' },
-  { label: 'Social', href: '#social' },
+  { label: 'Our Playlists', href: '#playlists' },
+  { label: 'Our Socials', href: '#social' },
 ]
 
 export function Navigation() {
@@ -90,7 +89,6 @@ export function Navigation() {
               type="button"
               onClick={() => handleNavClick(link.href)}
               style={{
-                display: 'none',
                 padding: '6px 14px',
                 fontSize: '11px',
                 fontWeight: 500,
@@ -103,7 +101,6 @@ export function Navigation() {
                 transition: 'color 0.2s ease',
                 borderRadius: '6px',
               }}
-              className="md:block"
               onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.85)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.42)')}
             >
