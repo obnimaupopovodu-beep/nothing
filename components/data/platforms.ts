@@ -79,7 +79,6 @@ export const platforms: Platform[] = [
     iconPath:
       'M6 18L18 6H13.5L6 13.5V18zm0-12L18 18h-4.5L6 10.5V6z',
   },
-  // ── extra platforms (shown as side icons, then merged into carousel) ──────
   {
     name: 'YouTube Music',
     desc: 'YouTube Music streaming',
@@ -119,6 +118,102 @@ export const platforms: Platform[] = [
     squareBg: '#FFA200',
     iconPath:
       'M12 3a9 9 0 100 18A9 9 0 0012 3zm-1 13V8l7 4-7 4z',
+  },
+  {
+    name: 'Qobuz',
+    desc: 'Hi-res music streaming',
+    href: 'https://qobuz.com',
+    squareBg: '#00AEEF',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a4 4 0 110 8 4 4 0 010-8zm0 10c1.1 0 2.1-.3 3-.8l3 3-1.4 1.4-3-3A5.9 5.9 0 0112 18z',
+  },
+  {
+    name: 'Boomplay',
+    desc: 'African music platform',
+    href: 'https://boomplay.com',
+    squareBg: '#86C232',
+    iconPath:
+      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14V8l6 4-6 4z',
+  },
+  {
+    name: 'Anghami',
+    desc: 'Middle East streaming',
+    href: 'https://anghami.com',
+    squareBg: '#F73F52',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm1 5a3 3 0 00-3 3v6H8v-6a5 5 0 1110 0v4h-2v-4a3 3 0 00-3-3z',
+  },
+  {
+    name: 'KKBOX',
+    desc: 'Asian music streaming',
+    href: 'https://kkbox.com',
+    squareBg: '#00C300',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm-2 6l6 4-6 4V8z',
+  },
+  {
+    name: 'JioSaavn',
+    desc: 'Indian music catalog',
+    href: 'https://jiosaavn.com',
+    squareBg: '#2BC5B4',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm1 4v7.2a2.8 2.8 0 11-2-2.68V7l5-1v6.2a2.8 2.8 0 11-2-2.68V6z',
+  },
+  {
+    name: 'Gaana',
+    desc: 'India streaming and radio',
+    href: 'https://gaana.com',
+    squareBg: '#E72C30',
+    iconPath:
+      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14V8l6 4-6 4z',
+  },
+  {
+    name: 'Tencent Music',
+    desc: 'China music ecosystem',
+    href: 'https://tme.com',
+    squareBg: '#1E88E5',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm-2 14V8l7 4-7 4z',
+  },
+  {
+    name: 'Joox',
+    desc: 'Streaming across Asia',
+    href: 'https://joox.com',
+    squareBg: '#00B8A9',
+    iconPath:
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a4 4 0 014 4v4a4 4 0 11-8 0V8h2v6a2 2 0 104 0v-4a2 2 0 10-4 0H8a4 4 0 014-4z',
+  },
+  {
+    name: 'Mixcloud',
+    desc: 'Radio shows and DJ mixes',
+    href: 'https://mixcloud.com',
+    squareBg: '#5000FF',
+    iconPath:
+      'M7 15a3 3 0 010-6 4.5 4.5 0 018.72 1.5A2.75 2.75 0 1116.5 16H7z',
+  },
+  {
+    name: 'Shazam',
+    desc: 'Music discovery links',
+    href: 'https://shazam.com',
+    squareBg: '#0088FF',
+    iconPath:
+      'M13.2 2L6.6 8.4h4L4 15l6.6-6.4h-4L13.2 2zm-2.4 20l6.6-6.4h-4L20 9l-6.6 6.4h4L10.8 22z',
+  },
+  {
+    name: 'Last.fm',
+    desc: 'Scrobbling and discovery',
+    href: 'https://last.fm',
+    squareBg: '#D51007',
+    iconPath:
+      'M17.6 17.2l-.8-2.2c-.3.4-.9.7-1.6.7-1 0-1.7-.5-2.1-1.7l-.4-1.2c-.5-1.5-1.5-2.1-3-2.1-1.8 0-3 1.1-3 2.9 0 1.7 1.1 2.8 2.9 2.8 1.2 0 2-.6 2.4-1.4l.8 2.2c-.7.7-1.8 1.2-3.2 1.2-2.9 0-4.9-1.8-4.9-4.8 0-3 2.1-4.8 5.1-4.8 2.6 0 4 1.2 4.8 3.5l.4 1.2c.2.6.5.9 1 .9.4 0 .7-.2.9-.5l-.8-2.1h2.2l1.8 4.9h-2.5z',
+  },
+  {
+    name: 'TikTok Music',
+    desc: 'Short-form music discovery',
+    href: 'https://music.tiktok.com',
+    squareBg: '#111111',
+    iconPath:
+      'M14 3c.4 1.6 1.6 2.9 3 3.6V9a6.4 6.4 0 01-3-1v5.2A4.8 4.8 0 119.2 8h1.6v2.4H9.2a2.4 2.4 0 102.4 2.4V3H14z',
   },
 ]
 
