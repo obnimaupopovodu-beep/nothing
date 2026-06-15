@@ -162,15 +162,14 @@ export function EverywhereReveal() {
   const blurPx = useTransform(scrollYProgress, (p) => {
     if (reducedMotion) return 0
     if (p <= T.BLUR_START)    return 0
-    if (p <= T.BLUR_PEAK)     return lerp(p, T.BLUR_START, T.BLUR_PEAK,     0, 14)
-    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK,  T.TEXT_FADE_END, 14, 0)
+    if (p <= T.BLUR_PEAK)     return lerp(p, T.BLUR_START, T.BLUR_PEAK, 0, 14)
+    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 14, 0)
     return 0
   })
   const textFilter  = useMotionTemplate`blur(${blurPx}px)`
   const textOpacity = useTransform(scrollYProgress,
     (p) => lerp(p, T.BLUR_START, T.TEXT_FADE_END, 1, 0)
   )
-
   const bandsOpacity = useTransform(scrollYProgress,
     (p) => lerp(p, T.BANDS_IN_START, T.BANDS_IN_START + 0.08, 0, 1)
   )
@@ -192,116 +191,133 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/* ── blurred / fading title block ── */}
-        <motion.div
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 'clamp(10px, 1.6vw, 22px)',
-            textAlign: 'center',
-            opacity: textOpacity,
-            filter: textFilter,
-            userSelect: 'none',
-            padding: '0 clamp(16px, 5vw, 48px)',
-            pointerEvents: 'none',
-          }}
-        >
-          <span style={{
-            fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
-            fontWeight: 500,
-            letterSpacing: '0.20em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.30)',
-          }}>
-            Distribution
-          </span>
+        {/*
+          Single flex column — all layers share the same vertical rhythm.
+          "everywhere" and the bands row occupy the same slot via position:absolute stacking.
+        */}
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'clamp(10px, 1.6vw, 22px)',
+          textAlign: 'center',
+          userSelect: 'none',
+          padding: '0 clamp(16px, 5vw, 48px)',
+          width: '100%',
+        }}>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
+          {/* eyebrow + subtitle — fade out with blur */}
+          <motion.div
+            style={{ opacity: textOpacity, filter: textFilter, pointerEvents: 'none',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 'clamp(6px, 1vw, 12px)' }}
+          >
+            <span style={{
+              fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
+              fontWeight: 500,
+              letterSpacing: '0.20em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.30)',
+            }}>
+              Distribution
+            </span>
             <span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)',
               fontWeight: 300,
               color: 'rgba(255,255,255,0.45)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.1,
             }}>
               Your audience is
             </span>
+          </motion.div>
+
+          {/*
+            "slot" — fixed height matches the everywhere text.
+            Both the word and the bands live here, absolutely stacked.
+          */}
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            height: 'clamp(2rem, 7vw, 6rem)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {/* everywhere — fades out */}
             <motion.span
               aria-label="everywhere"
               style={{
+                position: 'absolute',
                 fontSize: 'clamp(2rem, 7vw, 6rem)',
                 fontWeight: 300,
                 letterSpacing: letterSpacingEm,
                 color: '#f0f0f0',
                 lineHeight: 1,
                 whiteSpace: 'nowrap',
-                display: 'block',
+                opacity: textOpacity,
+                filter: textFilter,
+                pointerEvents: 'none',
               }}
             >
               everywhere
             </motion.span>
-          </div>
-        </motion.div>
 
-        {/* ── bands: absolute, fills viewport, centred over text ── */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            opacity: bandsOpacity,
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}
-        >
-          {/* centre divider */}
-          <div
-            aria-hidden="true"
+            {/* bands — fade in over text, same vertical slot */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                opacity: bandsOpacity,
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              {/* centre divider */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 1,
+                  height: `${icon + 20}px`,
+                  background:
+                    'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
+                  zIndex: 3,
+                  pointerEvents: 'none',
+                }}
+              />
+              <Band direction="left"  iconSize={icon} iconInner={inner} />
+              <Band direction="right" iconSize={icon} iconInner={inner} />
+            </motion.div>
+          </div>
+
+          {/* body copy — static, fades in after bands, never blurs */}
+          <motion.p
             style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 1,
-              height: `${icon + 20}px`,
-              background:
-                'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
-              zIndex: 3,
+              opacity: bodyOpacity,
+              fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
+              fontWeight: 300,
+              color: 'rgba(255,255,255,0.32)',
+              letterSpacing: '0.01em',
+              lineHeight: 1.75,
+              maxWidth: '44ch',
+              margin: 0,
+              textAlign: 'center',
               pointerEvents: 'none',
             }}
-          />
-          <Band direction="left"  iconSize={icon} iconInner={inner} />
-          <Band direction="right" iconSize={icon} iconInner={inner} />
-        </motion.div>
+          >
+            We distribute to all major platforms simultaneously —{' '}
+            <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
+          </motion.p>
 
-        {/* ── static body copy: absolute, sits below centre ── */}
-        <motion.p
-          style={{
-            position: 'absolute',
-            top: 'calc(50% + clamp(40px, 7vw, 80px))',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            opacity: bodyOpacity,
-            zIndex: 4,
-            fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
-            fontWeight: 300,
-            color: 'rgba(255,255,255,0.32)',
-            letterSpacing: '0.01em',
-            lineHeight: 1.75,
-            maxWidth: '44ch',
-            margin: 0,
-            textAlign: 'center',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          We distribute to all major platforms simultaneously —{' '}
-          <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
-        </motion.p>
+        </div>
       </div>
     </div>
   )
