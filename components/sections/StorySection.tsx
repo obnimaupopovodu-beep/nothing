@@ -83,7 +83,6 @@ const advantages = [
   },
 ]
 
-// Compact action row for hero right column
 function ActionRow({
   label,
   href,
@@ -137,7 +136,11 @@ function ActionRow({
   )
 }
 
-// ─── Scroll-driven slide ────────────────────────────────────────────────────
+// Slides 0-3 occupy [0, 0.72]. Commitments start at 0.72.
+// Each slide slot = 0.72 / 4 = 0.18. All slides fade OUT before 0.72.
+const SLIDES_END = 0.72
+const SLIDE_SLOT = SLIDES_END / 4
+
 function SystemSlide({
   progress,
   index,
@@ -153,19 +156,14 @@ function SystemSlide({
   body: string
   mobile?: boolean
 }) {
-  // 4 slides total (0 = intro, 1-3 = release modes)
-  // Each slide occupies ~0.2 of the [0,1] presentation range
-  // with a slight hold window before fading out
-  const total = 4
-  const slotSize = 1 / total
-  const start = index * slotSize
-  const mid = start + slotSize * 0.35
-  const hold = start + slotSize * 0.62
-  const end = index < total - 1 ? start + slotSize * 0.88 : 1
+  const start = index * SLIDE_SLOT
+  const mid = start + SLIDE_SLOT * 0.35
+  const hold = start + SLIDE_SLOT * 0.60
+  const end = start + SLIDE_SLOT * 0.88
 
-  const opacity = useTransform(progress, [start, mid, hold, end], [0, 1, 1, index < total - 1 ? 0 : 1])
-  const y = useTransform(progress, [start, mid, hold, end], [40, 0, 0, index < total - 1 ? -32 : 0])
-  const blur = useTransform(progress, [start, mid, hold, end], [20, 0, 0, index < total - 1 ? 16 : 0])
+  const opacity = useTransform(progress, [start, mid, hold, end], [0, 1, 1, 0])
+  const y = useTransform(progress, [start, mid, hold, end], [40, 0, 0, -32])
+  const blur = useTransform(progress, [start, mid, hold, end], [20, 0, 0, 16])
   const filter = useMotionTemplate`blur(${blur}px)`
 
   return (
@@ -234,7 +232,13 @@ function SystemSlide({
   )
 }
 
-// ─── Single commitment row with blur-in ────────────────────────────────────
+// Commitments: block fades in at 0.72, rows stagger within [0.76, 0.97]
+// 3 rows, stagger = 0.07 each → last row ends at 0.76 + 2*0.07 + 0.08 = 0.97 ✓
+const COMMIT_START = 0.72
+const COMMIT_ROWS_START = 0.76
+const COMMIT_ROW_STAGGER = 0.07
+const COMMIT_ROW_DURATION = 0.08
+
 function CommitmentRevealRow({
   progress,
   index,
@@ -250,9 +254,8 @@ function CommitmentRevealRow({
   Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold' }>
   mobile?: boolean
 }) {
-  // commitments block starts at progress ~0.82, rows stagger by 0.06
-  const start = 0.82 + index * 0.06
-  const end = start + 0.09
+  const start = COMMIT_ROWS_START + index * COMMIT_ROW_STAGGER
+  const end = start + COMMIT_ROW_DURATION
 
   const opacity = useTransform(progress, [start, end], [0, 1])
   const y = useTransform(progress, [start, end], [28, 0])
@@ -304,7 +307,6 @@ function CommitmentRevealRow({
   )
 }
 
-// ─── Full presentation layer (used by both mobile + desktop) ───────────────
 function SystemPresentation({
   progress,
   mobile = false,
@@ -312,11 +314,10 @@ function SystemPresentation({
   progress: MotionValue<number>
   mobile?: boolean
 }) {
-  // "Our commitments" block snaps in at ~0.76 with blur
-  const commitmentsOpacity = useTransform(progress, [0.74, 0.8], [0, 1])
-  const commitmentsY = useTransform(progress, [0.74, 0.8], [48, 0])
-  const commitmentsScale = useTransform(progress, [0.74, 0.8], [0.96, 1])
-  const commitmentsBlur = useTransform(progress, [0.74, 0.8], [18, 0])
+  const commitmentsOpacity = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0, 1])
+  const commitmentsY = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [48, 0])
+  const commitmentsScale = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0.96, 1])
+  const commitmentsBlur = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [18, 0])
   const commitmentsFilter = useMotionTemplate`blur(${commitmentsBlur}px)`
 
   return (
@@ -330,7 +331,6 @@ function SystemPresentation({
           justifyContent: 'center',
         }}
       >
-        {/* Slide 0: One clear system. */}
         <SystemSlide
           progress={progress}
           index={0}
@@ -339,7 +339,6 @@ function SystemPresentation({
           mobile={mobile}
         />
 
-        {/* Slides 1-3: release modes */}
         {releaseModes.map((mode, i) => (
           <SystemSlide
             key={mode.eyebrow}
@@ -352,7 +351,6 @@ function SystemPresentation({
           />
         ))}
 
-        {/* Our commitments block — appears suddenly then rows stagger in */}
         <motion.div
           style={{
             position: 'absolute',
@@ -405,7 +403,6 @@ function SystemPresentation({
   )
 }
 
-// ─── Mobile ────────────────────────────────────────────────────────────────
 function MobileStory() {
   const presentationRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -423,7 +420,6 @@ function MobileStory() {
         }}
       />
 
-      {/* Hero screen */}
       <div className="relative min-h-[100dvh] px-5 pb-10 pt-[80px]">
         <div className="flex min-h-[calc(100dvh-110px)] flex-col justify-center">
           <motion.p
@@ -464,7 +460,6 @@ function MobileStory() {
         </div>
       </div>
 
-      {/* Scroll-driven presentation */}
       <div
         id="mobile-presentation"
         ref={presentationRef}
@@ -490,7 +485,6 @@ function MobileStory() {
   )
 }
 
-// ─── Desktop ───────────────────────────────────────────────────────────────
 function DesktopStory() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -509,19 +503,16 @@ function DesktopStory() {
   const contentOpacity = useTransform(scrollYProgress, [0.22, 0.3], [0, 1])
   const contentY = useTransform(scrollYProgress, [0.22, 0.3], [24, 0])
 
-  // presentation progress runs from when content fades in → end of scroll
   const presentationProgress = useTransform(scrollYProgress, [0.26, 0.96], [0, 1])
 
   return (
     <div ref={containerRef} className="relative hidden md:block" style={{ height: '580vh' }}>
       <div className="sticky top-0 h-dvh overflow-hidden">
 
-        {/* 3D scene */}
         <motion.div className="absolute inset-0 z-0" style={{ opacity: sceneOpacity }}>
           <Scene mouseX={0} mouseY={0} />
         </motion.div>
 
-        {/* Vignette */}
         <div
           className="absolute inset-0 z-10 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 25%, rgba(5,5,5,0.6) 65%, #050505 100%)' }}
@@ -531,12 +522,10 @@ function DesktopStory() {
           style={{ height: '32%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,5,0.92) 80%, #050505)' }}
         />
 
-        {/* ─── PHASE 1: Hero ─────────────────────────────────── */}
         <div className="relative z-20 flex h-full items-center">
           <div className="section-shell w-full">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '64px' }}>
 
-              {/* Left: title block */}
               <motion.div style={{ opacity: titleOpacity, y: titleY, filter: titleFilter, flex: 1, minWidth: 0 }}>
                 <motion.p
                   style={{ fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.25)', marginBottom: '22px' }}
@@ -575,7 +564,6 @@ function DesktopStory() {
                 </motion.p>
               </motion.div>
 
-              {/* Right: action cards */}
               <motion.div style={{ opacity: titleOpacity, filter: titleFilter, width: '300px', flexShrink: 0 }}>
                 <motion.div
                   style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}
@@ -607,7 +595,6 @@ function DesktopStory() {
           </div>
         </div>
 
-        {/* ─── PHASE 2: Scroll presentation ──────────────────── */}
         <motion.div
           className="absolute inset-0 z-20"
           style={{ opacity: contentOpacity, y: contentY }}
@@ -615,7 +602,6 @@ function DesktopStory() {
           <SystemPresentation progress={presentationProgress} />
         </motion.div>
 
-        {/* Scroll arrow */}
         <motion.div
           className="absolute bottom-8 inset-x-0 z-20 flex justify-center"
           style={{ opacity: useTransform(scrollYProgress, [0, 0.06], [1, 0]) }}
