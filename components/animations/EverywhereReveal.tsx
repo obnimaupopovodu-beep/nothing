@@ -60,10 +60,8 @@ const ORBIT: { cx: number; cy: number; delay: number; ring: number; cpBias: numb
   { cx:  44, cy:  24, delay: 0.21, ring: 2, cpBias: -0.22 },
 ]
 
-// max possible distance in the ORBIT table (~52)
 const MAX_ORBIT_DIST = 52
 
-// inner (dist≈0) → divisor 40 (slow/deep), outer (dist≈52) → divisor 20 (fast/close)
 function getParallaxDivisor(cx: number, cy: number): number {
   const dist = Math.sqrt(cx * cx + cy * cy)
   return 40 - (dist / MAX_ORBIT_DIST) * 20
@@ -257,11 +255,16 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  const eyebrowOpacity = useTransform(scrollYProgress, (p) => lerp(p, T.P2_START, T.P2_END, 1, 0))
+  // eyebrow: fades P2→0, then disappears again P4→0
+  const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
+    const fadeP2 = lerp(p, T.P2_START, T.P2_END, 1, 0)
+    const fadeP4 = lerp(p, T.P4_START, T.P4_END, 0, 0)
+    return p > T.P4_START ? fadeP4 : clamp01(fadeP2)
+  })
 
   const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
-    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0)
-    const final = lerp(p, T.P4_START, T.P4_END, 0, 0)
+    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0.18)
+    const final = lerp(p, T.P4_START, T.P4_END, 0.18, 0)
     return p > T.P4_START ? final : base
   })
 
@@ -369,7 +372,7 @@ export function EverywhereReveal() {
                 userSelect: 'none', whiteSpace: 'nowrap',
               }}
             >
-              We distribute to all major platforms simultaneously&nbsp;—{' '}
+              We distribute to all major platforms simultaneously —{' '}
               <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
             </motion.p>
           </div>
