@@ -255,7 +255,6 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  // eyebrow: fades P2→0, then disappears again P4→0
   const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
     const fadeP2 = lerp(p, T.P2_START, T.P2_END, 1, 0)
     const fadeP4 = lerp(p, T.P4_START, T.P4_END, 0, 0)
@@ -273,9 +272,19 @@ export function EverywhereReveal() {
     clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
   )
 
-  const bodyOpacity = useTransform(scrollYProgress, (p) =>
-    clamp01(lerp(p, T.P3_END, T.P4_START, 0, 1))
-  )
+  // body text: fade-in at P3_END→P4_START+0.08, fade-out at P4_END-0.06→P4_END
+  const bodyOpacity = useTransform(scrollYProgress, (p) => {
+    const fadeIn  = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
+    const fadeOut = clamp01(lerp(p, T.P4_END - 0.06, T.P4_END, 1, 0))
+    return Math.min(fadeIn, fadeOut)
+  })
+
+  // body text: slides up 14px on fade-in, then back down on fade-out
+  const bodyY = useTransform(scrollYProgress, (p) => {
+    const slideIn  = lerp(p, T.P3_END, T.P4_START + 0.08, 14, 0)
+    const slideOut = lerp(p, T.P4_END - 0.06, T.P4_END, 0, -10)
+    return p > T.P4_END - 0.06 ? slideOut : slideIn
+  })
 
   if (reducedMotion) {
     return (
@@ -365,6 +374,7 @@ export function EverywhereReveal() {
                 position: 'absolute', top: '50%', left: '50%',
                 translateX: '-50%', translateY: '-50%',
                 opacity: bodyOpacity,
+                y: bodyY,
                 fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)', fontWeight: 300,
                 color: 'rgba(255,255,255,0.32)', letterSpacing: '0.01em',
                 lineHeight: 1.75, margin: 0,
