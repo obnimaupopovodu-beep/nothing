@@ -263,8 +263,8 @@ export function EverywhereReveal() {
   })
 
   const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
-    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0.18)
-    const final = lerp(p, T.P4_START, T.P4_END, 0.18, 0)
+    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0)
+    const final = lerp(p, T.P4_START, T.P4_END, 0, 0)
     return p > T.P4_START ? final : base
   })
 
