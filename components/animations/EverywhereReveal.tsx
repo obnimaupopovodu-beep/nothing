@@ -266,7 +266,7 @@ export function EverywhereReveal() {
 
   // eyebrow: same rhythm — fades IN 0→P1_END alongside everywhere, then OUT P2_START→P2_END
   const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
-    const fadeIn  = clamp01(lerp(p, 0.0, T.P1_END, 0, 1))
+    const fadeIn  = clamp01(lerp(p, 0.12, T.P1_END, 1, 1))
     const fadeOut = clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
     return p <= T.P1_END ? fadeIn : fadeOut
   })
