@@ -15,14 +15,14 @@ import {
 import { useEffect, useRef, useState } from 'react'
 
 const T = {
-  P1_END:      0.15,
+  P1_END:      0.30,
   P2_START:    0.12,
-  P2_END:      0.15,
-  ICONS_START: 0.14,
-  P3_START:    0.20,
-  P3_END:      0.30,
-  P4_START:    0.20,
-  P4_END:      0.40,
+  P2_END:      0.30,
+  ICONS_START: 0.28,
+  P3_START:    0.28,
+  P3_END:      0.50,
+  P4_START:    0.40,
+  P4_END:      1.50,
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
@@ -302,7 +302,7 @@ export function EverywhereReveal() {
   const visiblePlatforms = platforms.slice(0, Math.min(platforms.length, ORBIT.length))
 
   return (
-    <div ref={containerRef} style={{ height: '320vh', position: 'relative' }}>
+    <div ref={containerRef} style={{ height: '140vh', position: 'relative' }}>
       <div style={{
         position: 'sticky', top: 0, height: '100vh',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
