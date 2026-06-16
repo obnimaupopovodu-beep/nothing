@@ -18,6 +18,8 @@ const T = {
   P1_END:   0.12,
   P2_START: 0.12,
   P2_END:   0.38,
+  // Icons start flying out earlier — before P2 fully ends
+  ICONS_START: 0.20,
   P3_START: 0.38,
   P3_END:   0.72,
   P4_START: 0.72,
@@ -87,8 +89,9 @@ function PlatformNode({
   vw: number
   vh: number
 }) {
-  const P3_SPAN = T.P3_END - T.P3_START
-  const activateAt = T.P3_START + orbit.delay * P3_SPAN * 0.8
+  // Icons span from ICONS_START to P3_END, using orbit.delay to stagger
+  const ICONS_SPAN = T.P3_END - T.ICONS_START
+  const activateAt = T.ICONS_START + orbit.delay * ICONS_SPAN * 0.6
   const fullyAt    = activateAt + 0.06
 
   const opacity = useTransform(scrollP, (p) => {
@@ -255,16 +258,16 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
-    const fadeP2 = lerp(p, T.P2_START, T.P2_END, 1, 0)
-    const fadeP4 = lerp(p, T.P4_START, T.P4_END, 0, 0)
-    return p > T.P4_START ? fadeP4 : clamp01(fadeP2)
+  // 'everywhere' fades out in sync with letterSpacing growth (0 → P1_END)
+  // then stays invisible until P4 where it was already 0
+  const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
+    if (p <= T.P1_END) return clamp01(lerp(p, 0.0, T.P1_END, 1, 0))
+    return 0
   })
 
-  const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
-    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0)
-    const final = lerp(p, T.P4_START, T.P4_END, 0, 0)
-    return p > T.P4_START ? final : base
+  const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
+    const fadeP2 = lerp(p, T.P2_START, T.P2_END, 1, 0)
+    return p > T.P2_START ? clamp01(fadeP2) : 1
   })
 
   const glowOpacity = useTransform(scrollYProgress, (p) =>
@@ -279,7 +282,6 @@ export function EverywhereReveal() {
     return Math.min(fadeIn, fadeOut)
   })
 
-  // body text: slides up 14px on fade-in, then back down on fade-out
   const bodyY = useTransform(scrollYProgress, (p) => {
     const slideIn  = lerp(p, T.P3_END, T.P4_START + 0.08, 14, 0)
     const slideOut = lerp(p, T.P4_END - 0.06, T.P4_END, 0, -10)
