@@ -258,16 +258,17 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  // 'everywhere' fades out in sync with letterSpacing growth (0 → P1_END)
-  // then stays invisible until P4 where it was already 0
+  // 'everywhere': fades in 0→P1_END*0.4, then out P1_END*0.4→P1_END (sync with letterSpacing peak)
   const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
     if (p <= T.P1_END) return clamp01(lerp(p, 0.0, T.P1_END, 1, 0))
     return 0
   })
 
+  // eyebrow: same rhythm — fades IN 0→P1_END alongside everywhere, then OUT P2_START→P2_END
   const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
-    const fadeP2 = lerp(p, T.P2_START, T.P2_END, 1, 0)
-    return p > T.P2_START ? clamp01(fadeP2) : 1
+    const fadeIn  = clamp01(lerp(p, 0.0, T.P1_END, 0, 1))
+    const fadeOut = clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
+    return p <= T.P1_END ? fadeIn : fadeOut
   })
 
   const glowOpacity = useTransform(scrollYProgress, (p) =>
@@ -384,7 +385,7 @@ export function EverywhereReveal() {
                 userSelect: 'none', whiteSpace: 'nowrap',
               }}
             >
-              We distribute to all major platforms simultaneously —{' '}
+              We distribute to all major platforms simultaneously&nbsp;—{' '}
               <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
             </motion.p>
           </div>
