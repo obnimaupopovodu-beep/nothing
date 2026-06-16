@@ -14,15 +14,26 @@ import {
 } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
+// const T = {
+//   P1_END:      0.30,
+//   P2_START:    0.12,
+//   P2_END:      0.30,
+//   ICONS_START: 0.28,
+//   P3_START:    0.28,
+//   P3_END:      0.35,
+//   P4_START:    0.40,
+//   P4_END:      1.50,
+// } as const
+
 const T = {
-  P1_END:      0.30,
+  P1_END:      0.32,   // заголовок уходит чуть позже
   P2_START:    0.12,
-  P2_END:      0.30,
-  ICONS_START: 0.28,
-  P3_START:    0.28,
-  P3_END:      0.50,
-  P4_START:    0.40,
-  P4_END:      1.50,
+  P2_END:      0.32,   // "everywhere" задерживается дольше
+  ICONS_START: 0.22,   // иконки начинают раньше, чтобы успеть до P2_END
+  P3_START:    0.32,
+  P3_END:      0.42,   // плавный переход к body text (было 0.35 — слишком резко)
+  P4_START:    0.46,   // небольшая пауза перед counter
+  P4_END:      0.82,   // counter считает не торопясь (было 1.50 — это почти весь скролл)
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
@@ -277,10 +288,9 @@ export function EverywhereReveal() {
   })
 
   const bodyY = useTransform(scrollYProgress, (p) => {
-    const slideIn  = lerp(p, T.P3_END, T.P4_START + 0.08, 14, 0)
-    const slideOut = lerp(p, T.P4_END - 0.06, T.P4_END, 0, -10)
-    return p > T.P4_END - 0.06 ? slideOut : slideIn
-  })
+  const progress = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
+  return `${(1 - progress) * 20}px`  // снизу 20px → на место
+})
 
   if (reducedMotion) {
     return (
