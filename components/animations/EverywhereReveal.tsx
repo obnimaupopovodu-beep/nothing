@@ -8,20 +8,24 @@ import {
   useReducedMotion,
   useScroll,
   useTransform,
+  MotionValue,
 } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
+// ─── scroll timeline ───────────────────────────────────────────────────────
 const T = {
-  HOLD_END:        0.08,
-  STRETCH_END:     0.50,
-  BLUR_START:      0.20,
-  BLUR_PEAK:       0.42,
-  TEXT_FADE_END:   0.65,
-  BANDS_IN_START:  0.25,
-  BODY_IN_START:   0.50,
+  // Phase 1 – typography hero
+  P1_END:     0.12,
+  // Phase 2 – signal emerges from word
+  P2_START:   0.12,
+  P2_END:     0.38,
+  // Phase 3 – broadcast expansion
+  P3_START:   0.38,
+  P3_END:     0.72,
+  // Phase 4 – resolution
+  P4_START:   0.72,
+  P4_END:     0.92,
 } as const
-
-const SPEED = 60
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
   if (p <= a) return from
@@ -29,156 +33,355 @@ function lerp(p: number, a: number, b: number, from: number, to: number) {
   return from + ((p - a) / (b - a)) * (to - from)
 }
 
-function useAdaptive() {
-  const [v, setV] = useState({ icon: 32, inner: 16, maxSpacing: '0.55em' })
+function clamp01(v: number) { return Math.max(0, Math.min(1, v) ) }
+
+// ─── orbital layout ────────────────────────────────────────────────────────
+// Art-directed positions: platforms radiate in controlled arcs
+// (cx, cy) = offset from center in vw/vh units; delay = stagger
+const ORBIT: { cx: number; cy: number; delay: number; ring: number }[] = [
+  // ring 0 – inner halo, 5 platforms
+  { cx: -22, cy: -8,  delay: 0.00, ring: 0 },
+  { cx: -14, cy:  9,  delay: 0.04, ring: 0 },
+  { cx:   0, cy: 14,  delay: 0.06, ring: 0 },
+  { cx:  14, cy:  9,  delay: 0.04, ring: 0 },
+  { cx:  22, cy: -8,  delay: 0.00, ring: 0 },
+  // ring 1 – outer arc, 7 platforms
+  { cx: -34, cy: -16, delay: 0.10, ring: 1 },
+  { cx: -26, cy:  18, delay: 0.13, ring: 1 },
+  { cx: -10, cy:  26, delay: 0.16, ring: 1 },
+  { cx:   10, cy: 26, delay: 0.16, ring: 1 },
+  { cx:  26, cy:  18, delay: 0.13, ring: 1 },
+  { cx:  34, cy: -16, delay: 0.10, ring: 1 },
+  { cx:   0, cy: -22, delay: 0.08, ring: 1 },
+  // ring 2 – far scatter, remaining
+  { cx: -42, cy:  -4, delay: 0.18, ring: 2 },
+  { cx: -36, cy:  28, delay: 0.20, ring: 2 },
+  { cx:  -8, cy:  34, delay: 0.22, ring: 2 },
+  { cx:   8, cy:  34, delay: 0.22, ring: 2 },
+  { cx:  36, cy:  28, delay: 0.20, ring: 2 },
+  { cx:  42, cy:  -4, delay: 0.18, ring: 2 },
+  { cx:  20, cy: -28, delay: 0.16, ring: 2 },
+  { cx: -20, cy: -28, delay: 0.16, ring: 2 },
+  { cx:  48, cy:  10, delay: 0.24, ring: 2 },
+  { cx: -48, cy:  10, delay: 0.24, ring: 2 },
+  { cx:   0, cy: -32, delay: 0.14, ring: 2 },
+  { cx:  30, cy: -20, delay: 0.17, ring: 2 },
+  { cx: -30, cy: -20, delay: 0.17, ring: 2 },
+  { cx:  44, cy:  24, delay: 0.21, ring: 2 },
+]
+
+// ─── SVG signal paths ──────────────────────────────────────────────────────
+// Each platform gets a bezier path from center to its orbital position
+function makePath(cx: number, cy: number, vw: number, vh: number) {
+  const ox = (cx / 100) * vw
+  const oy = (cy / 100) * vh
+  // control point bends the path slightly for organic feel
+  const cpx = ox * 0.45 + (Math.random() - 0.5) * 40
+  const cpy = oy * 0.45 + (Math.random() - 0.5) * 40
+  return `M 0 0 Q ${cpx} ${cpy} ${ox} ${oy}`
+}
+
+// ─── PlatformNode ──────────────────────────────────────────────────────────
+function PlatformNode({
+  platform, orbit, scrollP, index, vw, vh,
+}: {
+  platform: typeof platforms[0]
+  orbit: typeof ORBIT[0]
+  scrollP: MotionValue<number>
+  index: number
+  vw: number
+  vh: number
+}) {
+  // Each platform activates at a staggered point in P3
+  const P3_SPAN = T.P3_END - T.P3_START
+  const activateAt = T.P3_START + orbit.delay * P3_SPAN * 0.8
+  const fullyAt    = activateAt + 0.06
+
+  const opacity = useTransform(scrollP, (p) => {
+    const fadeIn  = lerp(p, activateAt, fullyAt, 0, 1)
+    // Phase 4: converge – platform fades slightly but stays
+    const fadeP4  = lerp(p, T.P4_START, T.P4_END, 1, 0.7)
+    return clamp01(fadeIn) * (p > T.P4_START ? fadeP4 : 1)
+  })
+
+  // Position: starts at (0,0) near the word, moves to orbital position
+  const ox = (orbit.cx / 100) * vw
+  const oy = (orbit.cy / 100) * vh
+
+  const x = useTransform(scrollP, (p) => {
+    const t = clamp01(lerp(p, activateAt, fullyAt + 0.02, 0, 1))
+    // easeOutQuint
+    const e = 1 - Math.pow(1 - t, 5)
+    return e * ox
+  })
+  const y = useTransform(scrollP, (p) => {
+    const t = clamp01(lerp(p, activateAt, fullyAt + 0.02, 0, 1))
+    const e = 1 - Math.pow(1 - t, 5)
+    return e * oy
+  })
+
+  const scale = useTransform(scrollP, (p) =>
+    lerp(p, activateAt, fullyAt, 0.4, 1)
+  )
+
+  const blur = useTransform(scrollP, (p) =>
+    lerp(p, activateAt, fullyAt, 6, 0)
+  )
+  const filter = useMotionTemplate`blur(${blur}px)`
+
+  // Signal line opacity: appears just before the node
+  const lineOpacity = useTransform(scrollP, (p) => {
+    const fadeIn = lerp(p, activateAt - 0.04, activateAt + 0.02, 0, 0.35)
+    const fadeOut = lerp(p, T.P4_START, T.P4_END, 0.35, 0)
+    return p > T.P4_START ? fadeOut : clamp01(fadeIn)
+  })
+
+  const path = useMemo(() => makePath(orbit.cx, orbit.cy, vw, vh), [orbit.cx, orbit.cy, vw, vh])
+
+  const iconSize = orbit.ring === 0 ? 28 : orbit.ring === 1 ? 24 : 20
+  const innerSize = orbit.ring === 0 ? 14 : orbit.ring === 1 ? 12 : 10
+
+  return (
+    <>
+      {/* signal path line */}
+      <svg
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          overflow: 'visible',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+        width="0"
+        height="0"
+        aria-hidden
+      >
+        <motion.path
+          d={path}
+          stroke="rgba(255,255,255,0.6)"
+          strokeWidth="0.5"
+          fill="none"
+          strokeDasharray="3 6"
+          style={{ opacity: lineOpacity }}
+        />
+      </svg>
+
+      {/* platform icon node */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          x,
+          y,
+          opacity,
+          scale,
+          filter,
+          translateX: '-50%',
+          translateY: '-50%',
+          zIndex: 3,
+        }}
+      >
+        <motion.a
+          href={platform.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={platform.name}
+          title={platform.name}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: iconSize,
+            height: iconSize,
+            borderRadius: Math.round(iconSize * 0.24),
+            background: `${platform.squareBg}22`, // subtle tinted bg
+            border: '1px solid rgba(255,255,255,0.10)',
+            flexShrink: 0,
+            textDecoration: 'none',
+            backdropFilter: 'blur(4px)',
+            transition: 'background 200ms ease, border-color 200ms ease, transform 200ms ease',
+            cursor: 'pointer',
+          }}
+          whileHover={{
+            background: `${platform.squareBg}55`,
+            borderColor: `${platform.squareBg}88`,
+            scale: 1.18,
+          }}
+        >
+          <PlatformIcon platform={platform} size={innerSize} color="rgba(255,255,255,0.85)" />
+        </motion.a>
+      </motion.div>
+    </>
+  )
+}
+
+// ─── PulseRing ─────────────────────────────────────────────────────────────
+// Expanding ring emanating from the word during Phase 2
+function PulseRing({ scrollP, delay }: { scrollP: MotionValue<number>; delay: number }) {
+  const opacity = useTransform(scrollP, (p) => {
+    const t = lerp(p, T.P2_START + delay, T.P2_END, 0, 1)
+    // ring pulses: rises and fades
+    if (t < 0.3) return t / 0.3 * 0.5
+    if (t < 0.7) return 0.5
+    return (1 - (t - 0.7) / 0.3) * 0.5
+  })
+  const scale = useTransform(scrollP, (p) =>
+    1 + lerp(p, T.P2_START + delay, T.P2_END + 0.1, 0, 2.8)
+  )
+
+  return (
+    <motion.div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        translateX: '-50%',
+        translateY: '-50%',
+        width: '38vw',
+        height: '10vw',
+        borderRadius: '50%',
+        border: '1px solid rgba(255,255,255,0.18)',
+        opacity,
+        scale,
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    />
+  )
+}
+
+// ─── CounterDisplay ────────────────────────────────────────────────────────
+function CounterDisplay({ scrollP }: { scrollP: MotionValue<number> }) {
+  const [count, setCount] = useState(0)
+  const opacity = useTransform(scrollP, (p) =>
+    lerp(p, T.P4_START + 0.05, T.P4_START + 0.18, 0, 1)
+  )
+
   useEffect(() => {
-    const fn = () => {
-      const w = window.innerWidth
-      if (w < 480)       setV({ icon: 24, inner: 12, maxSpacing: '0.2em' })
-      else if (w < 768)  setV({ icon: 28, inner: 14, maxSpacing: '0.35em' })
-      else               setV({ icon: 32, inner: 16, maxSpacing: '0.55em' })
-    }
+    return scrollP.on('change', (p) => {
+      const t = clamp01(lerp(p, T.P4_START, T.P4_END, 0, 1))
+      setCount(Math.round(t * 150))
+    })
+  }, [scrollP])
+
+  return (
+    <motion.div
+      style={{
+        position: 'absolute',
+        bottom: 'clamp(60px, 8vh, 100px)',
+        left: '50%',
+        translateX: '-50%',
+        opacity,
+        zIndex: 5,
+        textAlign: 'center',
+        pointerEvents: 'none',
+      }}
+    >
+      <div style={{
+        fontSize: 'clamp(1.8rem, 3.5vw, 3rem)',
+        fontWeight: 200,
+        letterSpacing: '-0.04em',
+        color: '#f0f0f0',
+        lineHeight: 1,
+        fontVariantNumeric: 'tabular-nums',
+      }}>
+        {count}<span style={{ fontSize: '0.5em', opacity: 0.5, marginLeft: '0.1em' }}>+</span>
+      </div>
+      <div style={{
+        fontSize: 'clamp(0.6rem, 0.85vw, 0.75rem)',
+        fontWeight: 400,
+        letterSpacing: '0.22em',
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.30)',
+        marginTop: '8px',
+      }}>
+        platforms worldwide
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────
+export function EverywhereReveal() {
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
+
+  const [vw, setVw] = useState(1280)
+  const [vh, setVh] = useState(800)
+  useEffect(() => {
+    const fn = () => { setVw(window.innerWidth); setVh(window.innerHeight) }
     fn()
     window.addEventListener('resize', fn)
     return () => window.removeEventListener('resize', fn)
   }, [])
-  return v
-}
-
-function IconBadge({ platform, size, inner }: {
-  platform: typeof platforms[0]
-  size: number
-  inner: number
-}) {
-  return (
-    <a
-      href={platform.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Listen on ${platform.name}`}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: size,
-        height: size,
-        borderRadius: Math.round(size * 0.22),
-        background: platform.squareBg,
-        border: platform.squareBg === '#000000' ? '1px solid rgba(255,255,255,0.18)' : 'none',
-        flexShrink: 0,
-        textDecoration: 'none',
-        transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1)',
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.13)' }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}
-    >
-      <PlatformIcon platform={platform} size={inner} color="#ffffff" />
-    </a>
-  )
-}
-
-function Band({ direction, iconSize, iconInner }: {
-  direction: 'left' | 'right'
-  iconSize: number
-  iconInner: number
-}) {
-  const GAP = 12
-  const list = direction === 'left' ? platforms : [...platforms].reverse()
-  const doubled = [...list, ...list]
-
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [halfW, setHalfW] = useState(0)
-
-  useEffect(() => {
-    if (!trackRef.current) return
-    const items = Array.from(trackRef.current.children) as HTMLElement[]
-    let w = 0
-    for (let i = 0; i < list.length; i++) {
-      w += (items[i]?.getBoundingClientRect().width ?? iconSize) + GAP
-    }
-    setHalfW(w)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [iconSize])
-
-  const duration = halfW > 0 ? halfW / SPEED : 18
-  const animName = direction === 'left' ? 'bandLeft' : 'bandRight'
-
-  const maskImage =
-    direction === 'left'
-      ? 'linear-gradient(to left,  #050505 0%, transparent 30%)'
-      : 'linear-gradient(to right, #050505 0%, transparent 30%)'
-
-  return (
-    <div style={{
-      width: '50%',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      height: '100%',
-      WebkitMaskImage: maskImage,
-      maskImage,
-    }}>
-      <div
-        ref={trackRef}
-        style={{
-          display: 'flex',
-          gap: GAP,
-          willChange: 'transform',
-          animation: halfW > 0 ? `${animName} ${duration}s linear infinite` : 'none',
-        }}
-      >
-        {doubled.map((p, i) => (
-          <IconBadge key={i} platform={p} size={iconSize} inner={iconInner} />
-        ))}
-      </div>
-      <style>{`
-        @keyframes bandLeft  { from { transform: translateX(0px); }        to { transform: translateX(-${halfW}px); } }
-        @keyframes bandRight { from { transform: translateX(-${halfW}px); } to { transform: translateX(0px); } }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes bandLeft  { from, to { transform: none; } }
-          @keyframes bandRight { from, to { transform: none; } }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-export function EverywhereReveal() {
-  const containerRef  = useRef<HTMLDivElement>(null)
-  const reducedMotion = useReducedMotion()
-  const { icon, inner, maxSpacing } = useAdaptive()
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
+  // typography motion
+  const [maxSpacing] = useState('0.55em')
   const maxSpacingNum = parseFloat(maxSpacing)
   const letterSpacingEm = useMotionTemplate`${useTransform(
     scrollYProgress,
-    (p) => ((-0.03 + lerp(p, T.HOLD_END, T.STRETCH_END, 0, 1) * (maxSpacingNum + 0.03)).toFixed(4))
+    (p) => ((-0.03 + lerp(p, 0.0, T.P1_END, 0, 1) * (maxSpacingNum + 0.03)).toFixed(4))
   )}em`
 
-  const blurPx = useTransform(scrollYProgress, (p) => {
-    if (reducedMotion) return 0
-    if (p <= T.BLUR_START)    return 0
-    if (p <= T.BLUR_PEAK)     return lerp(p, T.BLUR_START, T.BLUR_PEAK, 0, 14)
-    if (p <= T.TEXT_FADE_END) return lerp(p, T.BLUR_PEAK, T.TEXT_FADE_END, 14, 0)
-    return 0
-  })
-  const textFilter  = useMotionTemplate`blur(${blurPx}px)`
-  const textOpacity = useTransform(scrollYProgress,
-    (p) => lerp(p, T.BLUR_START, T.TEXT_FADE_END, 1, 0)
+  // Phase 2: word starts to pulse/dim as signal takes over
+  const wordOpacity = useTransform(scrollYProgress,
+    (p) => lerp(p, T.P2_START, T.P3_START, 1, 0.18)
   )
-  const bandsOpacity = useTransform(scrollYProgress,
-    (p) => lerp(p, T.BANDS_IN_START, T.BANDS_IN_START + 0.08, 0, 1)
-  )
-  const bodyOpacity = useTransform(scrollYProgress,
-    (p) => lerp(p, T.BODY_IN_START, T.BODY_IN_START + 0.12, 0, 1)
+  const eyebrowOpacity = useTransform(scrollYProgress,
+    (p) => lerp(p, T.P2_START, T.P2_END, 1, 0)
   )
 
+  // "We distribute" text
+  const bodyOpacity = useTransform(scrollYProgress,
+    (p) => clamp01(lerp(p, T.P3_END, T.P4_START, 0, 1))
+  )
+
+  // Phase 4: word fades fully
+  const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
+    const base = lerp(p, T.P2_START, T.P3_START, 1, 0.18)
+    const final = lerp(p, T.P4_START, T.P4_END, 0.18, 0)
+    return p > T.P4_START ? final : base
+  })
+
+  // Glow halo around word in P2
+  const glowOpacity = useTransform(scrollYProgress,
+    (p) => clamp01(lerp(p, T.P2_START, T.P2_END, 0, 1)) *
+           clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
+  )
+
+  if (reducedMotion) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', background: '#050505', gap: 24 }}>
+        <span style={{ fontSize: 'clamp(0.6rem,0.9vw,0.75rem)', fontWeight: 500,
+          letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)' }}>
+          Distribution
+        </span>
+        <span style={{ fontSize: 'clamp(1.4rem,3.8vw,3.2rem)', fontWeight: 300,
+          color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em' }}>
+          Your audience is
+        </span>
+        <span style={{ fontSize: 'clamp(2rem,7vw,6rem)', fontWeight: 300,
+          color: '#f0f0f0', letterSpacing: '0.1em' }}>everywhere</span>
+        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', maxWidth: '44ch' }}>
+          We distribute to all major platforms simultaneously — day-and-date worldwide.
+        </p>
+      </div>
+    )
+  }
+
+  const visiblePlatforms = platforms.slice(0, Math.min(platforms.length, ORBIT.length))
+
   return (
-    <div ref={containerRef} style={{ height: '230vh', position: 'relative' }}>
+    <div ref={containerRef} style={{ height: '320vh', position: 'relative' }}>
       <div
         style={{
           position: 'sticky',
@@ -191,28 +394,66 @@ export function EverywhereReveal() {
           overflow: 'hidden',
         }}
       >
-        {/*
-          Single flex column — all layers share the same vertical rhythm.
-          "everywhere" and the bands row occupy the same slot via position:absolute stacking.
-        */}
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 'clamp(10px, 1.6vw, 22px)',
-          textAlign: 'center',
-          userSelect: 'none',
-          padding: '0 clamp(16px, 5vw, 48px)',
-          width: '100%',
-        }}>
+        {/* ── glow halo ── */}
+        <motion.div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            translateX: '-50%',
+            translateY: '-50%',
+            width: 'clamp(200px, 40vw, 600px)',
+            height: 'clamp(60px, 12vw, 160px)',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 70%)',
+            opacity: glowOpacity,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
 
-          {/* eyebrow + subtitle — fade out with blur */}
+        {/* ── pulse rings (Phase 2) ── */}
+        <PulseRing scrollP={scrollYProgress} delay={0} />
+        <PulseRing scrollP={scrollYProgress} delay={0.06} />
+        <PulseRing scrollP={scrollYProgress} delay={0.12} />
+
+        {/* ── platform nodes + signal lines (Phase 3) ── */}
+        {visiblePlatforms.map((platform, i) => (
+          <PlatformNode
+            key={platform.name}
+            platform={platform}
+            orbit={ORBIT[i]}
+            scrollP={scrollYProgress}
+            index={i}
+            vw={vw}
+            vh={vh}
+          />
+        ))}
+
+        {/* ── typography ── */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 'clamp(8px, 1.2vw, 18px)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {/* eyebrow + subtitle */}
           <motion.div
-            style={{ opacity: textOpacity, filter: textFilter, pointerEvents: 'none',
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 'clamp(6px, 1vw, 12px)' }}
+            style={{
+              opacity: eyebrowOpacity,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 'clamp(6px, 0.8vw, 12px)',
+            }}
           >
             <span style={{
               fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)',
@@ -220,104 +461,62 @@ export function EverywhereReveal() {
               letterSpacing: '0.20em',
               textTransform: 'uppercase',
               color: 'rgba(255,255,255,0.30)',
-            }}>
-              Distribution
-            </span>
+            }}>Distribution</span>
             <span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)',
               fontWeight: 300,
               color: 'rgba(255,255,255,0.45)',
               letterSpacing: '-0.02em',
               lineHeight: 1.1,
-            }}>
-              Your audience is
-            </span>
+            }}>Your audience is</span>
           </motion.div>
 
-          {/*
-            "slot" — fixed height matches the everywhere text.
-            Both the word and the bands live here, absolutely stacked.
-          */}
-          <div style={{
-            position: 'relative',
-            width: '100%',
-            height: 'clamp(2rem, 7vw, 6rem)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            {/* everywhere — fades out */}
-            <motion.span
-              aria-label="everywhere"
-              style={{
-                position: 'absolute',
-                fontSize: 'clamp(2rem, 7vw, 6rem)',
-                fontWeight: 300,
-                letterSpacing: letterSpacingEm,
-                color: '#f0f0f0',
-                lineHeight: 1,
-                whiteSpace: 'nowrap',
-                opacity: textOpacity,
-                filter: textFilter,
-                pointerEvents: 'none',
-              }}
-            >
-              everywhere
-            </motion.span>
-
-            {/* bands — fade in over text, same vertical slot */}
-            <motion.div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                opacity: bandsOpacity,
-                pointerEvents: 'none',
-                overflow: 'hidden',
-              }}
-            >
-              {/* centre divider */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: 1,
-                  height: `${icon + 20}px`,
-                  background:
-                    'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.14) 25%, rgba(255,255,255,0.14) 75%, transparent 100%)',
-                  zIndex: 3,
-                  pointerEvents: 'none',
-                }}
-              />
-              <Band direction="left"  iconSize={icon} iconInner={inner} />
-              <Band direction="right" iconSize={icon} iconInner={inner} />
-            </motion.div>
-          </div>
-
-          {/* body copy — static, fades in after bands, never blurs */}
-          <motion.p
+          {/* hero word */}
+          <motion.span
+            aria-label="everywhere"
             style={{
-              opacity: bodyOpacity,
-              fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
+              fontSize: 'clamp(2rem, 7vw, 6rem)',
               fontWeight: 300,
-              color: 'rgba(255,255,255,0.32)',
-              letterSpacing: '0.01em',
-              lineHeight: 1.75,
-              maxWidth: '44ch',
-              margin: 0,
-              textAlign: 'center',
-              pointerEvents: 'none',
+              letterSpacing: letterSpacingEm,
+              color: '#f0f0f0',
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              display: 'block',
+              opacity: wordFinalOpacity,
             }}
           >
-            We distribute to all major platforms simultaneously —{' '}
-            <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
-          </motion.p>
-
+            everywhere
+          </motion.span>
         </div>
+
+        {/* ── body copy (Phase 3 → 4) ── */}
+        <motion.p
+          style={{
+            position: 'absolute',
+            bottom: 'clamp(100px, 14vh, 160px)',
+            left: '50%',
+            translateX: '-50%',
+            opacity: bodyOpacity,
+            zIndex: 4,
+            fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)',
+            fontWeight: 300,
+            color: 'rgba(255,255,255,0.32)',
+            letterSpacing: '0.01em',
+            lineHeight: 1.75,
+            maxWidth: '44ch',
+            margin: 0,
+            textAlign: 'center',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          We distribute to all major platforms simultaneously —{' '}
+          <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
+        </motion.p>
+
+        {/* ── counter (Phase 4) ── */}
+        <CounterDisplay scrollP={scrollYProgress} />
       </div>
     </div>
   )
