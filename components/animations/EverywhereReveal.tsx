@@ -12,7 +12,6 @@ import {
 } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
-// ── scroll timeline ──────────────────────────────────────────────────────────
 const T = {
   P1_END:   0.12,
   P2_START: 0.12,
@@ -30,7 +29,6 @@ function lerp(p: number, a: number, b: number, from: number, to: number) {
 }
 function clamp01(v: number) { return Math.max(0, Math.min(1, v)) }
 
-// ── orbital layout ───────────────────────────────────────────────────────────
 const ORBIT: { cx: number; cy: number; delay: number; ring: number; cpBias: number }[] = [
   { cx: -22, cy:  -8, delay: 0.00, ring: 0, cpBias:  0.12 },
   { cx: -14, cy:   9, delay: 0.04, ring: 0, cpBias: -0.08 },
@@ -60,17 +58,14 @@ const ORBIT: { cx: number; cy: number; delay: number; ring: number; cpBias: numb
   { cx:  44, cy:  24, delay: 0.21, ring: 2, cpBias: -0.22 },
 ]
 
-// Deterministic bezier path – no Math.random(), no hydration mismatch
 function makePath(cx: number, cy: number, cpBias: number, vw: number, vh: number) {
   const ox = (cx / 100) * vw
   const oy = (cy / 100) * vh
-  // control point is a stable fraction of the endpoint, offset by a fixed bias
   const cpx = ox * (0.45 + cpBias)
   const cpy = oy * (0.45 - cpBias * 0.5)
   return `M 0 0 Q ${cpx} ${cpy} ${ox} ${oy}`
 }
 
-// ── PlatformNode ─────────────────────────────────────────────────────────────
 function PlatformNode({
   platform, orbit, scrollP, vw, vh,
 }: {
@@ -113,58 +108,29 @@ function PlatformNode({
   })
 
   const path = makePath(orbit.cx, orbit.cy, orbit.cpBias, vw, vh)
-
   const iconSize  = orbit.ring === 0 ? 28 : orbit.ring === 1 ? 24 : 20
   const innerSize = orbit.ring === 0 ? 14 : orbit.ring === 1 ? 12 : 10
 
   return (
     <>
       <svg
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          overflow: 'visible', pointerEvents: 'none', zIndex: 1,
-        }}
+        style={{ position: 'absolute', top: '50%', left: '50%', overflow: 'visible', pointerEvents: 'none', zIndex: 1 }}
         width="0" height="0" aria-hidden
       >
-        <motion.path
-          d={path}
-          stroke="rgba(255,255,255,0.6)"
-          strokeWidth="0.5"
-          fill="none"
-          strokeDasharray="3 6"
-          style={{ opacity: lineOpacity }}
-        />
+        <motion.path d={path} stroke="rgba(255,255,255,0.6)" strokeWidth="0.5" fill="none" strokeDasharray="3 6" style={{ opacity: lineOpacity }} />
       </svg>
-
-      <motion.div
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          x, y, opacity, scale, filter,
-          translateX: '-50%', translateY: '-50%', zIndex: 3,
-        }}
-      >
+      <motion.div style={{ position: 'absolute', top: '50%', left: '50%', x, y, opacity, scale, filter, translateX: '-50%', translateY: '-50%', zIndex: 3 }}>
         <motion.a
-          href={platform.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={platform.name}
-          title={platform.name}
+          href={platform.href} target="_blank" rel="noopener noreferrer"
+          aria-label={platform.name} title={platform.name}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: iconSize, height: iconSize,
-            borderRadius: Math.round(iconSize * 0.24),
-            background: `${platform.squareBg}22`,
-            border: '1px solid rgba(255,255,255,0.10)',
-            flexShrink: 0, textDecoration: 'none',
-            backdropFilter: 'blur(4px)',
-            transition: 'background 200ms ease, border-color 200ms ease, transform 200ms ease',
-            cursor: 'pointer',
+            width: iconSize, height: iconSize, borderRadius: Math.round(iconSize * 0.24),
+            background: `${platform.squareBg}22`, border: '1px solid rgba(255,255,255,0.10)',
+            flexShrink: 0, textDecoration: 'none', backdropFilter: 'blur(4px)',
+            transition: 'background 200ms ease, border-color 200ms ease, transform 200ms ease', cursor: 'pointer',
           }}
-          whileHover={{
-            background: `${platform.squareBg}55`,
-            borderColor: `${platform.squareBg}88`,
-            scale: 1.18,
-          }}
+          whileHover={{ background: `${platform.squareBg}55`, borderColor: `${platform.squareBg}88`, scale: 1.18 }}
         >
           <PlatformIcon platform={platform} size={innerSize} color="rgba(255,255,255,0.85)" />
         </motion.a>
@@ -173,7 +139,6 @@ function PlatformNode({
   )
 }
 
-// ── PulseRing ─────────────────────────────────────────────────────────────────
 function PulseRing({ scrollP, delay }: { scrollP: MotionValue<number>; delay: number }) {
   const opacity = useTransform(scrollP, (p) => {
     const t = lerp(p, T.P2_START + delay, T.P2_END, 0, 1)
@@ -185,20 +150,16 @@ function PulseRing({ scrollP, delay }: { scrollP: MotionValue<number>; delay: nu
     1 + lerp(p, T.P2_START + delay, T.P2_END + 0.1, 0, 2.8)
   )
   return (
-    <motion.div
-      aria-hidden
-      style={{
-        position: 'absolute', top: '50%', left: '50%',
-        translateX: '-50%', translateY: '-50%',
-        width: '38vw', height: '10vw', borderRadius: '50%',
-        border: '1px solid rgba(255,255,255,0.18)',
-        opacity, scale, pointerEvents: 'none', zIndex: 0,
-      }}
-    />
+    <motion.div aria-hidden style={{
+      position: 'absolute', top: '50%', left: '50%',
+      translateX: '-50%', translateY: '-50%',
+      width: '38vw', height: '10vw', borderRadius: '50%',
+      border: '1px solid rgba(255,255,255,0.18)',
+      opacity, scale, pointerEvents: 'none', zIndex: 0,
+    }} />
   )
 }
 
-// ── CounterDisplay ────────────────────────────────────────────────────────────
 function CounterDisplay({ scrollP }: { scrollP: MotionValue<number> }) {
   const [count, setCount] = useState(0)
   const opacity = useTransform(scrollP, (p) =>
@@ -211,14 +172,12 @@ function CounterDisplay({ scrollP }: { scrollP: MotionValue<number> }) {
     })
   }, [scrollP])
   return (
-    <motion.div
-      style={{
-        position: 'absolute',
-        bottom: 'clamp(60px, 8vh, 100px)',
-        left: '50%', translateX: '-50%',
-        opacity, zIndex: 5, textAlign: 'center', pointerEvents: 'none',
-      }}
-    >
+    <motion.div style={{
+      position: 'absolute',
+      bottom: 'clamp(60px, 8vh, 100px)',
+      left: '50%', translateX: '-50%',
+      opacity, zIndex: 5, textAlign: 'center', pointerEvents: 'none',
+    }}>
       <div style={{
         fontSize: 'clamp(1.8rem, 3.5vw, 3rem)', fontWeight: 200,
         letterSpacing: '-0.04em', color: '#f0f0f0', lineHeight: 1,
@@ -230,14 +189,11 @@ function CounterDisplay({ scrollP }: { scrollP: MotionValue<number> }) {
         fontSize: 'clamp(0.6rem, 0.85vw, 0.75rem)', fontWeight: 400,
         letterSpacing: '0.22em', textTransform: 'uppercase',
         color: 'rgba(255,255,255,0.30)', marginTop: '8px',
-      }}>
-        platforms worldwide
-      </div>
+      }}>platforms worldwide</div>
     </motion.div>
   )
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
 export function EverywhereReveal() {
   const containerRef  = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
@@ -263,18 +219,20 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  const eyebrowOpacity = useTransform(scrollYProgress,
-    (p) => lerp(p, T.P2_START, T.P2_END, 1, 0)
-  )
+  const eyebrowOpacity = useTransform(scrollYProgress, (p) => lerp(p, T.P2_START, T.P2_END, 1, 0))
+
   const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
     const base  = lerp(p, T.P2_START, T.P3_START, 1, 0.18)
     const final = lerp(p, T.P4_START, T.P4_END, 0.18, 0)
     return p > T.P4_START ? final : base
   })
+
   const glowOpacity = useTransform(scrollYProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 0, 1)) *
     clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
   )
+
+  // body copy: appears in place of "everywhere" (center of screen)
   const bodyOpacity = useTransform(scrollYProgress, (p) =>
     clamp01(lerp(p, T.P3_END, T.P4_START, 0, 1))
   )
@@ -284,17 +242,12 @@ export function EverywhereReveal() {
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', background: '#050505', gap: 24 }}>
         <span style={{ fontSize: 'clamp(0.6rem,0.9vw,0.75rem)', fontWeight: 500,
-          letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)' }}>
-          Distribution
-        </span>
+          letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)' }}>Distribution</span>
         <span style={{ fontSize: 'clamp(1.4rem,3.8vw,3.2rem)', fontWeight: 300,
-          color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em' }}>
-          Your audience is
-        </span>
+          color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em' }}>Your audience is</span>
         <span style={{ fontSize: 'clamp(2rem,7vw,6rem)', fontWeight: 300,
           color: '#f0f0f0', letterSpacing: '0.1em' }}>everywhere</span>
-        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.35)',
-          textAlign: 'center', maxWidth: '44ch' }}>
+        <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', maxWidth: '44ch' }}>
           We distribute to all major platforms simultaneously — day-and-date worldwide.
         </p>
       </div>
@@ -328,17 +281,12 @@ export function EverywhereReveal() {
         {/* platform nodes */}
         {visiblePlatforms.map((platform, i) => (
           <PlatformNode
-            key={platform.name}
-            platform={platform}
-            orbit={ORBIT[i]}
-            scrollP={scrollYProgress}
-            index={i}
-            vw={vw}
-            vh={vh}
+            key={platform.name} platform={platform} orbit={ORBIT[i]}
+            scrollP={scrollYProgress} index={i} vw={vw} vh={vh}
           />
         ))}
 
-        {/* typography */}
+        {/* typography block: eyebrow + subtitle + hero word */}
         <div style={{
           position: 'relative', zIndex: 2,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -352,8 +300,7 @@ export function EverywhereReveal() {
           }}>
             <span style={{
               fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)', fontWeight: 500,
-              letterSpacing: '0.20em', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.30)',
+              letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)',
             }}>Distribution</span>
             <span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)', fontWeight: 300,
@@ -361,34 +308,39 @@ export function EverywhereReveal() {
             }}>Your audience is</span>
           </motion.div>
 
-          <motion.span
-            aria-label="everywhere"
-            style={{
-              fontSize: 'clamp(2rem, 7vw, 6rem)', fontWeight: 300,
-              letterSpacing: letterSpacingEm,
-              color: '#f0f0f0', lineHeight: 1,
-              whiteSpace: 'nowrap', display: 'block',
-              opacity: wordFinalOpacity,
-            }}
-          >
-            everywhere
-          </motion.span>
-        </div>
+          {/* "everywhere" fades out, body copy fades in — both occupy the same slot */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.span
+              aria-label="everywhere"
+              style={{
+                fontSize: 'clamp(2rem, 7vw, 6rem)', fontWeight: 300,
+                letterSpacing: letterSpacingEm,
+                color: '#f0f0f0', lineHeight: 1,
+                whiteSpace: 'nowrap', display: 'block',
+                opacity: wordFinalOpacity,
+              }}
+            >
+              everywhere
+            </motion.span>
 
-        {/* body copy */}
-        <motion.p style={{
-          position: 'absolute', bottom: 'clamp(100px, 14vh, 160px)',
-          left: '50%', translateX: '-50%',
-          opacity: bodyOpacity, zIndex: 4,
-          fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)', fontWeight: 300,
-          color: 'rgba(255,255,255,0.32)', letterSpacing: '0.01em',
-          lineHeight: 1.75, maxWidth: '44ch', margin: 0,
-          textAlign: 'center', pointerEvents: 'none',
-          userSelect: 'none', whiteSpace: 'nowrap',
-        }}>
-          We distribute to all major platforms simultaneously —{' '}
-          <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
-        </motion.p>
+            <motion.p
+              style={{
+                position: 'absolute',
+                top: '50%', left: '50%',
+                translateX: '-50%', translateY: '-50%',
+                opacity: bodyOpacity,
+                fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)', fontWeight: 300,
+                color: 'rgba(255,255,255,0.32)', letterSpacing: '0.01em',
+                lineHeight: 1.75, margin: 0,
+                textAlign: 'center', pointerEvents: 'none',
+                userSelect: 'none', whiteSpace: 'nowrap',
+              }}
+            >
+              We distribute to all major platforms simultaneously —{' '}
+              <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
+            </motion.p>
+          </div>
+        </div>
 
         {/* counter */}
         <CounterDisplay scrollP={scrollYProgress} />
