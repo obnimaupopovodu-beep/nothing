@@ -33,7 +33,7 @@ const T = {
   P3_START:    0.32,
   P3_END:      0.42,   // плавный переход к body text (было 0.35 — слишком резко)
   P4_START:    0.46,   // небольшая пауза перед counter
-  P4_END:      0.82,   // counter считает не торопясь (было 1.50 — это почти весь скролл)
+  P4_END:      1.50,   // counter считает не торопясь (было 1.50 — это почти весь скролл)
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
@@ -382,15 +382,15 @@ export function EverywhereReveal() {
                 translateX: '-50%', translateY: '-50%',
                 opacity: bodyOpacity,
                 y: bodyY,
-                fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)', fontWeight: 300,
-                color: 'rgba(255,255,255,0.32)', letterSpacing: '0.01em',
+                fontSize: 'clamp(0.75rem, 2.0vw, 1.5rem)', fontWeight: 300,
+                color: 'rgba(255, 255, 255, 0.51)', letterSpacing: '0.01em',
                 lineHeight: 1.75, margin: 0,
                 textAlign: 'center', pointerEvents: 'none',
                 userSelect: 'none', whiteSpace: 'nowrap',
               }}
             >
               We distribute to all major platforms simultaneously&nbsp;—{' '}
-              <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.75)' }}>day-and-date worldwide.</span>
             </motion.p>
           </div>
         </div>
