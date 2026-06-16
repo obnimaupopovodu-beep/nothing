@@ -18,7 +18,6 @@ const T = {
   P1_END:   0.12,
   P2_START: 0.12,
   P2_END:   0.38,
-  // Icons start flying out earlier — before P2 fully ends
   ICONS_START: 0.20,
   P3_START: 0.38,
   P3_END:   0.72,
@@ -89,7 +88,6 @@ function PlatformNode({
   vw: number
   vh: number
 }) {
-  // Icons span from ICONS_START to P3_END, using orbit.delay to stagger
   const ICONS_SPAN = T.P3_END - T.ICONS_START
   const activateAt = T.ICONS_START + orbit.delay * ICONS_SPAN * 0.6
   const fullyAt    = activateAt + 0.06
@@ -258,25 +256,20 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  // 'everywhere': fades in 0→P1_END*0.4, then out P1_END*0.4→P1_END (sync with letterSpacing peak)
-  const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
-    if (p <= T.P1_END) return clamp01(lerp(p, 0.0, T.P1_END, 1, 0))
-    return 0
-  })
+  // 'everywhere' and eyebrow both fade out over P2_START→P2_END
+  const wordFinalOpacity = useTransform(scrollYProgress, (p) =>
+    clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
+  )
 
-  // eyebrow: same rhythm — fades IN 0→P1_END alongside everywhere, then OUT P2_START→P2_END
-  const eyebrowOpacity = useTransform(scrollYProgress, (p) => {
-    const fadeIn  = clamp01(lerp(p, 0.12, T.P1_END, 1, 1))
-    const fadeOut = clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
-    return p <= T.P1_END ? fadeIn : fadeOut
-  })
+  const eyebrowOpacity = useTransform(scrollYProgress, (p) =>
+    clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
+  )
 
   const glowOpacity = useTransform(scrollYProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 0, 1)) *
     clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
   )
 
-  // body text: fade-in at P3_END→P4_START+0.08, fade-out at P4_END-0.06→P4_END
   const bodyOpacity = useTransform(scrollYProgress, (p) => {
     const fadeIn  = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
     const fadeOut = clamp01(lerp(p, T.P4_END - 0.06, T.P4_END, 1, 0))
@@ -343,20 +336,21 @@ export function EverywhereReveal() {
           textAlign: 'center', gap: 'clamp(8px, 1.2vw, 18px)',
           pointerEvents: 'none', userSelect: 'none',
         }}>
-          <motion.div style={{
-            opacity: eyebrowOpacity,
+          <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             gap: 'clamp(6px, 0.8vw, 12px)',
           }}>
-            <span style={{
+            <motion.span style={{
               fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)', fontWeight: 500,
               letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)',
-            }}>Distribution</span>
-            <span style={{
+              opacity: eyebrowOpacity,
+            }}>Distribution</motion.span>
+            <motion.span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)', fontWeight: 300,
               color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em', lineHeight: 1.1,
-            }}>Your audience is</span>
-          </motion.div>
+              opacity: eyebrowOpacity,
+            }}>Your audience is</motion.span>
+          </div>
 
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <motion.span
