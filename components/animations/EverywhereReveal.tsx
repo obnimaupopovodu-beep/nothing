@@ -5,8 +5,10 @@ import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import {
   motion,
   useMotionTemplate,
+  useMotionValue,
   useReducedMotion,
   useScroll,
+  useSpring,
   useTransform,
   MotionValue,
 } from 'framer-motion'
@@ -67,11 +69,13 @@ function makePath(cx: number, cy: number, cpBias: number, vw: number, vh: number
 }
 
 function PlatformNode({
-  platform, orbit, scrollP, vw, vh,
+  platform, orbit, scrollP, mouseX, mouseY, vw, vh,
 }: {
   platform: typeof platforms[0]
   orbit: typeof ORBIT[0]
   scrollP: MotionValue<number>
+  mouseX: MotionValue<number>
+  mouseY: MotionValue<number>
   index: number
   vw: number
   vh: number
@@ -89,14 +93,26 @@ function PlatformNode({
   const ox = (orbit.cx / 100) * vw
   const oy = (orbit.cy / 100) * vh
 
-  const x = useTransform(scrollP, (p) => {
+  // scroll-driven base position
+  const scrollX = useTransform(scrollP, (p) => {
     const t = clamp01(lerp(p, activateAt, fullyAt + 0.02, 0, 1))
     return (1 - Math.pow(1 - t, 5)) * ox
   })
-  const y = useTransform(scrollP, (p) => {
+  const scrollY = useTransform(scrollP, (p) => {
     const t = clamp01(lerp(p, activateAt, fullyAt + 0.02, 0, 1))
     return (1 - Math.pow(1 - t, 5)) * oy
   })
+
+  // combined: scroll position + mouse parallax (1:20)
+  const x = useTransform(
+    [scrollX, mouseX] as MotionValue[],
+    ([sx, mx]: number[]) => sx + mx / 20
+  )
+  const y = useTransform(
+    [scrollY, mouseY] as MotionValue[],
+    ([sy, my]: number[]) => sy + my / 20
+  )
+
   const scale = useTransform(scrollP, (p) => lerp(p, activateAt, fullyAt, 0.4, 1))
   const blur  = useTransform(scrollP, (p) => lerp(p, activateAt, fullyAt, 6, 0))
   const filter = useMotionTemplate`blur(${blur}px)`
@@ -173,8 +189,7 @@ function CounterDisplay({ scrollP }: { scrollP: MotionValue<number> }) {
   }, [scrollP])
   return (
     <motion.div style={{
-      position: 'absolute',
-      bottom: 'clamp(60px, 8vh, 100px)',
+      position: 'absolute', bottom: 'clamp(60px, 8vh, 100px)',
       left: '50%', translateX: '-50%',
       opacity, zIndex: 5, textAlign: 'center', pointerEvents: 'none',
     }}>
@@ -207,6 +222,22 @@ export function EverywhereReveal() {
     return () => window.removeEventListener('resize', fn)
   }, [])
 
+  // mouse position relative to viewport center
+  const rawMouseX = useMotionValue(0)
+  const rawMouseY = useMotionValue(0)
+  // spring smoothing so motion feels physical, not instant
+  const mouseX = useSpring(rawMouseX, { stiffness: 60, damping: 20, mass: 0.5 })
+  const mouseY = useSpring(rawMouseY, { stiffness: 60, damping: 20, mass: 0.5 })
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      rawMouseX.set(e.clientX - window.innerWidth  / 2)
+      rawMouseY.set(e.clientY - window.innerHeight / 2)
+    }
+    window.addEventListener('mousemove', onMove)
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [rawMouseX, rawMouseY])
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
@@ -232,7 +263,6 @@ export function EverywhereReveal() {
     clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
   )
 
-  // body copy: appears in place of "everywhere" (center of screen)
   const bodyOpacity = useTransform(scrollYProgress, (p) =>
     clamp01(lerp(p, T.P3_END, T.P4_START, 0, 1))
   )
@@ -282,11 +312,13 @@ export function EverywhereReveal() {
         {visiblePlatforms.map((platform, i) => (
           <PlatformNode
             key={platform.name} platform={platform} orbit={ORBIT[i]}
-            scrollP={scrollYProgress} index={i} vw={vw} vh={vh}
+            scrollP={scrollYProgress} index={i}
+            mouseX={mouseX} mouseY={mouseY}
+            vw={vw} vh={vh}
           />
         ))}
 
-        {/* typography block: eyebrow + subtitle + hero word */}
+        {/* typography */}
         <div style={{
           position: 'relative', zIndex: 2,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -308,7 +340,6 @@ export function EverywhereReveal() {
             }}>Your audience is</span>
           </motion.div>
 
-          {/* "everywhere" fades out, body copy fades in — both occupy the same slot */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <motion.span
               aria-label="everywhere"
@@ -325,8 +356,7 @@ export function EverywhereReveal() {
 
             <motion.p
               style={{
-                position: 'absolute',
-                top: '50%', left: '50%',
+                position: 'absolute', top: '50%', left: '50%',
                 translateX: '-50%', translateY: '-50%',
                 opacity: bodyOpacity,
                 fontSize: 'clamp(0.75rem, 1.2vw, 0.95rem)', fontWeight: 300,
