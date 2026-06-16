@@ -15,14 +15,14 @@ import {
 import { useEffect, useRef, useState } from 'react'
 
 const T = {
-  P1_END:   0.12,
-  P2_START: 0.12,
-  P2_END:   0.38,
-  ICONS_START: 0.20,
-  P3_START: 0.38,
-  P3_END:   0.72,
-  P4_START: 0.72,
-  P4_END:   0.92,
+  P1_END:      0.15,
+  P2_START:    0.12,
+  P2_END:      0.15,
+  ICONS_START: 0.14,
+  P3_START:    0.20,
+  P3_END:      0.30,
+  P4_START:    0.20,
+  P4_END:      0.40,
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
