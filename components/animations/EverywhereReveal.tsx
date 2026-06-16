@@ -60,6 +60,15 @@ const ORBIT: { cx: number; cy: number; delay: number; ring: number; cpBias: numb
   { cx:  44, cy:  24, delay: 0.21, ring: 2, cpBias: -0.22 },
 ]
 
+// max possible distance in the ORBIT table (~52)
+const MAX_ORBIT_DIST = 52
+
+// inner (dist≈0) → divisor 40 (slow/deep), outer (dist≈52) → divisor 20 (fast/close)
+function getParallaxDivisor(cx: number, cy: number): number {
+  const dist = Math.sqrt(cx * cx + cy * cy)
+  return 40 - (dist / MAX_ORBIT_DIST) * 20
+}
+
 function makePath(cx: number, cy: number, cpBias: number, vw: number, vh: number) {
   const ox = (cx / 100) * vw
   const oy = (cy / 100) * vh
@@ -93,7 +102,6 @@ function PlatformNode({
   const ox = (orbit.cx / 100) * vw
   const oy = (orbit.cy / 100) * vh
 
-  // scroll-driven base position
   const scrollX = useTransform(scrollP, (p) => {
     const t = clamp01(lerp(p, activateAt, fullyAt + 0.02, 0, 1))
     return (1 - Math.pow(1 - t, 5)) * ox
@@ -103,14 +111,15 @@ function PlatformNode({
     return (1 - Math.pow(1 - t, 5)) * oy
   })
 
-  // combined: scroll position + mouse parallax (1:20)
+  const divisor = getParallaxDivisor(orbit.cx, orbit.cy)
+
   const x = useTransform(
     [scrollX, mouseX] as MotionValue[],
-    ([sx, mx]: number[]) => sx + mx / 20
+    ([sx, mx]: number[]) => sx + mx / divisor
   )
   const y = useTransform(
     [scrollY, mouseY] as MotionValue[],
-    ([sy, my]: number[]) => sy + my / 20
+    ([sy, my]: number[]) => sy + my / divisor
   )
 
   const scale = useTransform(scrollP, (p) => lerp(p, activateAt, fullyAt, 0.4, 1))
@@ -222,10 +231,8 @@ export function EverywhereReveal() {
     return () => window.removeEventListener('resize', fn)
   }, [])
 
-  // mouse position relative to viewport center
   const rawMouseX = useMotionValue(0)
   const rawMouseY = useMotionValue(0)
-  // spring smoothing so motion feels physical, not instant
   const mouseX = useSpring(rawMouseX, { stiffness: 60, damping: 20, mass: 0.5 })
   const mouseY = useSpring(rawMouseY, { stiffness: 60, damping: 20, mass: 0.5 })
 
@@ -253,8 +260,8 @@ export function EverywhereReveal() {
   const eyebrowOpacity = useTransform(scrollYProgress, (p) => lerp(p, T.P2_START, T.P2_END, 1, 0))
 
   const wordFinalOpacity = useTransform(scrollYProgress, (p) => {
-    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0)
-    const final = lerp(p, T.P4_START, T.P4_END, 0, 0)
+    const base  = lerp(p, T.P2_START, T.P3_START, 1, 0.18)
+    const final = lerp(p, T.P4_START, T.P4_END, 0.18, 0)
     return p > T.P4_START ? final : base
   })
 
@@ -293,7 +300,6 @@ export function EverywhereReveal() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: '#050505', overflow: 'hidden',
       }}>
-        {/* glow halo */}
         <motion.div aria-hidden style={{
           position: 'absolute', top: '50%', left: '50%',
           translateX: '-50%', translateY: '-50%',
@@ -303,12 +309,10 @@ export function EverywhereReveal() {
           opacity: glowOpacity, pointerEvents: 'none', zIndex: 0,
         }} />
 
-        {/* pulse rings */}
         <PulseRing scrollP={scrollYProgress} delay={0} />
         <PulseRing scrollP={scrollYProgress} delay={0.06} />
         <PulseRing scrollP={scrollYProgress} delay={0.12} />
 
-        {/* platform nodes */}
         {visiblePlatforms.map((platform, i) => (
           <PlatformNode
             key={platform.name} platform={platform} orbit={ORBIT[i]}
@@ -318,7 +322,6 @@ export function EverywhereReveal() {
           />
         ))}
 
-        {/* typography */}
         <div style={{
           position: 'relative', zIndex: 2,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -366,13 +369,12 @@ export function EverywhereReveal() {
                 userSelect: 'none', whiteSpace: 'nowrap',
               }}
             >
-              We distribute to all major platforms simultaneously —{' '}
+              We distribute to all major platforms simultaneously&nbsp;—{' '}
               <span style={{ color: 'rgba(255,255,255,0.55)' }}>day-and-date worldwide.</span>
             </motion.p>
           </div>
         </div>
 
-        {/* counter */}
         <CounterDisplay scrollP={scrollYProgress} />
       </div>
     </div>
