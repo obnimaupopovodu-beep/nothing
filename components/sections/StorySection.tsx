@@ -30,9 +30,9 @@ const actions = [
 ]
 
 const releaseModes = [
-  { eyebrow: '01', title: 'Direct release management.', body: 'We distribute your track for 10% of royalties, keep the workflow simple, and show every number in one place.', Icon: VinylRecord },
-  { eyebrow: '02', title: 'Release support with momentum.', body: 'We handle the release and pair it with social media campaigns and playlist outreach on digital platforms when your track needs extra reach.', Icon: Sparkle },
-  { eyebrow: '03', title: 'A second life for the right record.', body: 'If a track is already out but still has room to grow, we reframe it as a stronger release and give it the push it deserves.', Icon: WaveSine },
+  { eyebrow: '01', title: 'Direct release management', body: 'We distribute your track for 10% of royalties, keep the workflow simple, and show every number in one place.', Icon: VinylRecord },
+  { eyebrow: '02', title: 'Release support with momentum', body: 'We handle the release and pair it with social media campaigns and playlist outreach on digital platforms when your track needs extra reach.', Icon: Sparkle },
+  { eyebrow: '03', title: 'A second life for the right record', body: 'If a track is already out but still has room to grow, we reframe it as a stronger release and give it the push it deserves.', Icon: WaveSine },
 ]
 
 const advantages = [
@@ -41,16 +41,9 @@ const advantages = [
   { title: 'Straight feedback', body: 'If a track does not meet our standards, we say it clearly. No ghosting.', Icon: ShieldCheck },
 ]
 
-const SLIDES_END = 0.72
-const SLIDE_SLOT = SLIDES_END / 4
-const FADE_IN_END  = 0.25
-const HOLD_END     = 0.75
-const FADE_OUT_END = 0.95
-
-const COMMIT_START        = 0.72
-const COMMIT_ROWS_START   = 0.76
-const COMMIT_ROW_STAGGER  = 0.07
-const COMMIT_ROW_DURATION = 0.08
+// ============================================================
+//  ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ
+// ============================================================
 
 function ActionRow({ label, href, description, Icon, index }: {
   label: string; href: string; description: string
@@ -77,53 +70,75 @@ function ActionRow({ label, href, description, Icon, index }: {
   )
 }
 
-function ProgressBar({ progress, visible }: { progress: MotionValue<number>; visible: MotionValue<number> }) {
-  const stepRanges = [
-    [0, SLIDE_SLOT],
-    [SLIDE_SLOT, SLIDE_SLOT * 2],
-    [SLIDE_SLOT * 2, SLIDE_SLOT * 3],
-    [SLIDE_SLOT * 3, SLIDES_END],
-    [COMMIT_START, 1.0],
-  ]
-  return (
-    <motion.div style={{ position: 'absolute', bottom: '32px', left: '50%', transform: 'translateX(-50%)', zIndex: 30, display: 'flex', alignItems: 'center', gap: '6px', opacity: visible }}>
-      {stepRanges.map(([start, end], i) => <ProgressSegment key={i} progress={progress} start={start} end={end} />)}
-    </motion.div>
-  )
-}
+// ============================================================
+//  НОВЫЙ БЛОК "ONE CLEAR SYSTEM" – КАРТОЧКИ
+// ============================================================
 
-function ProgressSegment({ progress, start, end }: { progress: MotionValue<number>; start: number; end: number }) {
-  const fill = useTransform(progress, [start, end], [0, 1])
-  const width = useTransform(fill, (v) => `${Math.min(100, Math.max(0, v * 100))}%`)
-  const segOpacity = useTransform(progress, [start - 0.02, start, end, end + 0.02], [0.25, 1, 1, 0.25])
-  return (
-    <motion.div style={{ width: '28px', height: '2px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden', opacity: segOpacity, flexShrink: 0 }}>
-      <motion.div style={{ height: '100%', width, background: 'rgba(127,176,255,0.7)', borderRadius: '2px', boxShadow: '0 0 4px rgba(127,176,255,0.4)' }} />
-    </motion.div>
-  )
-}
-
-function SystemSlide({ progress, index, eyebrow, title, body, mobile = false }: {
-  progress: MotionValue<number>; index: number; eyebrow?: string; title: string; body: string; mobile?: boolean
+function ModeCard({
+  progress,
+  index,
+  eyebrow,
+  title,
+  body,
+  Icon,
+  mobile = false,
+}: {
+  progress: MotionValue<number>
+  index: number
+  eyebrow: string
+  title: string
+  body: string
+  Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold' }>
+  mobile?: boolean
 }) {
-  const start      = index * SLIDE_SLOT
-  const fadeInEnd  = start + SLIDE_SLOT * FADE_IN_END
-  const holdEnd    = start + SLIDE_SLOT * HOLD_END
-  const fadeOutEnd = start + SLIDE_SLOT * FADE_OUT_END
+  // Каждая карточка появляется с задержкой
+  const start = 0.50 + index * 0.10
+  const end = start + 0.12
 
-  const opacity = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [0, 1, 1, 0])
-  const y       = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [40, 0, 0, -32])
-  const blur    = useTransform(progress, [start, fadeInEnd, holdEnd, fadeOutEnd], [20, 0, 0, 16])
-  const filter  = useMotionTemplate`blur(${blur}px)`
+  const opacity = useTransform(progress, [start, end], [0, 1])
+  const y = useTransform(progress, [start, end], [40, 0])
+  const scale = useTransform(progress, [start, end], [0.95, 1])
+  const blur = useTransform(progress, [start, end], [8, 0])
+  const filter = useMotionTemplate`blur(${blur}px)`
 
   return (
-    <motion.div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity, y, filter, pointerEvents: 'none' }}>
-      <div style={{ width: '100%', maxWidth: mobile ? 'min(92vw, 560px)' : 'min(68vw, 820px)', margin: '0 auto', textAlign: 'center', padding: mobile ? '0 20px' : '0 32px' }}>
-        {eyebrow ? <p className="label-caps" style={{ marginBottom: mobile ? '14px' : '20px', color: 'rgba(127,176,255,0.55)' }}>{eyebrow}</p> : null}
-        <h2 style={{ fontSize: mobile ? 'clamp(2rem, 10vw, 3rem)' : 'clamp(2.8rem, 5vw, 5.2rem)', fontWeight: 200, letterSpacing: '-0.05em', color: '#f0f0f0', lineHeight: 0.94, marginBottom: mobile ? '18px' : '24px', whiteSpace: 'pre-line' }}>
-          {title}
-        </h2>
-        <p style={{ margin: '0 auto', maxWidth: mobile ? '30ch' : '44ch', fontSize: mobile ? '13px' : '15px', lineHeight: mobile ? 1.72 : 1.82, color: 'rgba(240,240,240,0.38)', fontWeight: 300 }}>
+    <motion.div
+      style={{
+        opacity,
+        y,
+        scale,
+        filter,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: mobile ? '16px' : '20px',
+        padding: mobile ? '16px 18px' : '20px 24px',
+        borderRadius: '14px',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
+        cursor: 'default',
+      }}
+      whileHover={{
+        background: 'rgba(255,255,255,0.06)',
+        borderColor: 'rgba(127,176,255,0.2)',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+        scale: 1.01,
+        transition: { duration: 0.2 },
+      }}
+    >
+      <div style={{ flexShrink: 0, marginTop: '2px' }}>
+        <Icon size={mobile ? 18 : 22} weight="regular" style={{ color: 'rgba(127,176,255,0.6)' }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', color: 'rgba(127,176,255,0.5)' }}>
+            {eyebrow}
+          </span>
+          <span style={{ fontSize: '15px', fontWeight: 500, color: 'rgba(240,240,240,0.85)' }}>
+            {title}
+          </span>
+        </div>
+        <p style={{ fontSize: mobile ? '13px' : '14px', lineHeight: 1.6, color: 'rgba(240,240,240,0.4)', margin: 0 }}>
           {body}
         </p>
       </div>
@@ -135,8 +150,8 @@ function CommitmentRevealRow({ progress, index, title, body, Icon, mobile = fals
   progress: MotionValue<number>; index: number; title: string; body: string
   Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold' }>; mobile?: boolean
 }) {
-  const start = COMMIT_ROWS_START + index * COMMIT_ROW_STAGGER
-  const end   = start + COMMIT_ROW_DURATION
+  const start = 0.86 + index * 0.04
+  const end   = start + 0.06
 
   const opacity = useTransform(progress, [start, end], [0, 1])
   const y       = useTransform(progress, [start, end], [28, 0])
@@ -158,36 +173,85 @@ function CommitmentRevealRow({ progress, index, title, body, Icon, mobile = fals
   )
 }
 
+// ============================================================
+//  ГЛАВНЫЙ КОМПОНЕНТ ПРЕЗЕНТАЦИИ (НОВАЯ ВЕРСИЯ)
+// ============================================================
+
 function SystemPresentation({ progress, mobile = false }: { progress: MotionValue<number>; mobile?: boolean }) {
-  const commitmentsOpacity = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0, 1])
-  const commitmentsY       = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [48, 0])
-  const commitmentsScale   = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [0.96, 1])
-  const commitmentsBlur    = useTransform(progress, [COMMIT_START, COMMIT_START + 0.06], [18, 0])
-  const commitmentsFilter  = useMotionTemplate`blur(${commitmentsBlur}px)`
-  const barVisible = useTransform(progress, [0.02, 0.08, 0.92, 0.98], [0, 1, 1, 0])
+  const titleOpacity = useTransform(progress, [0.44, 0.50], [0, 1])
+  const titleY = useTransform(progress, [0.44, 0.50], [20, 0])
 
   return (
-    <div className="absolute inset-0">
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <SystemSlide progress={progress} index={0} title={'One clear\nsystem.'} body="Every artist gets the same honest framework — choose how much support you need." mobile={mobile} />
-        {releaseModes.map((mode, i) => (
-          <SystemSlide key={mode.eyebrow} progress={progress} index={i + 1} eyebrow={mode.eyebrow} title={mode.title} body={mode.body} mobile={mobile} />
-        ))}
-        <motion.div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: commitmentsOpacity, y: commitmentsY, scale: commitmentsScale, filter: commitmentsFilter, pointerEvents: 'none' }}>
-          <div style={{ width: '100%', maxWidth: mobile ? 'min(92vw, 560px)' : 'min(60vw, 720px)', margin: '0 auto', padding: mobile ? '0 20px' : '0 32px' }}>
-            <p className="label-caps" style={{ marginBottom: mobile ? '20px' : '28px', textAlign: 'left' }}>Our commitments</p>
-            <div style={{ margin: '0 auto', maxWidth: mobile ? '100%' : '660px' }}>
-              {advantages.map((item, i) => (
-                <CommitmentRevealRow key={item.title} progress={progress} index={i} title={item.title} body={item.body} Icon={item.Icon} mobile={mobile} />
-              ))}
-            </div>
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        style={{
+          width: '100%',
+          maxWidth: mobile ? 'min(92vw, 560px)' : 'min(68vw, 820px)',
+          margin: '0 auto',
+          padding: mobile ? '0 20px' : '0 32px',
+        }}
+      >
+        {/* Заголовок */}
+        <motion.div style={{ opacity: titleOpacity, y: titleY, marginBottom: mobile ? '32px' : '48px', textAlign: 'center' }}>
+          <p className="label-caps" style={{ color: 'rgba(127,176,255,0.55)', marginBottom: '8px' }}>
+            One clear system
+          </p>
+          <h2
+            style={{
+              fontSize: mobile ? 'clamp(2rem, 8vw, 2.8rem)' : 'clamp(2.8rem, 4vw, 4rem)',
+              fontWeight: 200,
+              letterSpacing: '-0.04em',
+              color: '#f0f0f0',
+              lineHeight: 1.1,
+            }}
+          >
+            Choose your release path.
+          </h2>
+        </motion.div>
+
+        {/* Карточки режимов */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '12px' : '16px', marginBottom: mobile ? '40px' : '60px' }}>
+          {releaseModes.map((mode, index) => (
+            <ModeCard
+              key={mode.eyebrow}
+              progress={progress}
+              index={index}
+              eyebrow={mode.eyebrow}
+              title={mode.title}
+              body={mode.body}
+              Icon={mode.Icon}
+              mobile={mobile}
+            />
+          ))}
+        </div>
+
+        {/* Блок "Our commitments" – появляется после карточек */}
+        <motion.div style={{ opacity: useTransform(progress, [0.86, 0.94], [0, 1]), y: useTransform(progress, [0.86, 0.94], [30, 0]) }}>
+          <p className="label-caps" style={{ marginBottom: mobile ? '20px' : '28px', textAlign: 'left' }}>
+            Our commitments
+          </p>
+          <div style={{ margin: '0 auto', maxWidth: mobile ? '100%' : '660px' }}>
+            {advantages.map((item, i) => (
+              <CommitmentRevealRow
+                key={item.title}
+                progress={progress}
+                index={i}
+                title={item.title}
+                body={item.body}
+                Icon={item.Icon}
+                mobile={mobile}
+              />
+            ))}
           </div>
         </motion.div>
       </div>
-      <ProgressBar progress={progress} visible={barVisible} />
     </div>
   )
 }
+
+// ============================================================
+//  MOBILE И DESKTOP ВЕРСИИ
+// ============================================================
 
 function MobileStory() {
   const presentationRef = useRef<HTMLDivElement>(null)
@@ -231,19 +295,14 @@ function DesktopStory() {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   const reducedMotion = useReducedMotion()
 
-  // Measured pixel offset: how far h1 must travel from its natural position to viewport center.
-  // We measure on mount (and on resize) so the value is always exact.
   const [centerDeltaX, setCenterDeltaX] = useState(0)
 
   const measure = () => {
     if (!spacerRef.current || !h1Ref.current) return
     const spacerRect = spacerRef.current.getBoundingClientRect()
     const h1Width    = h1Ref.current.offsetWidth
-    // Viewport center in px
     const vpCenter   = window.innerWidth / 2
-    // Natural left edge of h1 = spacerRect.left (they share the same position)
     const naturalLeft = spacerRect.left
-    // Delta needed so h1 center aligns with viewport center
     const delta = vpCenter - naturalLeft - h1Width / 2
     setCenterDeltaX(delta)
   }
@@ -256,37 +315,23 @@ function DesktopStory() {
 
   const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
 
-  // ─── Timeline ──────────────────────────────────────────────────────────
-  //  [0.00 → 0.08]  static at natural position
-  //  [0.08 → 0.26]  h1 drifts right to true viewport center
-  //  [0.26 → 0.34]  hold — h1 sits at center (pause)
-  //  [0.34 → 0.46]  h1 floats up and fades out
-  //  [0.08 → 0.28]  eyebrow + subtitle fade out
-  //  [0.10 → 0.30]  right column fades out
-  //  [0.40 → 0.50]  One Clear System fades in
-
-  // x: 0 → centerDeltaX (phase A), hold (phase B), hold (phase C, y takes over)
   const h1X = useTransform(
     scrollYProgress,
     [0.08, 0.26, 0.34, 0.46],
     reducedMotion ? [0, 0, 0, 0] : [0, centerDeltaX, centerDeltaX, centerDeltaX]
   )
-
-  // y: 0 during drift + hold, then -110px during fly-up
   const h1Y = useTransform(
     scrollYProgress,
     [0.26, 0.34, 0.46],
     reducedMotion ? [0, 0, 0] : [0, 0, -110]
   )
-
-  // opacity: visible through hold, fades during fly-up
   const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.36, 0.46], [1, 1, 1, 0])
 
   const eyebrowOpacity  = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
   const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.30], [1, 1, 0])
 
-  const contentOpacity       = useTransform(scrollYProgress, [0.40, 0.50], [0, 1])
-  const contentY             = useTransform(scrollYProgress, [0.40, 0.50], [20, 0])
+  const contentOpacity = useTransform(scrollYProgress, [0.40, 0.50], [0, 1])
+  const contentY       = useTransform(scrollYProgress, [0.40, 0.50], [20, 0])
   const presentationProgress = useTransform(scrollYProgress, [0.44, 0.96], [0, 1])
 
   return (
@@ -306,7 +351,6 @@ function DesktopStory() {
 
               {/* Left column */}
               <div style={{ flex: 1, minWidth: 0 }}>
-
                 <motion.p
                   style={{
                     fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase',
@@ -320,11 +364,6 @@ function DesktopStory() {
                   Independent Electronic Music Label
                 </motion.p>
 
-                {/*
-                  Spacer: invisible clone of h1 — keeps layout height intact.
-                  Also serves as the measurement anchor: its getBoundingClientRect().left
-                  is exactly where h1 starts naturally.
-                */}
                 <div
                   ref={spacerRef}
                   aria-hidden
@@ -384,20 +423,11 @@ function DesktopStory() {
           </div>
         </div>
 
-        {/*
-          h1 floats above the layout as position:absolute.
-          It starts exactly over the spacer (same top/left) thanks to
-          top:50% + translateY:-50% matching the flex items-center alignment,
-          and x starts at 0 (no offset from spacer).
-          We measure spacerRef to compute centerDeltaX so x:0 = natural position.
-        */}
         <motion.h1
           ref={h1Ref}
           style={{
             position: 'absolute',
             top: '50%',
-            // Align left edge with spacer: section-shell padding is the inset.
-            // We use the same left offset as the section-shell.
             left: spacerRef.current ? spacerRef.current.getBoundingClientRect().left : undefined,
             translateY: '-50%',
             x: h1X,
