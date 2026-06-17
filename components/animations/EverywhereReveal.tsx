@@ -101,7 +101,7 @@ function PlatformNode({
 }) {
   const ICONS_SPAN = T.P3_END - T.ICONS_START
   const activateAt = T.ICONS_START + orbit.delay * ICONS_SPAN * 0.6
-  const fullyAt    = activateAt + 0.06
+  const fullyAt    = activateAt + 0.46
 
   const opacity = useTransform(scrollP, (p) => {
     const fadeIn = lerp(p, activateAt, fullyAt, 0, 1)
@@ -143,8 +143,8 @@ function PlatformNode({
   })
 
   const path = makePath(orbit.cx, orbit.cy, orbit.cpBias, vw, vh)
-  const iconSize  = orbit.ring === 0 ? 28 : orbit.ring === 1 ? 24 : 20
-  const innerSize = orbit.ring === 0 ? 14 : orbit.ring === 1 ? 12 : 10
+  const iconSize  = orbit.ring === 0 ? 40 : orbit.ring === 1 ? 40 : 30
+  const innerSize = orbit.ring === 0 ? 27 : orbit.ring === 1 ? 24 : 20
 
   return (
     <>
