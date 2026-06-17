@@ -6,6 +6,7 @@ import type { ComponentType } from 'react'
 import {
   motion,
   useMotionTemplate,
+  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
@@ -50,42 +51,23 @@ const advantages = [
 ]
 
 // ─── Animation timing ────────────────────────────────────────────────────────
-//
-// The entire SystemPresentation progress runs 0 → 1 (mapped from scrollYProgress
-// via presentationProgress in DesktopStory / mobileProgress in MobileStory).
-//
-// Phase A  0.00 → 0.18   "One clear system" fades in at center
-// Phase B  0.18 → 0.36   card 01 appears LEFT, card 02 appears RIGHT
-// Phase C  0.36 → 0.54   card 03 appears CENTER  →  convergence begins
-//                         03 is already centered; 01 travels right, 02 left
-// Phase D  0.54 → 0.72   all 3 cards fully centered; header migrates to top
-// Phase E  0.76 → 1.00   Our commitments reveal
 
 const T = {
-  // Header
-  headerIn:      [0.00, 0.14] as const,   // fade in
-  headerToTop:   [0.54, 0.70] as const,   // y: center → top, scale down
-  // Cards appear
-  card01In:      [0.18, 0.30] as const,   // 01 fades in from left
-  card02In:      [0.26, 0.38] as const,   // 02 fades in from right
-  card03In:      [0.36, 0.48] as const,   // 03 fades in from below center
-  // Cards converge (x offset → 0)
-  card01Conv:    [0.42, 0.68] as const,   // 01 travels from left to center
-  card02Conv:    [0.46, 0.70] as const,   // 02 travels from right to center
-  card03Conv:    [0.38, 0.50] as const,   // 03 is center from start, minor y settle
-  // Cards stack vertically after convergence
-  cardsY:        [0.54, 0.72] as const,   // distribute cards into column
-  // Commitments
+  headerIn:      [0.00, 0.14] as const,
+  headerToTop:   [0.54, 0.70] as const,
+  card01In:      [0.18, 0.30] as const,
+  card02In:      [0.26, 0.38] as const,
+  card03In:      [0.36, 0.48] as const,
+  card01Conv:    [0.42, 0.68] as const,
+  card02Conv:    [0.46, 0.70] as const,
+  card03Conv:    [0.38, 0.50] as const,
+  cardsY:        [0.54, 0.72] as const,
   commitIn:      [0.78, 0.86] as const,
   commitRow:     (i: number) => [0.82 + i * 0.05, 0.88 + i * 0.05] as const,
 } as const
 
 const EASE_OUT  = [0.16, 1, 0.3, 1] as const
-const EASE_IO   = [0.45, 0, 0.55, 1] as const   // easeInOut for convergence end
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function clamp01(v: number) { return Math.max(0, Math.min(1, v)) }
+const EASE_IO   = [0.45, 0, 0.55, 1] as const
 
 // ─── ActionRow ───────────────────────────────────────────────────────────────
 
@@ -128,8 +110,7 @@ function ReleaseCard({
   reducedMotion: boolean
   mobile?: boolean
 }) {
-  // ── appear ──────────────────────────────────────────────────────────────
-  const inRange  = slot === 'left' ? T.card01In  : slot === 'right' ? T.card02In  : T.card03In
+  const inRange   = slot === 'left' ? T.card01In  : slot === 'right' ? T.card02In  : T.card03In
   const convRange = slot === 'left' ? T.card01Conv : slot === 'right' ? T.card02Conv : T.card03Conv
   const [inStart, inEnd]     = inRange
   const [convStart, convEnd] = convRange
@@ -137,26 +118,26 @@ function ReleaseCard({
 
   const opacity = useTransform(progress, [inStart, inEnd], [0, 1])
 
-  // Horizontal: left card comes from left offset, right from right, center stays
   const OFFSET_X = mobile ? 160 : 280
   const initX = slot === 'left' ? -OFFSET_X : slot === 'right' ? OFFSET_X : 0
-  // During convergence, x → 0 (easeInOut)
-  const xRaw = useTransform(progress, [convStart, convEnd], [initX, 0])
-  // Wrap with easeInOut-like value transform on the output side
-  const x = reducedMotion ? useTransform(progress, [convStart, convEnd], [0, 0]) : xRaw
+  const x = useTransform(progress, [convStart, convEnd], reducedMotion ? [0, 0] : [initX, 0])
 
   // Vertical appear offset
   const appearY = slot === 'center' ? 24 : 0
   const yAppear = useTransform(progress, [inStart, inEnd], [appearY, 0])
 
-  // After convergence: cards stack vertically into column
-  // 01 → top, 02 → middle, 03 → bottom (ordering by slot index)
+  // Vertical stack offset after convergence
   const slotIndex = slot === 'left' ? 0 : slot === 'right' ? 1 : 2
   const CARD_H = mobile ? 110 : 130
-  const targetY = (slotIndex - 1) * CARD_H   // -CARD_H | 0 | +CARD_H
+  const targetY = (slotIndex - 1) * CARD_H
   const yStack = useTransform(progress, [stackStart, stackEnd], [0, reducedMotion ? 0 : targetY])
 
-  // blur on appear
+  // Sum the two y MotionValues safely
+  const y = useTransform(
+    [yAppear, yStack] as MotionValue<number>[],
+    ([a, b]: number[]) => a + b
+  )
+
   const blur   = useTransform(progress, [inStart, inEnd], reducedMotion ? [0, 0] : [10, 0])
   const filter = useMotionTemplate`blur(${blur}px)`
 
@@ -165,7 +146,7 @@ function ReleaseCard({
       style={{
         opacity,
         x,
-        y: useMotionTemplate`calc(${yAppear}px + ${yStack}px)` as any,
+        y,
         filter,
         willChange: 'opacity, transform, filter',
         position: 'absolute',
@@ -226,11 +207,8 @@ function SystemPresentation({ progress, mobile = false, reducedMotion }: {
   const [htStart, htEnd] = T.headerToTop
   const [cStart, cEnd]   = T.commitIn
 
-  // Header opacity + initial fade-in
   const headerOpacity = useTransform(progress, [hStart, hEnd], [0, 1])
 
-  // Header travels from vertical center → top as cards converge
-  // y: 0 → -(vh/2 - topPad)  →  we use a percentage-based offset
   const HEADER_TRAVEL = mobile ? -200 : -240
   const headerY = useTransform(
     progress, [htStart, htEnd],
@@ -239,14 +217,13 @@ function SystemPresentation({ progress, mobile = false, reducedMotion }: {
   )
   const headerScale = useTransform(progress, [htStart, htEnd], reducedMotion ? [1, 1] : [1, 0.78])
 
-  // Commitments block
   const commitOpacity = useTransform(progress, [cStart, cEnd], [0, 1])
   const commitY       = useTransform(progress, [cStart, cEnd], reducedMotion ? [0, 0] : [40, 0])
 
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
 
-      {/* Header — z-0 so cards can overlap it */}
+      {/* Header */}
       <motion.div
         style={{
           opacity: headerOpacity,
@@ -270,7 +247,7 @@ function SystemPresentation({ progress, mobile = false, reducedMotion }: {
         </h2>
       </motion.div>
 
-      {/* Release cards — z-10, render above header */}
+      {/* Release cards */}
       {releaseModes.map((mode, i) => {
         const slot: CardSlot = i === 0 ? 'left' : i === 1 ? 'right' : 'center'
         return (
