@@ -288,7 +288,7 @@ export function SocialSection() {
           }}
         >
           {/* ── Left ── */}
-          <div>
+          <div style={{ position: 'sticky', top: '5rem' }}>
             <p
               className="label-caps"
               style={{ marginBottom: '1.5rem' }}
@@ -307,7 +307,7 @@ export function SocialSection() {
               }}
             >
               Stay in<br />
-              <em style={{ fontStyle: 'normal', color: 'rgba(240,237,230,0.45)' }}>the loop.</em>
+              <em style={{ fontStyle: 'italic', color: 'rgba(240,237,230,0.45)' }}>the loop.</em>
             </h2>
 
             <p
