@@ -728,7 +728,10 @@ function MobileStory() {
   const { scrollYProgress } = useScroll({ target: presentationRef, offset: ['start start', 'end end'] })
 
   return (
-    <section className="relative overflow-hidden md:hidden" aria-label="Nothing Records story">
+    // overflow:clip clips visually without creating a scroll container,
+    // so window scroll events still reach useScroll({ target }).
+    // overflow:hidden would intercept scroll and freeze scrollYProgress at 0.
+    <section className="relative md:hidden" style={{ overflowX: 'clip' }} aria-label="Nothing Records story">
       <div className="absolute inset-x-0 top-0" style={{ height: '50%', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127,176,255,0.09), transparent 70%)' }} />
       <div className="relative min-h-[100dvh] px-5 pb-10 pt-[80px]">
         <div className="flex min-h-[calc(100dvh-110px)] flex-col justify-center">
@@ -749,7 +752,9 @@ function MobileStory() {
         </div>
       </div>
       <div id="mobile-presentation" ref={presentationRef} style={{ height: '400dvh', position: 'relative', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ position: 'sticky', top: 0, height: '100dvh', overflow: 'hidden', background: 'linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.99))' }}>
+        {/* overflow:clip here too — clips animated elements that go out of bounds
+            without creating a scroll container that would break useScroll */}
+        <div style={{ position: 'sticky', top: 0, height: '100dvh', overflow: 'clip', background: 'linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.99))' }}>
           <SystemPresentation progress={scrollYProgress} mobile />
         </div>
       </div>
