@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { MotionValue } from 'framer-motion'
-import type { ComponentType } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowDown,
@@ -54,7 +54,7 @@ const COMMIT_ROW_DURATION = 0.08
 
 function ActionRow({ label, href, description, Icon, index }: {
   label: string; href: string; description: string
-  Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold' }>; index: number
+  Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold'; style?: CSSProperties }>; index: number
 }) {
   return (
     <motion.a
