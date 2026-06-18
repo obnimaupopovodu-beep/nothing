@@ -397,39 +397,76 @@ function MobileSystemPresentation({ progress }: { progress: MotionValue<number> 
   const commitBlurRaw = useTransform(progress, [0.68, 0.80], [12, 0])
   const commitFilter  = useMotionTemplate`blur(${commitBlurRaw}px)`
 
-  return (
-    <div style={{ width: '100%', padding: '0 20px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100dvh' }}>
+  // Phase A (0→0.65): cards view — centered vertically
+  // Phase B (0.65→1): commitments view — centered vertically
+  const cardsOpacity = useTransform(progress, [0.62, 0.70], [1, 0])
+  const cardsPointer = useTransform(progress, (v) => v > 0.68 ? 'none' : 'auto')
 
-      <motion.div
-        style={{
-          opacity: introLabelOpacity,
-          y: introLabelY,
-          filter: introLabelFilter,
-          fontSize: 11,
-          letterSpacing: '0.28em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.38)',
-          marginBottom: 28,
-        }}
-      >
-        How it works
+  return (
+    <div style={{
+      width: '100%',
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      padding: '0 20px',
+      position: 'relative',
+    }}>
+
+      {/* Cards phase */}
+      <motion.div style={{
+        opacity: cardsOpacity,
+        pointerEvents: cardsPointer,
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '0 20px',
+      }}>
+        <motion.div
+          style={{
+            opacity: introLabelOpacity,
+            y: introLabelY,
+            filter: introLabelFilter,
+            fontSize: 11,
+            letterSpacing: '0.28em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.38)',
+            marginBottom: 28,
+          }}
+        >
+          How it works
+        </motion.div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {releaseModes.map((item, i) => (
+            <MobileCard
+              key={item.eyebrow}
+              item={item}
+              progress={progress}
+              cardStart={cardStarts[i]}
+              cardEnd={cardEnds[i]}
+              cardOutStart={cardOutStart}
+              cardOutEnd={cardOutEnd}
+            />
+          ))}
+        </div>
       </motion.div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {releaseModes.map((item, i) => (
-          <MobileCard
-            key={item.eyebrow}
-            item={item}
-            progress={progress}
-            cardStart={cardStarts[i]}
-            cardEnd={cardEnds[i]}
-            cardOutStart={cardOutStart}
-            cardOutEnd={cardOutEnd}
-          />
-        ))}
-      </div>
-
-      <motion.div style={{ opacity: commitOpacity, y: commitY, filter: commitFilter, marginTop: 40 }}>
+      {/* Commitments phase */}
+      <motion.div style={{
+        opacity: commitOpacity,
+        y: commitY,
+        filter: commitFilter,
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '0 20px',
+        pointerEvents: 'none',
+      }}>
         <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 16 }}>
           Our commitments
         </div>
@@ -445,6 +482,7 @@ function MobileSystemPresentation({ progress }: { progress: MotionValue<number> 
           ))}
         </div>
       </motion.div>
+
     </div>
   )
 }
