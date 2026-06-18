@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { easeInOut, motion, useInView } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
 
-/* ─── Data ──────────────────────────────────────────── */
+/* ─── Data ─────────────────────────────────────── */
 const EASE = [0.22, 1, 0.36, 1] as const
 
 const socials = [
@@ -61,7 +61,7 @@ const socials = [
   },
 ]
 
-/* ─── Pulse dot ─────────────────────────────────────── */
+/* ─── Pulse dot ───────────────────────────────── */
 function PulseDot({ active, accent }: { active: boolean; accent: string }) {
   return (
     <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 12, height: 12, flexShrink: 0 }}>
@@ -92,7 +92,7 @@ function PulseDot({ active, accent }: { active: boolean; accent: string }) {
   )
 }
 
-/* ─── Arrow icon ────────────────────────────────────── */
+/* ─── Arrow icon ───────────────────────────────── */
 function ArrowUpRight({ color }: { color: string }) {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={color} strokeWidth="1.2" aria-hidden="true">
@@ -101,7 +101,7 @@ function ArrowUpRight({ color }: { color: string }) {
   )
 }
 
-/* ─── Social Row ────────────────────────────────────── */
+/* ─── Social Row ───────────────────────────────── */
 function SocialRow({
   social,
   index,
@@ -113,6 +113,11 @@ function SocialRow({
 }) {
   const [hovered, setHovered] = useState(false)
   const [ctxIndex, setCtxIndex] = useState(0)
+
+  const handleTouch = () => {
+    setHovered((v) => !v)
+    setCtxIndex((p) => (p + 1) % social.contexts.length)
+  }
 
   const handleMouseEnter = () => {
     setHovered(true)
@@ -168,9 +173,10 @@ function SocialRow({
           display: 'grid',
           gridTemplateColumns: '2rem 1fr auto',
           alignItems: 'center',
-          columnGap: '1rem',
-          padding: '1.35rem 0 1.35rem 0.25rem',
+          columnGap: 'clamp(0.6rem, 2vw, 1rem)',
+          padding: '1.25rem 0 1.25rem 0.25rem',
           borderTop: '1px solid rgba(255,255,255,0.055)',
+          minHeight: '56px',
         }}
       >
         {/* Icon */}
@@ -211,6 +217,9 @@ function SocialRow({
               fontStyle: 'italic',
               color: 'rgba(240,237,230,0.32)',
               transition: 'color 0.25s ease',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {social.handle}
@@ -218,8 +227,8 @@ function SocialRow({
         </span>
 
         {/* Right cluster */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexShrink: 0 }}>
-          {/* Context label */}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1.5vw, 0.8rem)', flexShrink: 0 }}>
+          {/* Context label — hide on very small screens */}
           <motion.span
             style={{
               fontSize: '0.58rem',
@@ -227,6 +236,7 @@ function SocialRow({
               textTransform: 'uppercase',
               color: 'rgba(240,237,230,0.35)',
               whiteSpace: 'nowrap',
+              display: 'var(--ctx-display, inline)',
             }}
             animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : -6 }}
             transition={{ duration: 0.28, ease: EASE }}
@@ -241,7 +251,7 @@ function SocialRow({
               fontWeight: 300,
               letterSpacing: '0.04em',
               color: hovered ? 'rgba(240,237,230,0.38)' : 'rgba(240,237,230,0.14)',
-              minWidth: '2.8rem',
+              minWidth: '2.5rem',
               textAlign: 'right',
               transition: 'color 0.25s ease',
             }}
@@ -266,7 +276,7 @@ function SocialRow({
   )
 }
 
-/* ─── Section ───────────────────────────────────────── */
+/* ─── Section ─────────────────────────────────── */
 export function SocialSection() {
   const ref = useRef<HTMLElement>(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -275,20 +285,27 @@ export function SocialSection() {
     <section
       ref={ref}
       id="social"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(5rem,8vw,7rem) 0' }}
+      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(3.5rem,8vw,7rem) 0' }}
       aria-label="Community — social channels"
     >
       <div className="section-shell">
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'clamp(200px, 28%, 320px) 1fr',
-            gap: 'clamp(3rem, 6vw, 7rem)',
+            /* Mobile: single column; tablet+: two columns */
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+            gap: 'clamp(2rem, 6vw, 7rem)',
             alignItems: 'start',
           }}
         >
           {/* ── Left ── */}
-          <div style={{ position: 'sticky', top: '5rem' }}>
+          <div
+            style={{
+              /* Sticky only on wide screens; on mobile just flows normally */
+              position: 'sticky',
+              top: '5rem',
+            }}
+          >
             <p
               className="label-caps"
               style={{ marginBottom: '1.5rem' }}
@@ -298,7 +315,7 @@ export function SocialSection() {
 
             <h2
               style={{
-                fontSize: 'clamp(2.2rem, 3.8vw, 3.4rem)',
+                fontSize: 'clamp(1.8rem, 5vw, 3.4rem)',
                 fontWeight: 200,
                 letterSpacing: '-0.03em',
                 color: '#f0ede8',
@@ -330,7 +347,6 @@ export function SocialSection() {
 
           {/* ── Right ── */}
           <div>
-            {/* Top border for the first row */}
             {socials.map((social, i) => (
               <SocialRow key={social.name} social={social} index={i} inView={inView} />
             ))}
