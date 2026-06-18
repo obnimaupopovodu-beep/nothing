@@ -111,7 +111,6 @@ function MobilePlaylistCard({
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        /* card is 80vw wide, peek shows next card */
         flexShrink: 0,
         width: 'calc(80vw)',
         maxWidth: 320,
@@ -132,116 +131,44 @@ function MobilePlaylistCard({
         transition: 'border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease',
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
-        /* snap target */
         scrollSnapAlign: 'center',
         willChange: 'transform',
         transform: isActive ? 'scale(1)' : 'scale(0.94)',
         opacity: isActive ? 1 : 0.62,
-        /* transition handled via CSS for performance */
         transitionProperty: 'transform, opacity, border-color, background, box-shadow',
         transitionDuration: '0.4s',
         transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      {/* eyebrow */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-      }}>
-        <span style={{
-          fontSize: 10,
-          letterSpacing: '0.28em',
-          textTransform: 'uppercase',
-          color: `rgba(${playlist.accentRgb}, 0.85)`,
-          lineHeight: 1,
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <span style={{ fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: `rgba(${playlist.accentRgb}, 0.85)`, lineHeight: 1 }}>
           {playlist.mood}
         </span>
-        <span style={{
-          fontSize: 28,
-          lineHeight: 0.9,
-          letterSpacing: '-0.06em',
-          color: isActive ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.28)',
-          transition: 'color 0.4s ease',
-        }}>
+        <span style={{ fontSize: 28, lineHeight: 0.9, letterSpacing: '-0.06em', color: isActive ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.28)', transition: 'color 0.4s ease' }}>
           {number}
         </span>
       </div>
-
-      {/* waveform — always visible on mobile card */}
       <div style={{ marginBottom: 20 }}>
         <Waveform active={isActive} activeColor={playlist.waveColor} />
       </div>
-
-      {/* title */}
-      <h3 style={{
-        margin: 0,
-        fontSize: 'clamp(20px, 6vw, 26px)',
-        lineHeight: 1.0,
-        letterSpacing: '-0.04em',
-        color: '#fff',
-        marginBottom: 12,
-      }}>
+      <h3 style={{ margin: 0, fontSize: 'clamp(20px, 6vw, 26px)', lineHeight: 1.0, letterSpacing: '-0.04em', color: '#fff', marginBottom: 12 }}>
         {playlist.title}
       </h3>
-
-      {/* description */}
-      <p style={{
-        margin: 0,
-        fontSize: 13,
-        lineHeight: 1.65,
-        color: 'rgba(255,255,255,0.52)',
-        flex: 1,
-        marginBottom: 20,
-      }}>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: 'rgba(255,255,255,0.52)', flex: 1, marginBottom: 20 }}>
         {playlist.description}
       </p>
-
-      {/* footer: tags + arrow */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          <span style={{
-            padding: '6px 10px',
-            borderRadius: 999,
-            background: `rgba(${playlist.accentRgb}, 0.1)`,
-            border: `1px solid rgba(${playlist.accentRgb}, 0.2)`,
-            fontSize: 11,
-            lineHeight: 1,
-            letterSpacing: '0.04em',
-            color: `rgba(${playlist.accentRgb}, 0.9)`,
-          }}>
+          <span style={{ padding: '6px 10px', borderRadius: 999, background: `rgba(${playlist.accentRgb}, 0.1)`, border: `1px solid rgba(${playlist.accentRgb}, 0.2)`, fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: `rgba(${playlist.accentRgb}, 0.9)` }}>
             {playlist.tracks}
           </span>
           {playlist.tags.slice(0, 1).map((tag) => (
-            <span key={tag} style={{
-              padding: '6px 10px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              fontSize: 11,
-              lineHeight: 1,
-              letterSpacing: '0.04em',
-              color: 'rgba(255,255,255,0.52)',
-            }}>
+            <span key={tag} style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.52)' }}>
               {tag}
             </span>
           ))}
         </div>
-        <span style={{
-          flexShrink: 0,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 36,
-          height: 36,
-          borderRadius: '999px',
-          border: `1px solid rgba(${playlist.accentRgb}, ${isActive ? 0.3 : 0.1})`,
-          background: isActive ? `rgba(${playlist.accentRgb}, 0.1)` : 'rgba(255,255,255,0.04)',
-          color: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.6)',
-          transition: 'all 0.4s ease',
-        }}>
+        <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '999px', border: `1px solid rgba(${playlist.accentRgb}, ${isActive ? 0.3 : 0.1})`, background: isActive ? `rgba(${playlist.accentRgb}, 0.1)` : 'rgba(255,255,255,0.04)', color: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.6)', transition: 'all 0.4s ease' }}>
           <ArrowUpRight size={16} weight="regular" />
         </span>
       </div>
@@ -284,12 +211,10 @@ export function PlaylistsSection() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  /* Detect active slide via IntersectionObserver on each card */
   useEffect(() => {
     if (!isMobile || !trackRef.current) return
     const cards = trackRef.current.querySelectorAll('[data-carousel-card]')
     if (!cards.length) return
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -299,10 +224,7 @@ export function PlaylistsSection() {
           }
         })
       },
-      {
-        root: trackRef.current,
-        threshold: 0.55,
-      }
+      { root: trackRef.current, threshold: 0.55 }
     )
     cards.forEach((card) => observer.observe(card))
     return () => observer.disconnect()
@@ -328,14 +250,12 @@ export function PlaylistsSection() {
         padding: 'clamp(56px, 12vw, 180px) 0',
         background: '#050505',
         color: '#fff',
-        /* clip so carousel peek doesn't cause overflow */
         overflow: 'hidden',
       }}
     >
-      {/* ── MOBILE LAYOUT ─────────────────────────────────────────── */}
+      {/* ── MOBILE LAYOUT ───────────────────────────────────────── */}
       {isMobile && (
         <div>
-          {/* Header inside section-shell */}
           <div className="section-shell">
             <motion.div
               initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
@@ -343,49 +263,19 @@ export function PlaylistsSection() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 14px',
-                borderRadius: 999,
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'rgba(255,255,255,0.84)',
-                fontSize: 12,
-                lineHeight: 1,
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                marginBottom: 22,
-              }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.84)', fontSize: 12, lineHeight: 1, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 22 }}>
                 <SpotifyIcon />
                 Spotify
               </div>
-
-              <h2 style={{
-                margin: 0,
-                fontSize: 'clamp(40px, 11vw, 64px)',
-                lineHeight: 0.92,
-                letterSpacing: '-0.07em',
-                color: '#fff',
-              }}>
+              <h2 style={{ margin: 0, fontSize: 'clamp(40px, 11vw, 64px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff' }}>
                 Our Playlists.
               </h2>
-
-              <p style={{
-                marginTop: 18,
-                marginBottom: 0,
-                maxWidth: '34ch',
-                fontSize: 14,
-                lineHeight: 1.65,
-                color: 'rgba(255,255,255,0.52)',
-              }}>
+              <p style={{ marginTop: 18, marginBottom: 0, maxWidth: '34ch', fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.52)' }}>
                 Handpicked collections shaped as living listening routes, not static lists.
               </p>
             </motion.div>
           </div>
 
-          {/* Carousel track — full-bleed, padding-inline creates side peek */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -394,62 +284,32 @@ export function PlaylistsSection() {
           >
             <div
               ref={trackRef}
-              style={{
-                display: 'flex',
-                gap: 14,
-                overflowX: 'scroll',
-                scrollSnapType: 'x mandatory',
-                WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: 'none',
-                paddingInline: 'calc((100vw - 80vw) / 2)',
-                paddingBlock: '28px 8px',
-                /* extra right breathing room so last card snaps center */
-                paddingRight: 'calc((100vw - 80vw) / 2)',
-              }}
-              /* hide webkit scrollbar */
+              style={{ display: 'flex', gap: 14, overflowX: 'scroll', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', paddingInline: 'calc((100vw - 80vw) / 2)', paddingBlock: '28px 8px', paddingRight: 'calc((100vw - 80vw) / 2)' }}
               className="carousel-track"
             >
               {playlists.map((playlist, index) => (
-                <div
-                  key={playlist.title}
-                  data-carousel-card
-                  data-idx={index}
-                  style={{ scrollSnapAlign: 'center', flexShrink: 0 }}
-                >
-                  <MobilePlaylistCard
-                    playlist={playlist}
-                    index={index}
-                    isActive={activeSlide === index}
-                  />
+                <div key={playlist.title} data-carousel-card data-idx={index} style={{ scrollSnapAlign: 'center', flexShrink: 0 }}>
+                  <MobilePlaylistCard playlist={playlist} index={index} isActive={activeSlide === index} />
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Dot indicators */}
           <CarouselDots total={playlists.length} active={activeSlide} />
 
-          {/* Scroll hint label */}
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            style={{
-              textAlign: 'center',
-              marginTop: 14,
-              fontSize: 10,
-              letterSpacing: '0.22em',
-              textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.22)',
-            }}
+            style={{ textAlign: 'center', marginTop: 14, fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)' }}
           >
             Swipe to explore
           </motion.p>
         </div>
       )}
 
-      {/* ── DESKTOP LAYOUT (unchanged) ────────────────────────────── */}
+      {/* ── DESKTOP LAYOUT ──────────────────────────────────────── */}
       {!isMobile && (
         <div className="section-shell">
           <div style={{
@@ -466,59 +326,36 @@ export function PlaylistsSection() {
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 999,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.03)',
-                  color: 'rgba(255,255,255,0.84)',
-                  fontSize: 12,
-                  lineHeight: 1,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  marginBottom: 22,
-                }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.84)', fontSize: 12, lineHeight: 1, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 22 }}>
                   <SpotifyIcon />
                   Spotify
                 </div>
-
-                <h2 style={{
-                  margin: 0,
-                  fontSize: 'clamp(40px, 8vw, 92px)',
-                  lineHeight: 0.92,
-                  letterSpacing: '-0.07em',
-                  color: '#fff',
-                  maxWidth: '8ch',
-                }}>
+                <h2 style={{ margin: 0, fontSize: 'clamp(40px, 8vw, 92px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff', maxWidth: '8ch' }}>
                   Our<br />Playlists.
                 </h2>
-
-                <p style={{
-                  marginTop: 24,
-                  marginBottom: 0,
-                  maxWidth: '28ch',
-                  fontSize: 16,
-                  lineHeight: 1.65,
-                  color: 'rgba(255,255,255,0.58)',
-                }}>
-                  Handpicked collections from the Nothing Records team — shaped as living
-                  listening routes, not static lists.
+                <p style={{ marginTop: 24, marginBottom: 0, maxWidth: '28ch', fontSize: 16, lineHeight: 1.65, color: 'rgba(255,255,255,0.58)' }}>
+                  Handpicked collections from the Nothing Records team — shaped as living listening routes, not static lists.
                 </p>
               </motion.div>
             </div>
 
             {/* Desktop playlist cards */}
-            <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 14 }}>
+            <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 10 }}>
               {playlists.map((playlist, index) => {
                 const isActive = activeIndex === index
                 const isIdle = activeIndex === null
                 const number = String(index + 1).padStart(2, '0')
-                const cardHeight = isIdle ? 140 : isActive ? 194 : 122
-                const cardOpacity = isIdle ? 1 : isActive ? 1 : 0.78
-                const cardScale = isIdle ? 1 : isActive ? 1 : 0.992
+                const cardOpacity = isIdle ? 1 : isActive ? 1 : 0.72
+                const cardScale = isIdle ? 1 : isActive ? 1 : 0.993
+
+                /*
+                 * FIX: No fixed height — cards are height:auto and sized by content.
+                 * Collapse effect achieved by animating paddingBlock (idle→compact→active).
+                 * overflow:visible so tall titles are never clipped.
+                 * Title font capped at 34px to stay comfortable inside the card.
+                 */
+                const paddingTop = isIdle ? 20 : isActive ? 24 : 14
+                const paddingBottom = isIdle ? 20 : isActive ? 24 : 14
 
                 return (
                   <motion.a
@@ -534,100 +371,126 @@ export function PlaylistsSection() {
                     viewport={{ once: true, amount: 0.24 }}
                     transition={{ duration: 0.7, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
                     animate={{
-                      height: cardHeight,
                       opacity: cardOpacity,
-                      y: isIdle ? 0 : isActive ? -1 : 0,
                       scale: cardScale,
+                      paddingTop,
+                      paddingBottom,
                     }}
                     style={{
                       position: 'relative',
                       display: 'block',
-                      overflow: 'hidden',
-                      borderRadius: 30,
+                      /* height:auto — content determines size, no clipping */
+                      overflow: 'visible',
+                      borderRadius: 24,
+                      paddingLeft: 26,
+                      paddingRight: 26,
                       border: isIdle
                         ? '1px solid rgba(255,255,255,0.065)'
                         : isActive
                           ? '1px solid rgba(255,255,255,0.1)'
-                          : '1px solid rgba(255,255,255,0.055)',
+                          : '1px solid rgba(255,255,255,0.05)',
                       background: isIdle
                         ? 'rgba(255,255,255,0.028)'
                         : isActive
                           ? `linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.024) 100%), ${playlist.color}`
-                          : 'rgba(255,255,255,0.024)',
-                      boxShadow: isActive ? '0 20px 56px rgba(0,0,0,0.22)' : '0 12px 28px rgba(0,0,0,0.14)',
+                          : 'rgba(255,255,255,0.022)',
+                      boxShadow: isActive ? '0 20px 56px rgba(0,0,0,0.22)' : '0 4px 16px rgba(0,0,0,0.10)',
                       textDecoration: 'none',
                       color: 'inherit',
                       backdropFilter: 'blur(18px)',
+                      WebkitBackdropFilter: 'blur(18px)',
                       willChange: 'transform, opacity',
+                      transition: 'border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease',
                     }}
                   >
+                    {/* Radial highlight on hover */}
                     <motion.div
                       animate={{ opacity: isActive ? 0.72 : 0 }}
                       transition={softTransition}
                       style={{
                         position: 'absolute',
                         inset: 0,
+                        borderRadius: 24,
                         background: 'radial-gradient(circle at 82% 28%, rgba(255,255,255,0.08), transparent 36%)',
                         pointerEvents: 'none',
                       }}
                     />
 
+                    {/* Card inner grid */}
                     <div style={{
                       position: 'relative',
                       zIndex: 1,
-                      height: '100%',
                       display: 'grid',
-                      gridTemplateColumns: '88px minmax(0, 1fr) auto',
-                      gap: 22,
-                      padding: '24px 26px',
+                      gridTemplateColumns: '72px minmax(0, 1fr) auto',
+                      gap: 20,
+                      alignItems: 'start',
                     }}>
                       {/* Number */}
-                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 2 }}>
                         <motion.div
-                          animate={{ color: isIdle ? 'rgba(255,255,255,0.4)' : isActive ? 'rgba(255,255,255,0.94)' : 'rgba(255,255,255,0.3)' }}
+                          animate={{ color: isIdle ? 'rgba(255,255,255,0.4)' : isActive ? 'rgba(255,255,255,0.94)' : 'rgba(255,255,255,0.28)' }}
                           transition={softTransition}
-                          style={{ fontSize: 32, lineHeight: 0.9, letterSpacing: '-0.06em' }}
+                          style={{ fontSize: 28, lineHeight: 1, letterSpacing: '-0.06em' }}
                         >
                           {number}
                         </motion.div>
                       </div>
 
                       {/* Title + description */}
-                      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                        <div>
-                          <motion.div
-                            animate={{ opacity: isIdle ? 0.4 : isActive ? 0.56 : 0.3 }}
-                            transition={softTransition}
-                            style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10, fontSize: 11, lineHeight: 1, letterSpacing: '0.22em', textTransform: 'uppercase' }}
-                          >
-                            <span>Spotify playlist</span>
-                            <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? '#6fff9f' : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
-                            <span>{playlist.mood}</span>
-                          </motion.div>
-
-                          <motion.h3
-                            animate={{ opacity: isIdle ? 0.9 : isActive ? 1 : 0.68 }}
-                            transition={softTransition}
-                            style={{ margin: 0, fontSize: 'clamp(22px, 3.2vw, 46px)', lineHeight: 0.96, letterSpacing: '-0.04em', color: '#fff' }}
-                          >
-                            {playlist.title}
-                          </motion.h3>
-                        </div>
-
+                      <div style={{ minWidth: 0 }}>
+                        {/* Eyebrow */}
                         <motion.div
-                          animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 10 }}
-                          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.04 : 0 }}
-                          style={{ overflow: 'hidden', pointerEvents: isActive ? 'auto' : 'none' }}
+                          animate={{ opacity: isIdle ? 0.4 : isActive ? 0.56 : 0.28 }}
+                          transition={softTransition}
+                          style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8, fontSize: 11, lineHeight: 1, letterSpacing: '0.22em', textTransform: 'uppercase' }}
                         >
-                          <p style={{ margin: '12px 0 10px', fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.62)' }}>
+                          <span>Spotify playlist</span>
+                          <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? '#6fff9f' : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
+                          <span>{playlist.mood}</span>
+                        </motion.div>
+
+                        {/* Title — font capped at 34px so multi-word titles stay on 1-2 lines */}
+                        <motion.h3
+                          animate={{ opacity: isIdle ? 0.9 : isActive ? 1 : 0.62 }}
+                          transition={softTransition}
+                          style={{
+                            margin: 0,
+                            fontSize: 'clamp(18px, 2.4vw, 34px)',
+                            lineHeight: 1.05,
+                            letterSpacing: '-0.035em',
+                            color: '#fff',
+                            /* allow wrapping — never clip */
+                            whiteSpace: 'normal',
+                            overflowWrap: 'break-word',
+                          }}
+                        >
+                          {playlist.title}
+                        </motion.h3>
+
+                        {/* Expandable description + tags */}
+                        <motion.div
+                          animate={{
+                            opacity: isActive ? 1 : 0,
+                            y: isActive ? 0 : 6,
+                            // height:auto trick — animate maxHeight so layout is not clipped
+                          }}
+                          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.04 : 0 }}
+                          style={{
+                            overflow: 'hidden',
+                            maxHeight: isActive ? 200 : 0,
+                            pointerEvents: isActive ? 'auto' : 'none',
+                            transition: 'max-height 0.45s cubic-bezier(0.22,1,0.36,1)',
+                          }}
+                        >
+                          <p style={{ margin: '10px 0 8px', fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.62)' }}>
                             {playlist.description}
                           </p>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                            <span style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.52)' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                            <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.52)' }}>
                               {playlist.tracks}
                             </span>
                             {playlist.tags.map((tag) => (
-                              <span key={tag} style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.76)' }}>
+                              <span key={tag} style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.76)' }}>
                                 {tag}
                               </span>
                             ))}
@@ -635,28 +498,30 @@ export function PlaylistsSection() {
                         </motion.div>
                       </div>
 
-                      {/* Right: waveform + arrow */}
-                      <div style={{ minWidth: 170, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      {/* Right column: tracks count + arrow + waveform */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, minWidth: 150 }}>
+                        {/* Tracks + arrow */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.72)', fontSize: 14, lineHeight: 1 }}>
-                          <motion.span animate={{ opacity: isIdle ? 0.76 : isActive ? 0.9 : 0.52 }} transition={softTransition}>
+                          <motion.span animate={{ opacity: isIdle ? 0.76 : isActive ? 0.9 : 0.48 }} transition={softTransition}>
                             {playlist.tracks}
                           </motion.span>
                           <motion.span
-                            animate={{ x: isActive ? 5 : 0, y: isActive ? -1 : 0, opacity: isIdle ? 0.8 : isActive ? 0.96 : 0.62, scale: isActive ? 1 : 0.975 }}
+                            animate={{ x: isActive ? 4 : 0, y: isActive ? -1 : 0, opacity: isIdle ? 0.8 : isActive ? 0.96 : 0.56, scale: isActive ? 1 : 0.975 }}
                             transition={springTransition}
-                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.04)', color: '#fff' }}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.04)', color: '#fff', flexShrink: 0 }}
                           >
                             <ArrowUpRight size={18} weight="regular" />
                           </motion.span>
                         </div>
 
+                        {/* Waveform — appears on hover */}
                         <motion.div
                           animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 8, scale: isActive ? 1 : 0.992 }}
-                          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.06 : 0 }}
+                          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.06 : 0 }}
                           style={{ width: 148, pointerEvents: 'none', transformOrigin: 'bottom right' }}
                         >
                           <Waveform active={isActive} activeColor={playlist.waveColor} />
-                          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 11, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
+                          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
                             <span>Preview</span>
                             <span>Open playlist</span>
                           </div>
@@ -671,7 +536,6 @@ export function PlaylistsSection() {
         </div>
       )}
 
-      {/* Hide scrollbar globally for carousel */}
       <style>{`.carousel-track::-webkit-scrollbar { display: none; }`}</style>
     </section>
   )
