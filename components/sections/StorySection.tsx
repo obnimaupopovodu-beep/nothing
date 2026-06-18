@@ -397,8 +397,6 @@ function MobileSystemPresentation({ progress }: { progress: MotionValue<number> 
   const commitBlurRaw = useTransform(progress, [0.68, 0.80], [12, 0])
   const commitFilter  = useMotionTemplate`blur(${commitBlurRaw}px)`
 
-  // Phase A (0→0.65): cards view — centered vertically
-  // Phase B (0.65→1): commitments view — centered vertically
   const cardsOpacity = useTransform(progress, [0.62, 0.70], [1, 0])
   const cardsPointer = useTransform(progress, (v) => v > 0.68 ? 'none' : 'auto')
 
@@ -492,14 +490,6 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
     return <MobileSystemPresentation progress={progress} />
   }
 
-  // timeline
-  // 0.00 - 0.16 intro title
-  // 0.16 - 0.40 cards reveal one by one
-  // 0.40 - 0.52 collapse to center + title goes up
-  // 0.52 - 0.67 stack vertically + widen
-  // 0.67 - 0.80 all swipe up together
-  // 0.80 - 1.00 commitments appear on clean canvas
-
   const introOpacity = useTransform(progress, (v) => {
     if (v <= 0.08) return mapRange(v, 0, 0.08, 0, 1)
     if (v <= 0.40) return 1
@@ -529,94 +519,89 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
 
   const introFilter = useMotionTemplate`blur(${introBlur}px)`
 
-const cardLayout = [
-  { x: -530, beforeY: -140, afterY: -320 },
-  { x: 590, beforeY: 60, afterY: 0 },
-  { x: 30, beforeY: 285, afterY: 320 },
-]
+  const cardLayout = [
+    { x: -530, beforeY: -140, afterY: -320 },
+    { x: 590, beforeY: 60, afterY: 0 },
+    { x: 30, beforeY: 285, afterY: 320 },
+  ]
 
-const revealStarts = [0.16, 0.22, 0.28]
-const revealEnds = [0.24, 0.30, 0.36]
+  const revealStarts = [0.16, 0.22, 0.28]
+  const revealEnds = [0.24, 0.30, 0.36]
 
-const enterOffsetY = 160
-const exitOffsetY = -220
+  const enterOffsetY = 160
+  const exitOffsetY = -220
 
   const cardStyles = releaseModes.map((_, i) => {
-  const opacity = useTransform(progress, (v) => {
-    if (v < revealStarts[i]) return 0
-    if (v <= revealEnds[i]) return easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
-    if (v <= 0.67) return 1
-    if (v <= 0.80) return mapRange(v, 0.67, 0.80, 1, 0)
-    return 0
+    const opacity = useTransform(progress, (v) => {
+      if (v < revealStarts[i]) return 0
+      if (v <= revealEnds[i]) return easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
+      if (v <= 0.67) return 1
+      if (v <= 0.80) return mapRange(v, 0.67, 0.80, 1, 0)
+      return 0
+    })
+
+    const x = useTransform(progress, (v) => {
+      const fromX = cardLayout[i].x
+      if (v <= 0.40) return fromX
+      if (v <= 0.52) {
+        const t = easeInOut(mapRange(v, 0.40, 0.52))
+        return fromX + (0 - fromX) * t
+      }
+      return 0
+    })
+
+    const y = useTransform(progress, (v) => {
+      const beforeY = cardLayout[i].beforeY
+      const afterY = cardLayout[i].afterY
+      const enterFromY = beforeY + enterOffsetY
+
+      if (v < revealStarts[i]) return enterFromY
+      if (v <= revealEnds[i]) {
+        const t = easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
+        return enterFromY + (beforeY - enterFromY) * t
+      }
+      if (v <= 0.52) return beforeY
+      if (v <= 0.67) {
+        const t = easeInOut(mapRange(v, 0.52, 0.67))
+        return beforeY + (afterY - beforeY) * t
+      }
+      if (v <= 0.80) {
+        const t = easeInOut(mapRange(v, 0.67, 0.80))
+        return afterY + exitOffsetY * t
+      }
+      return afterY + exitOffsetY
+    })
+
+    const scale = useTransform(progress, (v) => {
+      if (v < revealStarts[i]) return 0.96
+      if (v <= revealEnds[i]) return 0.96 + 0.04 * easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
+      if (v <= 0.67) return 1
+      if (v <= 0.80) return 1 - 0.04 * easeInOut(mapRange(v, 0.67, 0.80))
+      return 0.96
+    })
+
+    // Explicit generic so TS infers MotionValue<number | string>, matching ReleaseCard's prop type
+    const width = useTransform<number, number | string>(progress, (v) => {
+      if (v <= 0.52) return 320
+      if (v <= 0.67) {
+        const t = easeInOut(mapRange(v, 0.52, 0.67))
+        return 320 + (540 - 320) * t
+      }
+      return 540
+    })
+
+    const blur = useTransform(progress, (v) => {
+      if (v < revealStarts[i]) return 18
+      if (v <= revealEnds[i]) return 18 - 18 * easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
+      if (v <= 0.67) return 0
+      if (v <= 0.80) return 10 * easeInOut(mapRange(v, 0.67, 0.80))
+      return 10
+    })
+
+    const filter = useMotionTemplate`blur(${blur}px)`
+
+    return { opacity, x, y, scale, width, filter }
   })
-
-  const x = useTransform(progress, (v) => {
-    const fromX = cardLayout[i].x
-
-    if (v <= 0.40) return fromX
-    if (v <= 0.52) {
-      const t = easeInOut(mapRange(v, 0.40, 0.52))
-      return fromX + (0 - fromX) * t
-    }
-    return 0
-  })
-
-  const y = useTransform(progress, (v) => {
-    const beforeY = cardLayout[i].beforeY
-    const afterY = cardLayout[i].afterY
-    const enterFromY = beforeY + enterOffsetY
-
-    if (v < revealStarts[i]) return enterFromY
-
-    if (v <= revealEnds[i]) {
-      const t = easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
-      return enterFromY + (beforeY - enterFromY) * t
-    }
-
-    if (v <= 0.52) return beforeY
-
-    if (v <= 0.67) {
-      const t = easeInOut(mapRange(v, 0.52, 0.67))
-      return beforeY + (afterY - beforeY) * t
-    }
-
-    if (v <= 0.80) {
-      const t = easeInOut(mapRange(v, 0.67, 0.80))
-      return afterY + exitOffsetY * t
-    }
-
-    return afterY + exitOffsetY
-  })
-
-  const scale = useTransform(progress, (v) => {
-    if (v < revealStarts[i]) return 0.96
-    if (v <= revealEnds[i]) return 0.96 + 0.04 * easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
-    if (v <= 0.67) return 1
-    if (v <= 0.80) return 1 - 0.04 * easeInOut(mapRange(v, 0.67, 0.80))
-    return 0.96
-  })
-
-  const width = useTransform(progress, (v) => {
-    if (v <= 0.52) return 320
-    if (v <= 0.67) {
-      const t = easeInOut(mapRange(v, 0.52, 0.67))
-      return 320 + (540 - 320) * t
-    }
-    return 540
-  })
-
-  const blur = useTransform(progress, (v) => {
-    if (v < revealStarts[i]) return 18
-    if (v <= revealEnds[i]) return 18 - 18 * easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
-    if (v <= 0.67) return 0
-    if (v <= 0.80) return 10 * easeInOut(mapRange(v, 0.67, 0.80))
-    return 10
-  })
-
-  const filter = useMotionTemplate`blur(${blur}px)`
-
-  return { opacity, x, y, scale, width, filter }
-})
 
   const commitmentsTitleOpacity = useTransform(progress, [0.80, 0.87], [0, 1])
   const commitmentsTitleY = useTransform(progress, [0.80, 0.87], [40, 0])
@@ -766,9 +751,6 @@ function MobileStory() {
   const { scrollYProgress } = useScroll({ target: presentationRef, offset: ['start start', 'end end'] })
 
   return (
-    // overflow:clip clips visually without creating a scroll container,
-    // so window scroll events still reach useScroll({ target }).
-    // overflow:hidden would intercept scroll and freeze scrollYProgress at 0.
     <section className="relative md:hidden" style={{ overflowX: 'clip' }} aria-label="Nothing Records story">
       <div className="absolute inset-x-0 top-0" style={{ height: '50%', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127,176,255,0.09), transparent 70%)' }} />
       <div className="relative min-h-[100dvh] px-5 pb-10 pt-[80px]">
@@ -790,8 +772,6 @@ function MobileStory() {
         </div>
       </div>
       <div id="mobile-presentation" ref={presentationRef} style={{ height: '400dvh', position: 'relative', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        {/* overflow:clip here too — clips animated elements that go out of bounds
-            without creating a scroll container that would break useScroll */}
         <div style={{ position: 'sticky', top: 0, height: '100dvh', overflow: 'clip', background: 'linear-gradient(to bottom, rgba(5,5,5,0.95), rgba(5,5,5,0.99))' }}>
           <SystemPresentation progress={scrollYProgress} mobile />
         </div>
@@ -808,19 +788,14 @@ function DesktopStory() {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   const reducedMotion = useReducedMotion()
 
-  // Measured pixel offset: how far h1 must travel from its natural position to viewport center.
-  // We measure on mount (and on resize) so the value is always exact.
   const [centerDeltaX, setCenterDeltaX] = useState(0)
 
   const measure = () => {
     if (!spacerRef.current || !h1Ref.current) return
     const spacerRect = spacerRef.current.getBoundingClientRect()
     const h1Width    = h1Ref.current.offsetWidth
-    // Viewport center in px
     const vpCenter   = window.innerWidth / 2
-    // Natural left edge of h1 = spacerRect.left (they share the same position)
     const naturalLeft = spacerRect.left
-    // Delta needed so h1 center aligns with viewport center
     const delta = vpCenter - naturalLeft - h1Width / 2
     setCenterDeltaX(delta)
   }
@@ -833,30 +808,18 @@ function DesktopStory() {
 
   const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
 
-  // ─── Timeline ──────────────────────────────────────────────────────────
-  //  [0.00 → 0.08]  static at natural position
-  //  [0.08 → 0.26]  h1 drifts right to true viewport center
-  //  [0.26 → 0.34]  hold — h1 sits at center (pause)
-  //  [0.34 → 0.46]  h1 floats up and fades out
-  //  [0.08 → 0.28]  eyebrow + subtitle fade out
-  //  [0.10 → 0.30]  right column fades out
-  //  [0.40 → 0.50]  One Clear System fades in
-
-  // x: 0 → centerDeltaX (phase A), hold (phase B), hold (phase C, y takes over)
   const h1X = useTransform(
     scrollYProgress,
     [0.08, 0.26, 0.34, 0.46],
     reducedMotion ? [0, 0, 0, 0] : [0, centerDeltaX, centerDeltaX, centerDeltaX]
   )
 
-  // y: 0 during drift + hold, then -110px during fly-up
   const h1Y = useTransform(
     scrollYProgress,
     [0.26, 0.34, 0.46],
     reducedMotion ? [0, 0, 0] : [0, 0, -110]
   )
 
-  // opacity: visible through hold, fades during fly-up
   const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.36, 0.46], [1, 1, 1, 0])
 
   const eyebrowOpacity  = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
@@ -883,7 +846,6 @@ function DesktopStory() {
 
               {/* Left column */}
               <div style={{ flex: 1, minWidth: 0 }}>
-
                 <motion.p
                   style={{
                     fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase',
@@ -897,11 +859,6 @@ function DesktopStory() {
                   Independent Electronic Music Label
                 </motion.p>
 
-                {/*
-                  Spacer: invisible clone of h1 — keeps layout height intact.
-                  Also serves as the measurement anchor: its getBoundingClientRect().left
-                  is exactly where h1 starts naturally.
-                */}
                 <div
                   ref={spacerRef}
                   aria-hidden
@@ -961,20 +918,11 @@ function DesktopStory() {
           </div>
         </div>
 
-        {/*
-          h1 floats above the layout as position:absolute.
-          It starts exactly over the spacer (same top/left) thanks to
-          top:50% + translateY:-50% matching the flex items-center alignment,
-          and x starts at 0 (no offset from spacer).
-          We measure spacerRef to compute centerDeltaX so x:0 = natural position.
-        */}
         <motion.h1
           ref={h1Ref}
           style={{
             position: 'absolute',
             top: '50%',
-            // Align left edge with spacer: section-shell padding is the inset.
-            // We use the same left offset as the section-shell.
             left: spacerRef.current ? spacerRef.current.getBoundingClientRect().left : undefined,
             translateY: '-50%',
             x: h1X,
