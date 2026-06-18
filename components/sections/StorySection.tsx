@@ -285,112 +285,173 @@ function CommitmentLine({
   )
 }
 
-function SystemPresentation({ progress, mobile = false }: { progress: MotionValue<number>; mobile?: boolean }) {
-  if (mobile) {
-    return (
-      <div style={{ width: '100%' }}>
-        <div
-          style={{
-            display: 'grid',
-            gap: 16,
-            width: '100%',
-          }}
-        >
-          {releaseModes.map((item, i) => (
-            <div
-              key={item.eyebrow}
-              style={{
-                borderRadius: 24,
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.03)',
-                padding: 20,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.45)',
-                  marginBottom: 12,
-                }}
-              >
-                {item.eyebrow}
-              </div>
-              <div
-                style={{
-                  fontSize: 22,
-                  lineHeight: 1.05,
-                  letterSpacing: '-0.04em',
-                  color: '#fff',
-                }}
-              >
-                {item.title}
-              </div>
-              <p
-                style={{
-                  marginTop: 12,
-                  marginBottom: 0,
-                  fontSize: 15,
-                  lineHeight: 1.55,
-                  color: 'rgba(255,255,255,0.64)',
-                }}
-              >
-                {item.body}
-              </p>
-            </div>
-          ))}
-        </div>
+function MobileCard({
+  item,
+  progress,
+  cardStart,
+  cardEnd,
+  cardOutStart,
+  cardOutEnd,
+}: {
+  item: (typeof releaseModes)[number]
+  progress: MotionValue<number>
+  cardStart: number
+  cardEnd: number
+  cardOutStart: number
+  cardOutEnd: number
+}) {
+  const opacity = useTransform(progress, (v) => {
+    if (v < cardStart) return 0
+    if (v <= cardEnd) return easeInOut(mapRange(v, cardStart, cardEnd))
+    if (v <= cardOutStart) return 1
+    if (v <= cardOutEnd) return 1 - easeInOut(mapRange(v, cardOutStart, cardOutEnd))
+    return 0
+  })
+  const y = useTransform(progress, (v) => {
+    if (v < cardStart) return 40
+    if (v <= cardEnd) return 40 - 40 * easeInOut(mapRange(v, cardStart, cardEnd))
+    if (v <= cardOutStart) return 0
+    if (v <= cardOutEnd) return -50 * easeInOut(mapRange(v, cardOutStart, cardOutEnd))
+    return -50
+  })
+  const blurRaw = useTransform(progress, (v) => {
+    if (v < cardStart) return 12
+    if (v <= cardEnd) return 12 - 12 * easeInOut(mapRange(v, cardStart, cardEnd))
+    if (v <= cardOutStart) return 0
+    if (v <= cardOutEnd) return 8 * easeInOut(mapRange(v, cardOutStart, cardOutEnd))
+    return 8
+  })
+  const filter = useMotionTemplate`blur(${blurRaw}px)`
 
-        <div style={{ height: 72 }} />
+  return (
+    <motion.div
+      style={{
+        opacity,
+        y,
+        filter,
+        borderRadius: 20,
+        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(255,255,255,0.03)',
+        padding: '18px 20px',
+        backdropFilter: 'blur(12px)',
+      }}
+    >
+      <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 10 }}>
+        {item.eyebrow}
+      </div>
+      <div style={{ fontSize: 20, lineHeight: 1.08, letterSpacing: '-0.04em', color: '#fff', marginBottom: 10 }}>
+        {item.title}
+      </div>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.58)' }}>
+        {item.body}
+      </p>
+    </motion.div>
+  )
+}
 
-        <div
-          style={{
-            fontSize: 12,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.42)',
-            marginBottom: 16,
-          }}
-        >
+function MobileCommitRow({
+  item,
+  progress,
+  rowStart,
+  rowEnd,
+}: {
+  item: (typeof advantages)[number]
+  progress: MotionValue<number>
+  rowStart: number
+  rowEnd: number
+}) {
+  const opacity = useTransform(progress, [rowStart, rowEnd], [0, 1])
+  const y = useTransform(progress, [rowStart, rowEnd], [20, 0])
+  return (
+    <motion.div
+      style={{
+        opacity,
+        y,
+        padding: '16px 0',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
+      <div style={{ fontSize: 17, lineHeight: 1.1, letterSpacing: '-0.03em', color: '#fff', marginBottom: 6 }}>
+        {item.title}
+      </div>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'rgba(255,255,255,0.54)' }}>
+        {item.body}
+      </p>
+    </motion.div>
+  )
+}
+
+function MobileSystemPresentation({ progress }: { progress: MotionValue<number> }) {
+  const cardStarts   = [0.08, 0.20, 0.32]
+  const cardEnds     = [0.18, 0.30, 0.42]
+  const cardOutStart = 0.58
+  const cardOutEnd   = 0.70
+
+  const introLabelOpacity = useTransform(progress, [0, 0.08, 0.50, 0.60], [0, 1, 1, 0])
+  const introLabelY       = useTransform(progress, [0, 0.08], [16, 0])
+  const introLabelBlurRaw = useTransform(progress, [0, 0.08], [10, 0])
+  const introLabelFilter  = useMotionTemplate`blur(${introLabelBlurRaw}px)`
+
+  const commitOpacity = useTransform(progress, [0.68, 0.80], [0, 1])
+  const commitY       = useTransform(progress, [0.68, 0.80], [30, 0])
+  const commitBlurRaw = useTransform(progress, [0.68, 0.80], [12, 0])
+  const commitFilter  = useMotionTemplate`blur(${commitBlurRaw}px)`
+
+  return (
+    <div style={{ width: '100%', padding: '0 20px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100dvh' }}>
+
+      <motion.div
+        style={{
+          opacity: introLabelOpacity,
+          y: introLabelY,
+          filter: introLabelFilter,
+          fontSize: 11,
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.38)',
+          marginBottom: 28,
+        }}
+      >
+        How it works
+      </motion.div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {releaseModes.map((item, i) => (
+          <MobileCard
+            key={item.eyebrow}
+            item={item}
+            progress={progress}
+            cardStart={cardStarts[i]}
+            cardEnd={cardEnds[i]}
+            cardOutStart={cardOutStart}
+            cardOutEnd={cardOutEnd}
+          />
+        ))}
+      </div>
+
+      <motion.div style={{ opacity: commitOpacity, y: commitY, filter: commitFilter, marginTop: 40 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 16 }}>
           Our commitments
         </div>
-
         <div style={{ display: 'grid', gap: 0 }}>
-          {advantages.map((item) => (
-            <div
+          {advantages.map((item, i) => (
+            <MobileCommitRow
               key={item.title}
-              style={{
-                padding: '18px 0',
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 18,
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.03em',
-                  color: '#fff',
-                  marginBottom: 8,
-                }}
-              >
-                {item.title}
-              </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 15,
-                  lineHeight: 1.55,
-                  color: 'rgba(255,255,255,0.62)',
-                }}
-              >
-                {item.body}
-              </p>
-            </div>
+              item={item}
+              progress={progress}
+              rowStart={0.72 + i * 0.06}
+              rowEnd={0.80 + i * 0.06}
+            />
           ))}
         </div>
-      </div>
-    )
+      </motion.div>
+    </div>
+  )
+}
+
+function SystemPresentation({ progress, mobile = false }: { progress: MotionValue<number>; mobile?: boolean }) {
+  if (mobile) {
+    return <MobileSystemPresentation progress={progress} />
   }
 
   // timeline
@@ -429,12 +490,6 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
   })
 
   const introFilter = useMotionTemplate`blur(${introBlur}px)`
-
-// const initialX = [-520, 470, 60]
-// const initialScatterY = [-110, 70, 155]
-// const stackedY = [-170, 0, 170]
-// const revealStarts = [0.16, 0.22, 0.28]
-// const revealEnds = [0.24, 0.30, 0.36]
 
 const cardLayout = [
   { x: -530, beforeY: -140, afterY: -320 },
