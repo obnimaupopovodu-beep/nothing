@@ -100,7 +100,7 @@ body {
   width: 100%;
   max-width: 76rem;
   margin-inline: auto;
-  padding-inline: clamp(2rem, 6vw, 4rem);
+  padding-inline: clamp(1rem, 5vw, 4rem);
 }
 .section-padding {
   padding-top: clamp(5rem, 12vw, 9rem);
@@ -115,15 +115,15 @@ h1, h2, .h1, .h2 {
 }
 
 h1 {
-  font-size: clamp(3.2rem, 8vw, 5.5rem);
+  font-size: clamp(2.4rem, 8vw, 5.5rem);
 }
 
 h2 {
-  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
 }
 
 h3 {
-  font-size: clamp(1.35rem, 2.8vw, 1.75rem);
+  font-size: clamp(1.15rem, 2.8vw, 1.75rem);
 }
 
 /* Увеличенный воздух между секциями */
@@ -156,5 +156,15 @@ section {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Mobile utilities ─────────────────────────────── */
+@media (max-width: 640px) {
+  .section-shell {
+    padding-inline: 1rem;
+  }
+  .hide-mobile {
+    display: none !important;
   }
 }
