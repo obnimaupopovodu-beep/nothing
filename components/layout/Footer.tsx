@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer
       id="connect"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '120px 0 80px' }}
+      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(60px, 12vw, 120px) 0 clamp(40px, 8vw, 80px)' }}
     >
       <div className="section-shell">
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', maxWidth: '680px' }}>
@@ -20,7 +20,7 @@ export function Footer() {
           >
             <h2
               style={{
-                fontSize: 'clamp(2rem, 4.5vw, 3.6rem)',
+                fontSize: 'clamp(1.8rem, 6vw, 3.6rem)',
                 fontWeight: 200,
                 letterSpacing: '-0.04em',
                 lineHeight: 1.1,
@@ -34,8 +34,8 @@ export function Footer() {
 
             <p
               style={{
-                marginTop: '20px',
-                fontSize: '14px',
+                marginTop: '16px',
+                fontSize: 'clamp(13px, 2.5vw, 14px)',
                 lineHeight: 1.75,
                 color: 'rgba(240,240,240,0.38)',
                 maxWidth: '44ch',
@@ -48,7 +48,13 @@ export function Footer() {
 
           {/* CTA */}
           <motion.div
-            style={{ marginTop: '44px', display: 'flex', alignItems: 'center', gap: '16px' }}
+            style={{
+              marginTop: 'clamp(28px, 6vw, 44px)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '12px',
+            }}
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
@@ -60,7 +66,7 @@ export function Footer() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '13px 28px',
+                padding: '14px 28px',
                 borderRadius: '8px',
                 background: '#f0f0f0',
                 color: '#0a0a0a',
@@ -70,6 +76,7 @@ export function Footer() {
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'background 0.2s ease, transform 0.2s ease',
+                minHeight: '48px',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#ffffff'
@@ -91,6 +98,7 @@ export function Footer() {
                 textDecoration: 'none',
                 letterSpacing: '-0.01em',
                 transition: 'color 0.2s ease',
+                wordBreak: 'break-all',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.65)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240,240,240,0.35)')}
@@ -102,13 +110,15 @@ export function Footer() {
           {/* Bottom meta */}
           <div
             style={{
-              marginTop: '80px',
+              marginTop: 'clamp(40px, 8vw, 80px)',
               paddingTop: '32px',
               borderTop: '1px solid rgba(255,255,255,0.05)',
               width: '100%',
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
+              gap: '8px',
             }}
           >
             <span style={{ fontSize: '11px', color: 'rgba(240,240,240,0.22)', letterSpacing: '0.06em' }}>
