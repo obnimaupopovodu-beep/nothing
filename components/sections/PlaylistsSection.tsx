@@ -15,59 +15,59 @@ const SpotifyIcon = () => (
 
 const playlists = [
   {
-    title: 'Nothing Selections Vol. 1',
-    description: 'Our curated picks — deep electronic, ambient and atmospheric cuts.',
-    tracks: '24 tracks',
-    href: 'https://open.spotify.com',
-    mood: 'Atmospheric',
-    color: 'rgba(111, 255, 163, 0.10)',
-    waveColor: 'rgba(111, 255, 163, 0.66)',
-    accentRgb: '111,255,163',
-    tags: ['Ambient', 'Deep cuts', 'Label curation'],
+    title: 'TikTok Hits June 2026',
+    description: 'Everything blowing up on TikTok right now — the freshest tracks before they peak.',
+    tracks: 'Spotify playlist',
+    href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E',
+    mood: 'Trending',
+    color: 'rgba(255, 80, 80, 0.10)',
+    waveColor: 'rgba(255, 100, 100, 0.66)',
+    accentRgb: '255,100,100',
+    tags: ['TikTok', 'Viral', 'June 2026'],
   },
   {
-    title: 'Late Night Drives',
-    description: 'Slow-rolling phonk and lo-fi for nocturnal hours.',
-    tracks: '18 tracks',
-    href: 'https://open.spotify.com',
-    mood: 'Night drive',
+    title: 'yo it\'s giving vibes',
+    description: 'A mood board in playlist form — lowkey, atmospheric, no skip zone.',
+    tracks: 'Spotify playlist',
+    href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X',
+    mood: 'Vibes',
     color: 'rgba(122, 176, 255, 0.10)',
     waveColor: 'rgba(122, 176, 255, 0.66)',
     accentRgb: '122,176,255',
-    tags: ['Phonk', 'Lo-fi', 'Nocturnal'],
+    tags: ['Chill', 'Aesthetic', 'Lowkey'],
   },
   {
-    title: 'New Frequencies',
-    description: 'Fresh submissions and emerging artists from our network.',
-    tracks: '31 tracks',
-    href: 'https://open.spotify.com',
-    mood: 'Discovery',
+    title: 'HARDTEKK WHAAAT',
+    description: 'Raw, distorted, relentless. Hardtekk at maximum pressure — not for the faint-hearted.',
+    tracks: 'Spotify playlist',
+    href: 'https://open.spotify.com/playlist/6OqaK1OlgLzWQOKgBFJ0yz',
+    mood: 'Hard & Fast',
+    color: 'rgba(255, 210, 60, 0.10)',
+    waveColor: 'rgba(255, 210, 60, 0.68)',
+    accentRgb: '255,210,60',
+    tags: ['Hardtekk', 'Rave', 'Hard dance'],
+  },
+  {
+    title: 'angelcore',
+    description: 'Soft, dreamy, heavenly. Floaty textures and ethereal sounds for celestial minds.',
+    tracks: 'Spotify playlist',
+    href: 'https://open.spotify.com/playlist/3e42evYodRnDigOVnk0ndd',
+    mood: 'Ethereal',
     color: 'rgba(214, 182, 255, 0.10)',
     waveColor: 'rgba(214, 182, 255, 0.68)',
     accentRgb: '214,182,255',
-    tags: ['New artists', 'Fresh finds', 'Network'],
+    tags: ['Angelcore', 'Dream', 'Soft'],
   },
   {
-    title: 'Label Essentials',
-    description: 'The definitive Nothing Records listening experience from day one.',
-    tracks: '42 tracks',
-    href: 'https://open.spotify.com',
-    mood: 'Core catalog',
-    color: 'rgba(255, 210, 120, 0.10)',
-    waveColor: 'rgba(255, 210, 120, 0.68)',
-    accentRgb: '255,210,120',
-    tags: ['Essentials', 'Catalog', 'Start here'],
-  },
-  {
-    title: 'Raw & Unreleased',
-    description: 'Demos, sketches and unreleased material from our artists.',
-    tracks: '11 tracks',
-    href: 'https://open.spotify.com',
-    mood: 'Behind the scenes',
-    color: 'rgba(255, 146, 146, 0.10)',
-    waveColor: 'rgba(255, 146, 146, 0.68)',
-    accentRgb: '255,146,146',
-    tags: ['Demos', 'Unreleased', 'Sketches'],
+    title: 'keep on pushing 🔒 | 2026',
+    description: 'Locked in. Focused energy for when you need to push through and stay in the zone.',
+    tracks: 'Spotify playlist',
+    href: 'https://open.spotify.com/playlist/2KW5AHpnw97X4Qp30Tf3Ju',
+    mood: 'Focus',
+    color: 'rgba(111, 255, 163, 0.10)',
+    waveColor: 'rgba(111, 255, 163, 0.66)',
+    accentRgb: '111,255,163',
+    tags: ['Motivation', 'Focus', '2026'],
   },
 ]
 
@@ -348,12 +348,6 @@ export function PlaylistsSection() {
                 const cardOpacity = isIdle ? 1 : isActive ? 1 : 0.72
                 const cardScale = isIdle ? 1 : isActive ? 1 : 0.993
 
-                /*
-                 * FIX: No fixed height — cards are height:auto and sized by content.
-                 * Collapse effect achieved by animating paddingBlock (idle→compact→active).
-                 * overflow:visible so tall titles are never clipped.
-                 * Title font capped at 34px to stay comfortable inside the card.
-                 */
                 const paddingTop = isIdle ? 20 : isActive ? 24 : 14
                 const paddingBottom = isIdle ? 20 : isActive ? 24 : 14
 
@@ -379,7 +373,6 @@ export function PlaylistsSection() {
                     style={{
                       position: 'relative',
                       display: 'block',
-                      /* height:auto — content determines size, no clipping */
                       overflow: 'visible',
                       borderRadius: 24,
                       paddingLeft: 26,
@@ -403,7 +396,6 @@ export function PlaylistsSection() {
                       transition: 'border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease',
                     }}
                   >
-                    {/* Radial highlight on hover */}
                     <motion.div
                       animate={{ opacity: isActive ? 0.72 : 0 }}
                       transition={softTransition}
@@ -416,7 +408,6 @@ export function PlaylistsSection() {
                       }}
                     />
 
-                    {/* Card inner grid */}
                     <div style={{
                       position: 'relative',
                       zIndex: 1,
@@ -425,7 +416,6 @@ export function PlaylistsSection() {
                       gap: 20,
                       alignItems: 'start',
                     }}>
-                      {/* Number */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 2 }}>
                         <motion.div
                           animate={{ color: isIdle ? 'rgba(255,255,255,0.4)' : isActive ? 'rgba(255,255,255,0.94)' : 'rgba(255,255,255,0.28)' }}
@@ -436,20 +426,17 @@ export function PlaylistsSection() {
                         </motion.div>
                       </div>
 
-                      {/* Title + description */}
                       <div style={{ minWidth: 0 }}>
-                        {/* Eyebrow */}
                         <motion.div
                           animate={{ opacity: isIdle ? 0.4 : isActive ? 0.56 : 0.28 }}
                           transition={softTransition}
                           style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8, fontSize: 11, lineHeight: 1, letterSpacing: '0.22em', textTransform: 'uppercase' }}
                         >
                           <span>Spotify playlist</span>
-                          <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? '#6fff9f' : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
+                          <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
                           <span>{playlist.mood}</span>
                         </motion.div>
 
-                        {/* Title — font capped at 34px so multi-word titles stay on 1-2 lines */}
                         <motion.h3
                           animate={{ opacity: isIdle ? 0.9 : isActive ? 1 : 0.62 }}
                           transition={softTransition}
@@ -459,7 +446,6 @@ export function PlaylistsSection() {
                             lineHeight: 1.05,
                             letterSpacing: '-0.035em',
                             color: '#fff',
-                            /* allow wrapping — never clip */
                             whiteSpace: 'normal',
                             overflowWrap: 'break-word',
                           }}
@@ -467,12 +453,10 @@ export function PlaylistsSection() {
                           {playlist.title}
                         </motion.h3>
 
-                        {/* Expandable description + tags */}
                         <motion.div
                           animate={{
                             opacity: isActive ? 1 : 0,
                             y: isActive ? 0 : 6,
-                            // height:auto trick — animate maxHeight so layout is not clipped
                           }}
                           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.04 : 0 }}
                           style={{
@@ -486,9 +470,6 @@ export function PlaylistsSection() {
                             {playlist.description}
                           </p>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                            <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.52)' }}>
-                              {playlist.tracks}
-                            </span>
                             {playlist.tags.map((tag) => (
                               <span key={tag} style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.76)' }}>
                                 {tag}
@@ -498,13 +479,8 @@ export function PlaylistsSection() {
                         </motion.div>
                       </div>
 
-                      {/* Right column: tracks count + arrow + waveform */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, minWidth: 150 }}>
-                        {/* Tracks + arrow */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.72)', fontSize: 14, lineHeight: 1 }}>
-                          <motion.span animate={{ opacity: isIdle ? 0.76 : isActive ? 0.9 : 0.48 }} transition={softTransition}>
-                            {playlist.tracks}
-                          </motion.span>
                           <motion.span
                             animate={{ x: isActive ? 4 : 0, y: isActive ? -1 : 0, opacity: isIdle ? 0.8 : isActive ? 0.96 : 0.56, scale: isActive ? 1 : 0.975 }}
                             transition={springTransition}
@@ -514,7 +490,6 @@ export function PlaylistsSection() {
                           </motion.span>
                         </div>
 
-                        {/* Waveform — appears on hover */}
                         <motion.div
                           animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 8, scale: isActive ? 1 : 0.992 }}
                           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.06 : 0 }}

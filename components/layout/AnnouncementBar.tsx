@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const PLAYLISTS = [
-  { title: 'Nothing Selections Vol. 1', accent: '111,255,163' },
-  { title: 'Late Night Drives',          accent: '122,176,255' },
-  { title: 'New Frequencies',            accent: '214,182,255' },
-  { title: 'Label Essentials',           accent: '255,210,120' },
-  { title: 'Raw & Unreleased',           accent: '255,146,146' },
+  { title: 'TikTok Hits June 2026',      accent: '255,100,100',  href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E' },
+  { title: 'yo it\'s giving vibes',       accent: '122,176,255',  href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X' },
+  { title: 'HARDTEKK WHAAAT',             accent: '255,210,60',   href: 'https://open.spotify.com/playlist/6OqaK1OlgLzWQOKgBFJ0yz' },
+  { title: 'angelcore',                   accent: '214,182,255',  href: 'https://open.spotify.com/playlist/3e42evYodRnDigOVnk0ndd' },
+  { title: 'keep on pushing 🔒 | 2026',   accent: '111,255,163',  href: 'https://open.spotify.com/playlist/2KW5AHpnw97X4Qp30Tf3Ju' },
 ]
 
 export function AnnouncementBar() {
@@ -58,7 +58,6 @@ export function AnnouncementBar() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {/* Spotify mini icon */}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.07)" />
                   <path d="M7.2 9.4c3.5-1 6.8-.7 9.9.8"  stroke="rgba(255,255,255,0.7)" strokeWidth="1.8" strokeLinecap="round" />
@@ -68,10 +67,9 @@ export function AnnouncementBar() {
                 Now on Spotify
               </span>
 
-              {/* Divider */}
               <span style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.09)', flexShrink: 0 }} />
 
-              {/* Playlist chips — scrollable on narrow screens */}
+              {/* Playlist chips */}
               <div
                 style={{
                   display: 'flex',
@@ -91,7 +89,9 @@ export function AnnouncementBar() {
                 {PLAYLISTS.map((p) => (
                   <a
                     key={p.title}
-                    href="#playlists"
+                    href={p.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                       flexShrink: 0,
                       display: 'inline-flex',
@@ -132,7 +132,7 @@ export function AnnouncementBar() {
                 ))}
               </div>
 
-              {/* View all button */}
+              {/* View all */}
               <a
                 href="#playlists"
                 style={{
@@ -170,7 +170,6 @@ export function AnnouncementBar() {
                 </svg>
               </a>
 
-              {/* Divider */}
               <span style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.09)', flexShrink: 0 }} />
 
               {/* Close */}
