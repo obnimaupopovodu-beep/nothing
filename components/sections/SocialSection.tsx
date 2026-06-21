@@ -288,24 +288,25 @@ export function SocialSection() {
       style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(3.5rem,8vw,7rem) 0' }}
       aria-label="Community — social channels"
     >
+      <style>{`
+        @media (min-width: 640px) {
+          .social-left-col {
+            position: sticky !important;
+            top: 5rem !important;
+          }
+        }
+      `}</style>
       <div className="section-shell">
         <div
           style={{
             display: 'grid',
-            /* Mobile: single column; tablet+: two columns */
             gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: 'clamp(2rem, 6vw, 7rem)',
             alignItems: 'start',
           }}
         >
           {/* ── Left ── */}
-          <div
-            style={{
-              /* Sticky only on wide screens; on mobile just flows normally */
-              position: 'sticky',
-              top: '5rem',
-            }}
-          >
+          <div className="social-left-col">
             <p
               className="label-caps"
               style={{ marginBottom: '1.5rem' }}
