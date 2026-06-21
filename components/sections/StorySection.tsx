@@ -348,7 +348,7 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
       return 0
     })
 
-    const y = useTransform([progress, yScale], ([v, scale]) => {
+    const y = useTransform([progress, yScale] as [MotionValue<number>, MotionValue<number>], ([v, scale]: [number, number]) => {
       const beforeY = cardLayout[i].beforeY * scale
       const afterY = cardLayout[i].afterY * scale
       const enterFromY = beforeY + enterOffsetY * scale
@@ -405,7 +405,7 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
 
   return (
     <section style={{ position: 'relative', width: '100%', height: '180vh' }}>
-      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'clip' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'visible' }}>
         <motion.div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: introOpacity, y: introY, scale: introScale, filter: introFilter, pointerEvents: 'none', zIndex: 3, textAlign: 'center', padding: '0 32px' }}>
           <div>
             <div style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.44)', marginBottom: 22 }}>One clear system</div>
@@ -415,7 +415,7 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
           </div>
         </motion.div>
 
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'auto' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'auto', overflow: 'visible' }}>
           {releaseModes.map((item, i) => (
             <ReleaseCard key={item.eyebrow} item={item} style={cardStyles[i]} />
           ))}
