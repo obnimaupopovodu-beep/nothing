@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SmoothScroll } from '@/components/layout/SmoothScroll'
+import { AnnouncementBar } from '@/components/layout/AnnouncementBar'
 
 export const metadata: Metadata = {
   title: 'Nothing Records',
@@ -38,6 +39,7 @@ export default function RootLayout({
       </head>
       <body>
         <div className="grain-overlay" aria-hidden="true" />
+        <AnnouncementBar />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
