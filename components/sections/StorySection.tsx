@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import type { MotionValue } from 'framer-motion'
 import type { ComponentType, CSSProperties } from 'react'
-import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowDown,
   ArrowRight,
@@ -41,17 +41,6 @@ const advantages = [
   { title: 'Straight feedback', body: 'If a track does not meet our standards, we say it clearly. No ghosting.', Icon: ShieldCheck },
 ]
 
-const SLIDES_END = 0.72
-const SLIDE_SLOT = SLIDES_END / 4
-const FADE_IN_END  = 0.25
-const HOLD_END     = 0.75
-const FADE_OUT_END = 0.95
-
-const COMMIT_START        = 0.72
-const COMMIT_ROWS_START   = 0.76
-const COMMIT_ROW_STAGGER  = 0.07
-const COMMIT_ROW_DURATION = 0.08
-
 function ActionRow({ label, href, description, Icon, index }: {
   label: string; href: string; description: string
   Icon: ComponentType<{ size?: number; weight?: 'regular' | 'bold'; style?: CSSProperties }>; index: number
@@ -87,9 +76,7 @@ function mapRange(v: number, inStart: number, inEnd: number, outStart = 0, outEn
 }
 
 function easeInOut(t: number) {
-  return t < 0.5
-    ? 4 * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 3) / 2
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
 type ReleaseCardItem = (typeof releaseModes)[number]
@@ -126,94 +113,38 @@ function ReleaseCard({
         translateY: '-50%',
         borderRadius: 28,
         border: '1px solid rgba(255,255,255,0.08)',
-        background:
-          'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)',
         boxShadow: '0 28px 80px rgba(0,0,0,0.28)',
         backdropFilter: 'blur(18px)',
         padding: '24px 24px 22px',
         overflow: 'hidden',
         willChange: 'transform, opacity, width, filter',
+        pointerEvents: 'auto',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          marginBottom: 18,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 12,
-            lineHeight: 1,
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.45)',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+        <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.24em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
           {eyebrow}
         </span>
-
-        <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: '999px',
-            display: 'grid',
-            placeItems: 'center',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            color: 'rgba(255,255,255,0.9)',
-            flex: '0 0 auto',
-          }}
-        >
+        <div style={{ width: 42, height: 42, borderRadius: '999px', display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.9)', flex: '0 0 auto' }}>
           <Icon size={20} weight="regular" />
         </div>
       </div>
 
-      <h3
-        style={{
-          margin: 0,
-          fontSize: 'clamp(24px, 2vw, 34px)',
-          lineHeight: 1.02,
-          letterSpacing: '-0.04em',
-          color: '#fff',
-          maxWidth: '12ch',
-        }}
-      >
+      <h3 style={{ margin: 0, fontSize: 'clamp(24px, 2vw, 34px)', lineHeight: 1.02, letterSpacing: '-0.04em', color: '#fff', maxWidth: '12ch' }}>
         {title}
       </h3>
 
-      <p
-        style={{
-          marginTop: 14,
-          marginBottom: 0,
-          fontSize: 15,
-          lineHeight: 1.55,
-          color: 'rgba(255,255,255,0.64)',
-          maxWidth: '42ch',
-        }}
-      >
+      <p style={{ marginTop: 14, marginBottom: 0, fontSize: 15, lineHeight: 1.55, color: 'rgba(255,255,255,0.64)', maxWidth: '42ch' }}>
         {body}
       </p>
     </motion.article>
   )
 }
 
-function CommitmentLine({
-  item,
-  index,
-  progress,
-}: {
-  item: (typeof advantages)[number]
-  index: number
-  progress: MotionValue<number>
-}) {
+function CommitmentLine({ item, index, progress }: { item: (typeof advantages)[number]; index: number; progress: MotionValue<number> }) {
   const start = 0.84 + index * 0.045
   const end = start + 0.065
-
   const opacity = useTransform(progress, [start, end], [0, 1])
   const y = useTransform(progress, [start, end], [42, 0])
   const blur = useTransform(progress, [start, end], [16, 0])
@@ -234,65 +165,23 @@ function CommitmentLine({
         borderTop: '1px solid rgba(255,255,255,0.08)',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          minWidth: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '999px',
-            display: 'grid',
-            placeItems: 'center',
-            background: 'rgba(255,255,255,0.045)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: '#fff',
-            flex: '0 0 auto',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+        <div style={{ width: 36, height: 36, borderRadius: '999px', display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', flex: '0 0 auto' }}>
           <item.Icon size={18} weight="regular" />
         </div>
-
-        <div
-          style={{
-            fontSize: 18,
-            lineHeight: 1.1,
-            letterSpacing: '-0.03em',
-            color: '#fff',
-          }}
-        >
+        <div style={{ fontSize: 18, lineHeight: 1.1, letterSpacing: '-0.03em', color: '#fff' }}>
           {item.title}
         </div>
       </div>
 
-      <p
-        style={{
-          margin: 0,
-          fontSize: 15,
-          lineHeight: 1.6,
-          color: 'rgba(255,255,255,0.62)',
-          maxWidth: '52ch',
-        }}
-      >
+      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: 'rgba(255,255,255,0.62)', maxWidth: '52ch' }}>
         {item.body}
       </p>
     </motion.div>
   )
 }
 
-function MobileCard({
-  item,
-  progress,
-  cardStart,
-  cardEnd,
-  cardOutStart,
-  cardOutEnd,
-}: {
+function MobileCard({ item, progress, cardStart, cardEnd, cardOutStart, cardOutEnd }: {
   item: (typeof releaseModes)[number]
   progress: MotionValue<number>
   cardStart: number
@@ -324,37 +213,15 @@ function MobileCard({
   const filter = useMotionTemplate`blur(${blurRaw}px)`
 
   return (
-    <motion.div
-      style={{
-        opacity,
-        y,
-        filter,
-        borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(255,255,255,0.03)',
-        padding: '18px 20px',
-        backdropFilter: 'blur(12px)',
-      }}
-    >
-      <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 10 }}>
-        {item.eyebrow}
-      </div>
-      <div style={{ fontSize: 20, lineHeight: 1.08, letterSpacing: '-0.04em', color: '#fff', marginBottom: 10 }}>
-        {item.title}
-      </div>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.58)' }}>
-        {item.body}
-      </p>
+    <motion.div style={{ opacity, y, filter, borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', padding: '18px 20px', backdropFilter: 'blur(12px)' }}>
+      <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 10 }}>{item.eyebrow}</div>
+      <div style={{ fontSize: 20, lineHeight: 1.08, letterSpacing: '-0.04em', color: '#fff', marginBottom: 10 }}>{item.title}</div>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.58)' }}>{item.body}</p>
     </motion.div>
   )
 }
 
-function MobileCommitRow({
-  item,
-  progress,
-  rowStart,
-  rowEnd,
-}: {
+function MobileCommitRow({ item, progress, rowStart, rowEnd }: {
   item: (typeof advantages)[number]
   progress: MotionValue<number>
   rowStart: number
@@ -363,132 +230,59 @@ function MobileCommitRow({
   const opacity = useTransform(progress, [rowStart, rowEnd], [0, 1])
   const y = useTransform(progress, [rowStart, rowEnd], [20, 0])
   return (
-    <motion.div
-      style={{
-        opacity,
-        y,
-        padding: '16px 0',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
-      <div style={{ fontSize: 17, lineHeight: 1.1, letterSpacing: '-0.03em', color: '#fff', marginBottom: 6 }}>
-        {item.title}
-      </div>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'rgba(255,255,255,0.54)' }}>
-        {item.body}
-      </p>
+    <motion.div style={{ opacity, y, padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ fontSize: 17, lineHeight: 1.1, letterSpacing: '-0.03em', color: '#fff', marginBottom: 6 }}>{item.title}</div>
+      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'rgba(255,255,255,0.54)' }}>{item.body}</p>
     </motion.div>
   )
 }
 
 function MobileSystemPresentation({ progress }: { progress: MotionValue<number> }) {
-  const cardStarts   = [0.08, 0.20, 0.32]
-  const cardEnds     = [0.18, 0.30, 0.42]
+  const cardStarts = [0.08, 0.20, 0.32]
+  const cardEnds = [0.18, 0.30, 0.42]
   const cardOutStart = 0.58
-  const cardOutEnd   = 0.70
+  const cardOutEnd = 0.70
 
   const introLabelOpacity = useTransform(progress, [0, 0.08, 0.50, 0.60], [0, 1, 1, 0])
-  const introLabelY       = useTransform(progress, [0, 0.08], [16, 0])
+  const introLabelY = useTransform(progress, [0, 0.08], [16, 0])
   const introLabelBlurRaw = useTransform(progress, [0, 0.08], [10, 0])
-  const introLabelFilter  = useMotionTemplate`blur(${introLabelBlurRaw}px)`
+  const introLabelFilter = useMotionTemplate`blur(${introLabelBlurRaw}px)`
 
   const commitOpacity = useTransform(progress, [0.68, 0.80], [0, 1])
-  const commitY       = useTransform(progress, [0.68, 0.80], [30, 0])
+  const commitY = useTransform(progress, [0.68, 0.80], [30, 0])
   const commitBlurRaw = useTransform(progress, [0.68, 0.80], [12, 0])
-  const commitFilter  = useMotionTemplate`blur(${commitBlurRaw}px)`
+  const commitFilter = useMotionTemplate`blur(${commitBlurRaw}px)`
 
   const cardsOpacity = useTransform(progress, [0.62, 0.70], [1, 0])
   const cardsPointer = useTransform(progress, (v) => v > 0.68 ? 'none' : 'auto')
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100dvh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      padding: '0 20px',
-      position: 'relative',
-    }}>
-
-      {/* Cards phase */}
-      <motion.div style={{
-        opacity: cardsOpacity,
-        pointerEvents: cardsPointer,
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '0 20px',
-      }}>
-        <motion.div
-          style={{
-            opacity: introLabelOpacity,
-            y: introLabelY,
-            filter: introLabelFilter,
-            fontSize: 11,
-            letterSpacing: '0.28em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.38)',
-            marginBottom: 28,
-          }}
-        >
+    <div style={{ width: '100%', height: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 20px', position: 'relative' }}>
+      <motion.div style={{ opacity: cardsOpacity, pointerEvents: cardsPointer, position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 20px' }}>
+        <motion.div style={{ opacity: introLabelOpacity, y: introLabelY, filter: introLabelFilter, fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 28 }}>
           How it works
         </motion.div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {releaseModes.map((item, i) => (
-            <MobileCard
-              key={item.eyebrow}
-              item={item}
-              progress={progress}
-              cardStart={cardStarts[i]}
-              cardEnd={cardEnds[i]}
-              cardOutStart={cardOutStart}
-              cardOutEnd={cardOutEnd}
-            />
+            <MobileCard key={item.eyebrow} item={item} progress={progress} cardStart={cardStarts[i]} cardEnd={cardEnds[i]} cardOutStart={cardOutStart} cardOutEnd={cardOutEnd} />
           ))}
         </div>
       </motion.div>
 
-      {/* Commitments phase */}
-      <motion.div style={{
-        opacity: commitOpacity,
-        y: commitY,
-        filter: commitFilter,
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '0 20px',
-        pointerEvents: 'none',
-      }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 16 }}>
-          Our commitments
-        </div>
+      <motion.div style={{ opacity: commitOpacity, y: commitY, filter: commitFilter, position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 20px', pointerEvents: 'none' }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', marginBottom: 16 }}>Our commitments</div>
         <div style={{ display: 'grid', gap: 0 }}>
           {advantages.map((item, i) => (
-            <MobileCommitRow
-              key={item.title}
-              item={item}
-              progress={progress}
-              rowStart={0.72 + i * 0.06}
-              rowEnd={0.80 + i * 0.06}
-            />
+            <MobileCommitRow key={item.title} item={item} progress={progress} rowStart={0.72 + i * 0.06} rowEnd={0.80 + i * 0.06} />
           ))}
         </div>
       </motion.div>
-
     </div>
   )
 }
 
 function SystemPresentation({ progress, mobile = false }: { progress: MotionValue<number>; mobile?: boolean }) {
-  if (mobile) {
-    return <MobileSystemPresentation progress={progress} />
-  }
+  if (mobile) return <MobileSystemPresentation progress={progress} />
 
   const introOpacity = useTransform(progress, (v) => {
     if (v <= 0.08) return mapRange(v, 0, 0.08, 0, 1)
@@ -520,16 +314,20 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
   const introFilter = useMotionTemplate`blur(${introBlur}px)`
 
   const cardLayout = [
-    { x: -530, beforeY: -140, afterY: -320 },
+    { x: -530, beforeY: -140, afterY: -280 },
     { x: 590, beforeY: 60, afterY: 0 },
-    { x: 30, beforeY: 285, afterY: 320 },
+    { x: 30, beforeY: 285, afterY: 280 },
   ]
 
   const revealStarts = [0.16, 0.22, 0.28]
   const revealEnds = [0.24, 0.30, 0.36]
-
   const enterOffsetY = 160
-  const exitOffsetY = -220
+  const exitOffsetY = -180
+
+  const yScale = useTransform(progress, () => {
+    if (typeof window === 'undefined') return 1
+    return Math.max(0.72, Math.min(1, window.innerHeight / 980))
+  })
 
   const cardStyles = releaseModes.map((_, i) => {
     const opacity = useTransform(progress, (v) => {
@@ -550,11 +348,10 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
       return 0
     })
 
-    const y = useTransform(progress, (v) => {
-      const beforeY = cardLayout[i].beforeY
-      const afterY = cardLayout[i].afterY
-      const enterFromY = beforeY + enterOffsetY
-
+    const y = useTransform([progress, yScale], ([v, scale]) => {
+      const beforeY = cardLayout[i].beforeY * scale
+      const afterY = cardLayout[i].afterY * scale
+      const enterFromY = beforeY + enterOffsetY * scale
       if (v < revealStarts[i]) return enterFromY
       if (v <= revealEnds[i]) {
         const t = easeInOut(mapRange(v, revealStarts[i], revealEnds[i]))
@@ -567,9 +364,9 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
       }
       if (v <= 0.80) {
         const t = easeInOut(mapRange(v, 0.67, 0.80))
-        return afterY + exitOffsetY * t
+        return afterY + exitOffsetY * scale * t
       }
-      return afterY + exitOffsetY
+      return afterY + exitOffsetY * scale
     })
 
     const scale = useTransform(progress, (v) => {
@@ -580,7 +377,6 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
       return 0.96
     })
 
-    // Explicit generic so TS infers MotionValue<number | string>, matching ReleaseCard's prop type
     const width = useTransform<number, number | string>(progress, (v) => {
       if (v <= 0.52) return 320
       if (v <= 0.67) {
@@ -599,7 +395,6 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
     })
 
     const filter = useMotionTemplate`blur(${blur}px)`
-
     return { opacity, x, y, scale, width, filter }
   })
 
@@ -609,134 +404,31 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
   const commitmentsTitleFilter = useMotionTemplate`blur(${commitmentsTitleBlur}px)`
 
   return (
-    <section
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: '180vh',
-      }}
-    >
-      <div
-        style={{
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          overflow: 'hidden',
-        }}
-      >
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'grid',
-            placeItems: 'center',
-            opacity: introOpacity,
-            y: introY,
-            scale: introScale,
-            filter: introFilter,
-            pointerEvents: 'none',
-            zIndex: 3,
-            textAlign: 'center',
-            padding: '0 32px',
-          }}
-        >
+    <section style={{ position: 'relative', width: '100%', height: '180vh' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'clip' }}>
+        <motion.div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: introOpacity, y: introY, scale: introScale, filter: introFilter, pointerEvents: 'none', zIndex: 3, textAlign: 'center', padding: '0 32px' }}>
           <div>
-            <div
-              style={{
-                fontSize: 12,
-                lineHeight: 1,
-                letterSpacing: '0.28em',
-                textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.44)',
-                marginBottom: 22,
-              }}
-            >
-              One clear system
-            </div>
-
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 'clamp(56px, 6.3vw, 108px)',
-                lineHeight: 0.94,
-                letterSpacing: '-0.065em',
-                color: '#fff',
-                maxWidth: '10ch',
-              }}
-            >
+            <div style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.44)', marginBottom: 22 }}>One clear system</div>
+            <h2 style={{ margin: 0, fontSize: 'clamp(56px, 6.3vw, 108px)', lineHeight: 0.94, letterSpacing: '-0.065em', color: '#fff', maxWidth: '10ch' }}>
               Choose your release path.
             </h2>
           </div>
         </motion.div>
 
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 2,
-            pointerEvents: 'none',
-          }}
-        >
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'auto' }}>
           {releaseModes.map((item, i) => (
             <ReleaseCard key={item.eyebrow} item={item} style={cardStyles[i]} />
           ))}
         </div>
 
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            display: 'grid',
-            placeItems: 'center',
-            pointerEvents: 'none',
-            padding: '0 32px',
-          }}
-        >
-          <div
-            style={{
-              width: '100%',
-              display: 'grid',
-              justifyItems: 'center',
-              marginTop: 40,
-            }}
-          >
-            <motion.div
-              style={{
-                opacity: commitmentsTitleOpacity,
-                y: commitmentsTitleY,
-                filter: commitmentsTitleFilter,
-                width: 'min(860px, calc(100vw - 96px))',
-                marginBottom: 18,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  lineHeight: 1,
-                  letterSpacing: '0.28em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.42)',
-                  marginBottom: 18,
-                }}
-              >
-                Our commitments
-              </div>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, display: 'grid', placeItems: 'center', pointerEvents: 'none', padding: '0 32px' }}>
+          <div style={{ width: '100%', display: 'grid', justifyItems: 'center', marginTop: 40 }}>
+            <motion.div style={{ opacity: commitmentsTitleOpacity, y: commitmentsTitleY, filter: commitmentsTitleFilter, width: 'min(860px, calc(100vw - 96px))', marginBottom: 18 }}>
+              <div style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.42)', marginBottom: 18 }}>Our commitments</div>
             </motion.div>
-
-            <div
-              style={{
-                width: 'min(860px, calc(100vw - 96px))',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
+            <div style={{ width: 'min(860px, calc(100vw - 96px))', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               {advantages.map((item, i) => (
-                <CommitmentLine
-                  key={item.title}
-                  item={item}
-                  index={i}
-                  progress={progress}
-                />
+                <CommitmentLine key={item.title} item={item} index={i} progress={progress} />
               ))}
             </div>
           </div>
@@ -782,19 +474,18 @@ function MobileStory() {
 
 function DesktopStory() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const spacerRef    = useRef<HTMLDivElement>(null)
-  const h1Ref        = useRef<HTMLHeadingElement>(null)
+  const spacerRef = useRef<HTMLDivElement>(null)
+  const h1Ref = useRef<HTMLHeadingElement>(null)
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   const reducedMotion = useReducedMotion()
-
   const [centerDeltaX, setCenterDeltaX] = useState(0)
 
   const measure = () => {
     if (!spacerRef.current || !h1Ref.current) return
     const spacerRect = spacerRef.current.getBoundingClientRect()
-    const h1Width    = h1Ref.current.offsetWidth
-    const vpCenter   = window.innerWidth / 2
+    const h1Width = h1Ref.current.offsetWidth
+    const vpCenter = window.innerWidth / 2
     const naturalLeft = spacerRect.left
     const delta = vpCenter - naturalLeft - h1Width / 2
     setCenterDeltaX(delta)
@@ -807,32 +498,18 @@ function DesktopStory() {
   })
 
   const sceneOpacity = useTransform(scrollYProgress, [0, 0.1, 0.88, 1], [1, 1, 1, 0])
-
-  const h1X = useTransform(
-    scrollYProgress,
-    [0.08, 0.26, 0.34, 0.46],
-    reducedMotion ? [0, 0, 0, 0] : [0, centerDeltaX, centerDeltaX, centerDeltaX]
-  )
-
-  const h1Y = useTransform(
-    scrollYProgress,
-    [0.26, 0.34, 0.46],
-    reducedMotion ? [0, 0, 0] : [0, 0, -110]
-  )
-
+  const h1X = useTransform(scrollYProgress, [0.08, 0.26, 0.34, 0.46], reducedMotion ? [0, 0, 0, 0] : [0, centerDeltaX, centerDeltaX, centerDeltaX])
+  const h1Y = useTransform(scrollYProgress, [0.26, 0.34, 0.46], reducedMotion ? [0, 0, 0] : [0, 0, -110])
   const h1Opacity = useTransform(scrollYProgress, [0, 0.10, 0.36, 0.46], [1, 1, 1, 0])
-
-  const eyebrowOpacity  = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
+  const eyebrowOpacity = useTransform(scrollYProgress, [0, 0.08, 0.28], [1, 1, 0])
   const rightColOpacity = useTransform(scrollYProgress, [0, 0.10, 0.30], [1, 1, 0])
-
-  const contentOpacity       = useTransform(scrollYProgress, [0.40, 0.50], [0, 1])
-  const contentY             = useTransform(scrollYProgress, [0.40, 0.50], [20, 0])
+  const contentOpacity = useTransform(scrollYProgress, [0.40, 0.50], [0, 1])
+  const contentY = useTransform(scrollYProgress, [0.40, 0.50], [20, 0])
   const presentationProgress = useTransform(scrollYProgress, [0.44, 0.96], [0, 1])
 
   return (
     <div ref={containerRef} className="relative hidden md:block" style={{ height: '580vh' }}>
       <div className="sticky top-0 h-dvh overflow-hidden">
-
         <motion.div className="absolute inset-0 z-0" style={{ opacity: sceneOpacity }}>
           <Scene mouseX={0} mouseY={0} />
         </motion.div>
@@ -843,73 +520,26 @@ function DesktopStory() {
         <div className="relative z-20 flex h-full items-center">
           <div className="section-shell w-full">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '64px' }}>
-
-              {/* Left column */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <motion.p
-                  style={{
-                    fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase',
-                    color: 'rgba(240,240,240,0.25)', marginBottom: '22px',
-                    opacity: eyebrowOpacity,
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.9, delay: 0.9 }}
-                >
+                <motion.p style={{ fontSize: '9px', letterSpacing: '0.46em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.25)', marginBottom: '22px', opacity: eyebrowOpacity }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.9 }}>
                   Independent Electronic Music Label
                 </motion.p>
 
-                <div
-                  ref={spacerRef}
-                  aria-hidden
-                  style={{
-                    fontSize: 'clamp(4.5rem, 9vw, 8rem)',
-                    fontWeight: 200,
-                    lineHeight: 0.92,
-                    letterSpacing: '-0.04em',
-                    visibility: 'hidden',
-                    userSelect: 'none',
-                    pointerEvents: 'none',
-                  }}
-                >
+                <div ref={spacerRef} aria-hidden style={{ fontSize: 'clamp(4.5rem, 9vw, 8rem)', fontWeight: 200, lineHeight: 0.92, letterSpacing: '-0.04em', visibility: 'hidden', userSelect: 'none', pointerEvents: 'none' }}>
                   NOTHING<br />RECORDS
                 </div>
 
-                <motion.p
-                  style={{
-                    fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.46)',
-                    marginTop: '28px', maxWidth: '38ch', fontWeight: 300,
-                    opacity: eyebrowOpacity,
-                  }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.9, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                >
+                <motion.p style={{ fontSize: '14px', lineHeight: 1.75, color: 'rgba(240,240,240,0.46)', marginTop: '28px', maxWidth: '38ch', fontWeight: 300, opacity: eyebrowOpacity }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 1.0, ease: [0.16, 1, 0.3, 1] }}>
                   Premium distribution, optional promotion, and direct answers for electronic artists.
                 </motion.p>
               </div>
 
-              {/* Right column */}
               <motion.div style={{ opacity: rightColOpacity, width: '300px', flexShrink: 0 }}>
-                <motion.div
-                  style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.9, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
-                >
+                <motion.div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}>
                   {actions.map((card, i) => <ActionRow key={card.label} {...card} index={i} />)}
                 </motion.div>
-                <motion.div
-                  style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 2.0 }}
-                >
-                  <motion.span
-                    style={{ fontSize: '9px', letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.16)' }}
-                    animate={{ opacity: [0.16, 0.3, 0.16] }}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                  >
+                <motion.div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.0 }}>
+                  <motion.span style={{ fontSize: '9px', letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.16)' }} animate={{ opacity: [0.16, 0.3, 0.16] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>
                     ↓ Scroll to explore
                   </motion.span>
                 </motion.div>
@@ -920,23 +550,7 @@ function DesktopStory() {
 
         <motion.h1
           ref={h1Ref}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: spacerRef.current ? spacerRef.current.getBoundingClientRect().left : undefined,
-            translateY: '-50%',
-            x: h1X,
-            y: h1Y,
-            opacity: h1Opacity,
-            zIndex: 25,
-            fontSize: 'clamp(4.5rem, 9vw, 8rem)',
-            fontWeight: 200,
-            lineHeight: 0.92,
-            letterSpacing: '-0.04em',
-            color: '#f0f0f0',
-            userSelect: 'none',
-            pointerEvents: 'none',
-          }}
+          style={{ position: 'absolute', top: '50%', left: spacerRef.current ? spacerRef.current.getBoundingClientRect().left : undefined, translateY: '-50%', x: h1X, y: h1Y, opacity: h1Opacity, zIndex: 25, fontSize: 'clamp(4.5rem, 9vw, 8rem)', fontWeight: 200, lineHeight: 0.92, letterSpacing: '-0.04em', color: '#f0f0f0', userSelect: 'none', pointerEvents: 'none' }}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -949,10 +563,7 @@ function DesktopStory() {
           <SystemPresentation progress={presentationProgress} />
         </motion.div>
 
-        <motion.div
-          className="absolute bottom-8 inset-x-0 z-20 flex justify-center"
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.06], [1, 0]) }}
-        >
+        <motion.div className="absolute bottom-8 inset-x-0 z-20 flex justify-center" style={{ opacity: useTransform(scrollYProgress, [0, 0.06], [1, 0]) }}>
           <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
             <ArrowDown size={16} weight="light" style={{ color: 'rgba(240,240,240,0.18)' }} />
           </motion.div>
