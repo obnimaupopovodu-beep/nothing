@@ -15,10 +15,11 @@ const SpotifyIcon = () => (
 
 const playlists = [
   {
-    title: 'TikTok Hits June 2026',
-    description: 'Everything blowing up on TikTok right now — the freshest tracks before they peak.',
-    tracks: 'Spotify playlist',
+    title: 'Tiktok hits june 2026',
+    description: 'fresh tiktok sounds and new trendy ones you might discover here',
+    tracks: '49 tracks',
     href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E',
+    coverUrl: 'https://i.scdn.co/image/ab67706c0000da84b8927783aa3a6046deb59424',
     mood: 'Trending',
     color: 'rgba(255, 80, 80, 0.10)',
     waveColor: 'rgba(255, 100, 100, 0.66)',
@@ -26,10 +27,11 @@ const playlists = [
     tags: ['TikTok', 'Viral', 'June 2026'],
   },
   {
-    title: 'yo it\'s giving vibes',
+    title: "Yo it's giving vibes",
     description: 'A mood board in playlist form — lowkey, atmospheric, no skip zone.',
-    tracks: 'Spotify playlist',
+    tracks: '16 tracks',
     href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X',
+    coverUrl: 'https://i.scdn.co/image/ab67706c0000da84e3a767f5ecba81eee7a178a6',
     mood: 'Vibes',
     color: 'rgba(122, 176, 255, 0.10)',
     waveColor: 'rgba(122, 176, 255, 0.66)',
@@ -39,8 +41,9 @@ const playlists = [
   {
     title: 'HARDTEKK WHAAAT',
     description: 'Raw, distorted, relentless. Hardtekk at maximum pressure — not for the faint-hearted.',
-    tracks: 'Spotify playlist',
+    tracks: '47 tracks',
     href: 'https://open.spotify.com/playlist/6OqaK1OlgLzWQOKgBFJ0yz',
+    coverUrl: 'https://i.scdn.co/image/ab67706c0000da84e1c409713b1183debe3afbea',
     mood: 'Hard & Fast',
     color: 'rgba(255, 210, 60, 0.10)',
     waveColor: 'rgba(255, 210, 60, 0.68)',
@@ -50,8 +53,9 @@ const playlists = [
   {
     title: 'angelcore',
     description: 'Soft, dreamy, heavenly. Floaty textures and ethereal sounds for celestial minds.',
-    tracks: 'Spotify playlist',
+    tracks: '20 tracks',
     href: 'https://open.spotify.com/playlist/3e42evYodRnDigOVnk0ndd',
+    coverUrl: 'https://mosaic.scdn.co/640/ab67616d00001e020dfc4abe47219f9094a8d6d0ab67616d00001e02695c129f5cf1179ce1b8c484ab67616d00001e02a84161d44069af42bf00fc4eab67616d00001e02ce94c7e86e1fbf3d10bb8c394',
     mood: 'Ethereal',
     color: 'rgba(214, 182, 255, 0.10)',
     waveColor: 'rgba(214, 182, 255, 0.68)',
@@ -59,10 +63,11 @@ const playlists = [
     tags: ['Angelcore', 'Dream', 'Soft'],
   },
   {
-    title: 'keep on pushing 🔒 | 2026',
-    description: 'Locked in. Focused energy for when you need to push through and stay in the zone.',
-    tracks: 'Spotify playlist',
+    title: 'keep on pushing🔒 | 2026',
+    description: 'yo. looking for smt that will force you to push your best? stay here. you wont regret.',
+    tracks: '93 tracks',
     href: 'https://open.spotify.com/playlist/2KW5AHpnw97X4Qp30Tf3Ju',
+    coverUrl: 'https://i.scdn.co/image/ab67706c0000da84a7a1dcd4fa61edc298656630',
     mood: 'Focus',
     color: 'rgba(111, 255, 163, 0.10)',
     waveColor: 'rgba(111, 255, 163, 0.66)',
@@ -138,9 +143,23 @@ function MobilePlaylistCard({
         transitionProperty: 'transform, opacity, border-color, background, box-shadow',
         transitionDuration: '0.4s',
         transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      {/* Cover image */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+        <img
+          src={playlist.coverUrl}
+          alt={playlist.title}
+          width={320}
+          height={320}
+          loading="lazy"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(160deg, rgba(${playlist.accentRgb},0.08) 0%, rgba(0,0,0,0.3) 100%)` }} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <span style={{ fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: `rgba(${playlist.accentRgb}, 0.85)`, lineHeight: 1 }}>
           {playlist.mood}
         </span>
@@ -373,7 +392,7 @@ export function PlaylistsSection() {
                     style={{
                       position: 'relative',
                       display: 'block',
-                      overflow: 'visible',
+                      overflow: 'hidden',
                       borderRadius: 24,
                       paddingLeft: 26,
                       paddingRight: 26,
@@ -396,6 +415,31 @@ export function PlaylistsSection() {
                       transition: 'border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease',
                     }}
                   >
+                    {/* Cover image — subtle background on hover */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: 120,
+                        height: '100%',
+                        opacity: isActive ? 0.13 : 0,
+                        transition: 'opacity 0.45s ease',
+                        pointerEvents: 'none',
+                        overflow: 'hidden',
+                        borderRadius: '0 24px 24px 0',
+                      }}
+                    >
+                      <img
+                        src={playlist.coverUrl}
+                        alt=""
+                        width={120}
+                        height={120}
+                        loading="lazy"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    </div>
+
                     <motion.div
                       animate={{ opacity: isActive ? 0.72 : 0 }}
                       transition={softTransition}
@@ -432,7 +476,7 @@ export function PlaylistsSection() {
                           transition={softTransition}
                           style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8, fontSize: 11, lineHeight: 1, letterSpacing: '0.22em', textTransform: 'uppercase' }}
                         >
-                          <span>Spotify playlist</span>
+                          <span>{playlist.tracks}</span>
                           <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
                           <span>{playlist.mood}</span>
                         </motion.div>
