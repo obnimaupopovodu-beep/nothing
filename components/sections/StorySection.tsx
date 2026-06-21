@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Timer,
 } from '@phosphor-icons/react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 const Scene = dynamic(
   () => import('@/components/3d/Scene').then((m) => ({ default: m.Scene })),
@@ -348,7 +348,9 @@ function SystemPresentation({ progress, mobile = false }: { progress: MotionValu
       return 0
     })
 
-    const y = useTransform([progress, yScale] as [MotionValue<number>, MotionValue<number>], ([v, scale]: [number, number]) => {
+    const y = useTransform([progress, yScale], (input: number[]) => {
+      const v = input[0]
+      const scale = input[1]
       const beforeY = cardLayout[i].beforeY * scale
       const afterY = cardLayout[i].afterY * scale
       const enterFromY = beforeY + enterOffsetY * scale
