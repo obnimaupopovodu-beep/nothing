@@ -77,13 +77,13 @@ const playlists = [
 ]
 
 function Waveform({ activeColor, active }: { activeColor: string; active: boolean }) {
-  const bars = useMemo(() => [34, 60, 42, 76, 54, 28, 68, 38, 58, 46, 70, 33], [])
+  const bars = useMemo(() => [20, 36, 25, 46, 32, 16, 42, 22, 35, 28, 44, 19], [])
   return (
-    <div style={{ display: 'flex', alignItems: 'end', gap: 5, height: 48 }}>
+    <div style={{ display: 'flex', alignItems: 'end', gap: 5, height: 30 }}>
       {bars.map((h, i) => (
         <motion.span
           key={i}
-          animate={{ height: active ? h : Math.max(18, h * 0.74), opacity: active ? 1 : 0.42 }}
+          animate={{ height: active ? h : Math.max(10, h * 0.74), opacity: active ? 1 : 0.42 }}
           transition={{ duration: 0.5, delay: active ? i * 0.015 : 0, ease: [0.22, 1, 0.36, 1] }}
           style={{
             width: 4,
@@ -167,7 +167,7 @@ function MobilePlaylistCard({
           {number}
         </span>
       </div>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 16 }}>
         <Waveform active={isActive} activeColor={playlist.waveColor} />
       </div>
       <h3 style={{ margin: 0, fontSize: 'clamp(20px, 6vw, 26px)', lineHeight: 1.0, letterSpacing: '-0.04em', color: '#fff', marginBottom: 12 }}>
@@ -540,7 +540,7 @@ export function PlaylistsSection() {
                           style={{ width: 148, pointerEvents: 'none', transformOrigin: 'bottom right' }}
                         >
                           <Waveform active={isActive} activeColor={playlist.waveColor} />
-                          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 11, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
+                          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
                             <span>Preview</span>
                             <span>Open playlist</span>
                           </div>
