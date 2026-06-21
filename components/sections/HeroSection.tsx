@@ -56,7 +56,7 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              NOTHING<br />
+              N0THING<br />
               <span style={{ color: 'rgba(245,245,245,0.45)', fontWeight: 100 }}>RECORDS</span>
             </motion.h1>
 
