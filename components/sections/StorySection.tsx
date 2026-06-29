@@ -445,7 +445,7 @@ function MobileStory() {
   const { scrollYProgress } = useScroll({ target: presentationRef, offset: ['start start', 'end end'] })
 
   return (
-    <section className="relative md:hidden" style={{ overflowX: 'clip' }} aria-label="Nothing Records story">
+    <section className="relative lg:hidden" style={{ overflowX: 'clip' }} aria-label="Nothing Records story">
       <div className="absolute inset-x-0 top-0" style={{ height: '50%', background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127,176,255,0.09), transparent 70%)' }} />
       <div className="relative min-h-[100dvh] px-5 pb-10 pt-[80px]">
         <div className="flex min-h-[calc(100dvh-110px)] flex-col justify-center">
@@ -510,7 +510,7 @@ function DesktopStory() {
   const presentationProgress = useTransform(scrollYProgress, [0.44, 0.96], [0, 1])
 
   return (
-    <div ref={containerRef} className="relative hidden md:block" style={{ height: '580vh' }}>
+    <div ref={containerRef} className="relative hidden lg:block" style={{ height: '580vh' }}>
       <div className="sticky top-0 h-dvh overflow-hidden">
         <motion.div className="absolute inset-0 z-0" style={{ opacity: sceneOpacity }}>
           <Scene mouseX={0} mouseY={0} />
@@ -542,7 +542,7 @@ function DesktopStory() {
                 </motion.div>
                 <motion.div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.0 }}>
                   <motion.span style={{ fontSize: '9px', letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(240,240,240,0.16)' }} animate={{ opacity: [0.16, 0.3, 0.16] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>
-                    ↓ Scroll to explore
+                    Scroll to explore
                   </motion.span>
                 </motion.div>
               </motion.div>
@@ -583,3 +583,4 @@ export function StorySection() {
     </div>
   )
 }
+

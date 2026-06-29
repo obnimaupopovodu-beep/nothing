@@ -421,9 +421,9 @@ export function PlaylistsSection() {
                         position: 'absolute',
                         top: 0,
                         right: 0,
-                        width: 120,
+                        width: 140,
                         height: '100%',
-                        opacity: isActive ? 0.13 : 0,
+                        opacity: isActive ? 0.11 : 0,
                         transition: 'opacity 0.45s ease',
                         pointerEvents: 'none',
                         overflow: 'hidden',
@@ -433,7 +433,7 @@ export function PlaylistsSection() {
                       <img
                         src={playlist.coverUrl}
                         alt=""
-                        width={120}
+                        width={140}
                         height={120}
                         loading="lazy"
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -523,7 +523,7 @@ export function PlaylistsSection() {
                         </motion.div>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, minWidth: 150 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 14, minWidth: 172 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.72)', fontSize: 14, lineHeight: 1 }}>
                           <motion.span
                             animate={{ x: isActive ? 4 : 0, y: isActive ? -1 : 0, opacity: isIdle ? 0.8 : isActive ? 0.96 : 0.56, scale: isActive ? 1 : 0.975 }}
@@ -533,18 +533,6 @@ export function PlaylistsSection() {
                             <ArrowUpRight size={18} weight="regular" />
                           </motion.span>
                         </div>
-
-                        <motion.div
-                          animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 8, scale: isActive ? 1 : 0.992 }}
-                          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: isActive ? 0.06 : 0 }}
-                          style={{ width: 148, pointerEvents: 'none', transformOrigin: 'bottom right' }}
-                        >
-                          <Waveform active={isActive} activeColor={playlist.waveColor} />
-                          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
-                            <span>Preview</span>
-                            <span>Open playlist</span>
-                          </div>
-                        </motion.div>
                       </div>
                     </div>
                   </motion.a>

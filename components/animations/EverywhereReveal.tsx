@@ -26,14 +26,14 @@ import { useEffect, useRef, useState } from 'react'
 // } as const
 
 const T = {
-  P1_END:      0.32,   // заголовок уходит чуть позже
+  P1_END:      0.32,
   P2_START:    0.12,
-  P2_END:      0.32,   // "everywhere" задерживается дольше
-  ICONS_START: 0.22,   // иконки начинают раньше, чтобы успеть до P2_END
+  P2_END:      0.32,
+  ICONS_START: 0.22,
   P3_START:    0.32,
-  P3_END:      0.42,   // плавный переход к body text (было 0.35 — слишком резко)
-  P4_START:    0.46,   // небольшая пауза перед counter
-  P4_END:      1.50,   // counter считает не торопясь (было 1.50 — это почти весь скролл)
+  P3_END:      0.42,
+  P4_START:    0.46,
+  P4_END:      1.50,
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
@@ -267,7 +267,7 @@ export function EverywhereReveal() {
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
-  // 'everywhere' and eyebrow both fade out over P2_START→P2_END
+  // 'everywhere' and eyebrow both fade out over the second phase
   const wordFinalOpacity = useTransform(scrollYProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
   )
@@ -288,9 +288,9 @@ export function EverywhereReveal() {
   })
 
   const bodyY = useTransform(scrollYProgress, (p) => {
-  const progress = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
-  return `${(1 - progress) * 20}px`  // снизу 20px → на место
-})
+    const progress = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
+    return `${(1 - progress) * 20}px`
+  })
 
   if (reducedMotion) {
     return (
@@ -303,7 +303,9 @@ export function EverywhereReveal() {
         <span style={{ fontSize: 'clamp(2rem,7vw,6rem)', fontWeight: 300,
           color: '#f0f0f0', letterSpacing: '0.1em' }}>everywhere</span>
         <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', maxWidth: '44ch' }}>
-          We distribute to all major platforms simultaneously — day-and-date worldwide.
+          We distribute to all major platforms
+          <br />
+          simultaneously. Day-and-date worldwide.
         </p>
       </div>
     )
@@ -386,11 +388,14 @@ export function EverywhereReveal() {
                 color: 'rgba(255, 255, 255, 0.51)', letterSpacing: '0.01em',
                 lineHeight: 1.75, margin: 0,
                 textAlign: 'center', pointerEvents: 'none',
-                userSelect: 'none', whiteSpace: 'nowrap',
+                userSelect: 'none', whiteSpace: 'normal',
+                width: 'min(88vw, 44rem)', maxWidth: '44rem',
               }}
             >
-              We distribute to all major platforms simultaneously&nbsp;—{' '}
-              <span style={{ color: 'rgba(255, 255, 255, 0.75)' }}>day-and-date worldwide.</span>
+              We distribute to all major platforms
+              <br />
+              simultaneously.{' '}
+              <span style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Day-and-date worldwide.</span>
             </motion.p>
           </div>
         </div>
@@ -400,3 +405,4 @@ export function EverywhereReveal() {
     </div>
   )
 }
+
