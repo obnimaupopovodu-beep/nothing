@@ -331,14 +331,25 @@ export function PlaylistsSection() {
       {/* ── DESKTOP LAYOUT ──────────────────────────────────────── */}
       {!isMobile && (
         <div className="section-shell">
-          <div style={{
+          {/* Between 701–1023px the two-column sticky layout feels cramped, so we
+             collapse to a single column (heading on top) and only restore the
+             sticky sidebar at ≥ 1024px. */}
+          <style>{`
+            .pl-desktop-grid {
+              grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.35fr);
+            }
+            @media (max-width: 1023px) {
+              .pl-desktop-grid { grid-template-columns: 1fr !important; }
+              .pl-desktop-sidebar { position: static !important; }
+            }
+          `}</style>
+          <div className="pl-desktop-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(240px, 0.9fr) minmax(0, 1.35fr)',
             gap: 'clamp(28px, 5vw, 72px)',
             alignItems: 'start',
           }}>
             {/* Sticky sidebar */}
-            <div style={{ position: 'sticky', top: 120, alignSelf: 'start' }}>
+            <div className="pl-desktop-sidebar" style={{ position: 'sticky', top: 120, alignSelf: 'start' }}>
               <motion.div
                 initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
                 whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -358,8 +369,8 @@ export function PlaylistsSection() {
               </motion.div>
             </div>
 
-            {/* Desktop playlist cards */}
-            <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 10 }}>
+            {/* Desktop playlist cards — capped so they don't over-stretch on wide (1920px) screens */}
+            <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 10, maxWidth: 680, width: '100%' }}>
               {playlists.map((playlist, index) => {
                 const isActive = activeIndex === index
                 const isIdle = activeIndex === null
@@ -507,6 +518,7 @@ export function PlaylistsSection() {
                             overflow: 'hidden',
                             maxHeight: isActive ? 200 : 0,
                             pointerEvents: isActive ? 'auto' : 'none',
+                            willChange: 'max-height',
                             transition: 'max-height 0.45s cubic-bezier(0.22,1,0.36,1)',
                           }}
                         >
