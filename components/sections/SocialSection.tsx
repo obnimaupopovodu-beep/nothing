@@ -114,11 +114,6 @@ function SocialRow({
   const [hovered, setHovered] = useState(false)
   const [ctxIndex, setCtxIndex] = useState(0)
 
-  const handleTouch = () => {
-    setHovered((v) => !v)
-    setCtxIndex((p) => (p + 1) % social.contexts.length)
-  }
-
   const handleMouseEnter = () => {
     setHovered(true)
     setCtxIndex((p) => (p + 1) % social.contexts.length)
@@ -133,6 +128,7 @@ function SocialRow({
       initial={{ opacity: 0, y: 5 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.12 + 0.1, duration: 0.65, ease: EASE }}
+      whileTap={{ scale: 0.95 }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
     >
@@ -197,12 +193,12 @@ function SocialRow({
           <span
             style={{
               display: 'block',
-              fontSize: '0.68rem',
+              fontSize: '0.75rem',
               fontWeight: 300,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: hovered ? 'rgba(240,237,230,0.9)' : 'rgba(240,237,230,0.5)',
-              lineHeight: 1,
+              lineHeight: 1.1,
               marginBottom: '0.28rem',
               transition: 'color 0.25s ease',
             }}
@@ -230,13 +226,13 @@ function SocialRow({
         <span style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1.5vw, 0.8rem)', flexShrink: 0 }}>
           {/* Context label — hide on very small screens */}
           <motion.span
+            className="hide-mobile"
             style={{
-              fontSize: '0.58rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
               color: 'rgba(240,237,230,0.35)',
               whiteSpace: 'nowrap',
-              display: 'var(--ctx-display, inline)',
             }}
             animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : -6 }}
             transition={{ duration: 0.28, ease: EASE }}
@@ -247,7 +243,7 @@ function SocialRow({
           {/* Follower count */}
           <span
             style={{
-              fontSize: '0.63rem',
+              fontSize: '0.75rem',
               fontWeight: 300,
               letterSpacing: '0.04em',
               color: hovered ? 'rgba(240,237,230,0.38)' : 'rgba(240,237,230,0.14)',
@@ -369,7 +365,7 @@ export function SocialSection() {
               <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
               <span
                 style={{
-                  fontSize: '0.58rem',
+                  fontSize: '0.75rem',
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
                   color: 'rgba(240,237,230,0.14)',
