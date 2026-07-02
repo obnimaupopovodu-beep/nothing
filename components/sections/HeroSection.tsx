@@ -23,6 +23,14 @@ export function HeroSection() {
 
   return (
     <section id="hero" ref={ref} className="relative w-full" style={{ height: '120vh' }} aria-label="Hero">
+      {/* Hero content is min(420px, 100%) on mobile and grows on larger viewports
+         so the action cards don't feel cramped in the centre of wide screens.
+         Media-query max-width uses !important to override the inline base value. */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .hero-content { max-width: 500px !important; }
+        }
+      `}</style>
       <div className="sticky top-0 w-full h-dvh overflow-hidden">
         <div className="absolute inset-0 z-0"><Scene mouseX={0} mouseY={0} /></div>
 
@@ -38,7 +46,7 @@ export function HeroSection() {
           className="relative z-20 flex flex-col items-center justify-center h-full"
           style={{ y: contentY, opacity: contentOpacity }}
         >
-          <div className="w-full px-6" style={{ maxWidth: '420px', margin: '0 auto' }}>
+          <div className="hero-content w-full px-6" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
             <motion.p
               className="text-center mb-4"
               style={{ fontSize: '9px', letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(245,245,245,0.28)' }}
