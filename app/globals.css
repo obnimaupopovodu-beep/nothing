@@ -89,7 +89,9 @@ body {
 
 /* label-caps: used sparingly — meta/eyebrow only */
 .label-caps {
-  font-size: 9px;
+  /* Clamp keeps the small eyebrow aesthetic but never renders below 9px on the
+     narrowest screens while allowing a touch more legibility up to 11px. */
+  font-size: clamp(9px, 2vw, 11px);
   font-weight: 600;
   letter-spacing: 0.38em;
   text-transform: uppercase;
@@ -166,5 +168,16 @@ section {
   }
   .hide-mobile {
     display: none !important;
+  }
+}
+
+/* ─── Hover-only affordances ───────────────────────────
+   The scrollbar thumb tint is the only pure-CSS interactive affordance; it is
+   gated behind a hover-capable, fine pointer so it never applies on touch
+   devices. All other hover states are driven by Framer Motion whileHover, which
+   is already touch-safe and does not stick on tap. */
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(127, 176, 255, 0.35);
   }
 }
