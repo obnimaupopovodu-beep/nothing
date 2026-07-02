@@ -117,10 +117,11 @@ export function FeaturedRelease() {
               {/* CTA */}
               <motion.button
                 onClick={() => setModalOpen(true)}
-                className="self-start flex items-center gap-3 px-7 py-3.5 rounded-full text-sm font-light tracking-wide text-[#F5F5F5] transition-all duration-300"
+                className="self-start flex items-center justify-center gap-3 px-7 py-3.5 rounded-full text-sm font-light tracking-wide text-[#F5F5F5] transition-all duration-300"
                 style={{
                   background: '#2F6DFF',
                   boxShadow: '0 0 30px rgba(47,109,255,0.2)',
+                  minHeight: '44px',
                 }}
                 whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(47,109,255,0.35)' }}
                 whileTap={{ scale: 0.97 }}
@@ -167,7 +168,8 @@ export function FeaturedRelease() {
                 <p className="text-sm text-[rgba(245,245,245,0.6)] font-light tracking-wide">Subzero Cascade EP</p>
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[rgba(245,245,245,0.4)] hover:text-[#F5F5F5] transition-colors"
+                  className="rounded-full flex items-center justify-center text-[rgba(245,245,245,0.4)] hover:text-[#F5F5F5] transition-colors"
+                  style={{ width: '44px', height: '44px', minWidth: '44px' }}
                   aria-label="Close player"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
