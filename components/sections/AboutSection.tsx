@@ -62,7 +62,7 @@ export function AboutSection() {
               <p
                 className="font-light"
                 style={{
-                  fontSize: '13px',
+                  fontSize: '14px',
                   lineHeight: 1.7,
                   color: 'rgba(245,245,245,0.38)',
                   marginTop: '16px',
@@ -100,7 +100,7 @@ export function AboutSection() {
                   </span>
                   <p
                     className="font-light"
-                    style={{ fontSize: '13px', lineHeight: 1.7, color: 'rgba(245,245,245,0.42)' }}
+                    style={{ fontSize: '14px', lineHeight: 1.7, color: 'rgba(245,245,245,0.42)' }}
                   >
                     {p.body}
                   </p>
