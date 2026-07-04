@@ -1,4 +1,4 @@
-// Tailwind v4 — config handled via CSS @theme, this file kept for compatibility
+// Tailwind v4 config handled via CSS @theme, this file kept for compatibility
 import type { Config } from 'tailwindcss'
 
 const config: Config = {

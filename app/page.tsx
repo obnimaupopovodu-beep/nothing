@@ -2,6 +2,7 @@ import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import { StorySection } from '@/components/sections/StorySection'
 import { PlatformsSection } from '@/components/sections/PlatformsSection'
+import { AboutSection } from '@/components/sections/AboutSection'
 import { SocialSection } from '@/components/sections/SocialSection'
 import { PlaylistsSection } from '@/components/sections/PlaylistsSection'
 
@@ -11,6 +12,7 @@ export default function Home() {
       <Navigation />
       <StorySection />
       <PlatformsSection />
+      <AboutSection />
       <SocialSection />
       <PlaylistsSection />
       <Footer />

@@ -224,7 +224,7 @@ function SocialRow({
 
         {/* Right cluster */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 1.5vw, 0.8rem)', flexShrink: 0 }}>
-          {/* Context label — hide on very small screens */}
+          {/* Context label, hide on very small screens */}
           <motion.span
             className="hide-mobile"
             style={{
@@ -282,7 +282,7 @@ export function SocialSection() {
       ref={ref}
       id="social"
       style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(3.5rem,8vw,7rem) 0' }}
-      aria-label="Community — social channels"
+      aria-label="Community and social channels"
     >
       <style>{`
         @media (min-width: 640px) {
@@ -334,7 +334,7 @@ export function SocialSection() {
               }}
             >
               Every channel is a live frequency. Releases, sessions, and dispatches
-              from the studio — we are always transmitting.
+              from the studio, always transmitting.
             </p>
 
             <div

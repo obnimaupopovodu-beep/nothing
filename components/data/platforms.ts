@@ -217,5 +217,5 @@ export const platforms: Platform[] = [
   },
 ]
 
-/** First 9 platforms — one per gap between letters in "everywhere" */
+/** First 9 platforms , one per gap between letters in "everywhere" */
 export const everywherePlatforms = platforms.slice(0, 9)

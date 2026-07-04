@@ -296,8 +296,6 @@ export function EverywhereReveal() {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', background: '#050505', gap: 24 }}>
-        <span style={{ fontSize: 'clamp(0.6rem,0.9vw,0.75rem)', fontWeight: 500,
-          letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)' }}>Distribution</span>
         <span style={{ fontSize: 'clamp(1.4rem,3.8vw,3.2rem)', fontWeight: 300,
           color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em' }}>Your audience is</span>
         <span style={{ fontSize: 'clamp(2rem,7vw,6rem)', fontWeight: 300,
@@ -352,11 +350,7 @@ export function EverywhereReveal() {
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             gap: 'clamp(6px, 0.8vw, 12px)',
           }}>
-            <motion.span style={{
-              fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)', fontWeight: 500,
-              letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)',
-              opacity: eyebrowOpacity,
-            }}>Distribution</motion.span>
+
             <motion.span style={{
               fontSize: 'clamp(1.4rem, 3.8vw, 3.2rem)', fontWeight: 300,
               color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em', lineHeight: 1.1,

@@ -30,9 +30,9 @@ const actions = [
 ]
 
 const releaseModes = [
-  { eyebrow: '01', title: 'Direct release management.', body: 'We distribute your track for 10% of royalties, keep the workflow simple, and show every number in one place.', Icon: VinylRecord },
-  { eyebrow: '02', title: 'Release support with momentum.', body: 'We handle the release and pair it with social media campaigns and playlist outreach on digital platforms when your track needs extra reach.', Icon: Sparkle },
-  { eyebrow: '03', title: 'A second life for the right record.', body: 'If a track is already out but still has room to grow, we reframe it as a stronger release and give it the push it deserves.', Icon: WaveSine },
+  { eyebrow: 'Release', title: 'Direct release management.', body: 'We distribute your track for 10% of royalties, keep the workflow simple, and show every number in one place.', Icon: VinylRecord },
+  { eyebrow: 'Promotion', title: 'Release support with momentum.', body: 'We handle the release and pair it with social media campaigns and playlist outreach on digital platforms when your track needs extra reach.', Icon: Sparkle },
+  { eyebrow: 'Re-release', title: 'A second life for the right record.', body: 'If a track is already out but still has room to grow, we reframe it as a stronger release and give it the push it deserves.', Icon: WaveSine },
 ]
 
 const advantages = [

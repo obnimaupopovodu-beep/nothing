@@ -28,7 +28,7 @@ const playlists = [
   },
   {
     title: "Yo it's giving vibes",
-    description: 'A mood board in playlist form — lowkey, atmospheric, no skip zone.',
+    description: 'A mood board in playlist form, lowkey, atmospheric, no skip zone.',
     tracks: '16 tracks',
     href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X',
     coverUrl: 'https://i.scdn.co/image/ab67706c0000da84e3a767f5ecba81eee7a178a6',
@@ -40,7 +40,7 @@ const playlists = [
   },
   {
     title: 'HARDTEKK WHAAAT',
-    description: 'Raw, distorted, relentless. Hardtekk at maximum pressure — not for the faint-hearted.',
+    description: 'Raw, distorted, relentless. Hardtekk at maximum pressure, not for the faint-hearted.',
     tracks: '47 tracks',
     href: 'https://open.spotify.com/playlist/6OqaK1OlgLzWQOKgBFJ0yz',
     coverUrl: 'https://i.scdn.co/image/ab67706c0000da84e1c409713b1183debe3afbea',
@@ -282,16 +282,16 @@ export function PlaylistsSection() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.84)', fontSize: 12, lineHeight: 1, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 22 }}>
-                <SpotifyIcon />
-                Spotify
-              </div>
               <h2 style={{ margin: 0, fontSize: 'clamp(40px, 11vw, 64px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff' }}>
                 Our Playlists.
               </h2>
               <p style={{ marginTop: 18, marginBottom: 0, maxWidth: '34ch', fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.52)' }}>
                 Handpicked collections shaped as living listening routes, not static lists.
               </p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 18, fontSize: 12, lineHeight: 1, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)' }}>
+                <SpotifyIcon />
+                Available on Spotify
+              </div>
             </motion.div>
           </div>
 
@@ -331,7 +331,7 @@ export function PlaylistsSection() {
       {/* ── DESKTOP LAYOUT ──────────────────────────────────────── */}
       {!isMobile && (
         <div className="section-shell">
-          {/* Between 701–1023px the two-column sticky layout feels cramped, so we
+          {/* Between 701-1023px the two-column sticky layout feels cramped, so we
              collapse to a single column (heading on top) and only restore the
              sticky sidebar at ≥ 1024px. */}
           <style>{`
@@ -356,20 +356,20 @@ export function PlaylistsSection() {
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.84)', fontSize: 12, lineHeight: 1, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 22 }}>
-                  <SpotifyIcon />
-                  Spotify
-                </div>
                 <h2 style={{ margin: 0, fontSize: 'clamp(40px, 8vw, 92px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff', maxWidth: '8ch' }}>
                   Our<br />Playlists.
                 </h2>
                 <p style={{ marginTop: 24, marginBottom: 0, maxWidth: '28ch', fontSize: 16, lineHeight: 1.65, color: 'rgba(255,255,255,0.58)' }}>
-                  Handpicked collections from the Nothing Records team — shaped as living listening routes, not static lists.
+                  Handpicked collections from the Nothing Records team, shaped as living listening routes, not static lists.
                 </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 24, fontSize: 13, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.4)' }}>
+                  <SpotifyIcon />
+                  Available on Spotify
+                </div>
               </motion.div>
             </div>
 
-            {/* Desktop playlist cards — capped so they don't over-stretch on wide (1920px) screens */}
+            {/* Desktop playlist cards, capped so they don't over-stretch on wide (1920px) screens */}
             <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 10, maxWidth: 680, width: '100%' }}>
               {playlists.map((playlist, index) => {
                 const isActive = activeIndex === index
@@ -426,7 +426,7 @@ export function PlaylistsSection() {
                       transition: 'border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease',
                     }}
                   >
-                    {/* Cover image — subtle background on hover */}
+                    {/* Cover image, subtle background on hover */}
                     <div
                       style={{
                         position: 'absolute',
