@@ -19,16 +19,9 @@ export function AboutSection() {
     <section id="about" ref={ref} className="relative w-full border-t border-white/[0.06]" style={{ background: '#000000', position: 'relative', zIndex: 1 }} aria-label="About">
       <motion.div className="relative z-10 section-shell" style={{ y, opacity }}>
         <div className="py-24 md:py-32">
-          <h2 className="font-extralight" style={{ fontSize: 'clamp(1.9rem, 4.6vw, 3.2rem)', lineHeight: 1.08, letterSpacing: '-0.035em', color: '#FAFAFA', maxWidth: '18ch' }}>
-            Music exists in the space between.
-          </h2>
-          <p className="font-light" style={{ fontSize: '15px', lineHeight: 1.75, color: 'rgba(250,250,250,0.40)', marginTop: '20px', maxWidth: '46ch' }}>
-            An independent electronic music label focused on curated sound, visual storytelling and immersive digital culture.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8 mt-16 md:mt-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">
             {PILLARS.map((p, i) => (
               <motion.div key={p.title} className="border-t border-white/[0.08] pt-6" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7, delay: i * 0.09, ease: [0.16, 1, 0.3, 1] }}>
-                {/* Monochrome label — hierarchy via opacity, not colour */}
                 <span style={{ fontSize: '10px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.28)', display: 'block', marginBottom: '12px' }}>
                   {p.title}
                 </span>
