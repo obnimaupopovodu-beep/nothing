@@ -1,16 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #050505;
-  --color-surface: #0d0d0d;
-  --color-blue-primary: #7fb0ff;
+  --color-bg: #000000;
+  --color-surface: #09090B;
   --font-sans: 'Montserrat', system-ui, sans-serif;
 }
 
 :root {
-  --color-blue: #7fb0ff;
-  --color-text: #f0f0f0;
-  --color-muted: rgba(240, 240, 240, 0.52);
+  --color-text: #FAFAFA;
+  --color-muted: rgba(250, 250, 250, 0.52);
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -25,31 +23,28 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #050505;
+  background-color: #000000;
   overscroll-behavior: none;
 }
 
 body {
-  background:
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(127, 176, 255, 0.07), transparent 60%),
-    #050505;
-  color: #f0f0f0;
+  background: #000000;
+  color: #FAFAFA;
   font-family: var(--font-sans);
   overflow-x: hidden;
   min-height: 100dvh;
 }
 
 ::selection {
-  background: rgba(127, 176, 255, 0.22);
-  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #FAFAFA;
 }
 
 :focus-visible {
-  outline: 1px solid rgba(127, 176, 255, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.40);
   outline-offset: 3px;
 }
 
-/* Grain — kept exactly, it's atmospheric */
 .grain-overlay {
   position: fixed;
   inset: -50%;
@@ -57,7 +52,7 @@ body {
   height: 200%;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.03;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-size: 256px 256px;
   animation: grain 0.4s steps(2) infinite;
@@ -78,24 +73,20 @@ body {
   100% { transform: translate(0, 0); }
 }
 
-/* Utility classes */
 .glass {
-  background: rgba(13, 13, 13, 0.75);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(9, 9, 11, 0.80);
+  backdrop-filter: blur(24px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
 }
 
-/* label-caps: used sparingly — meta/eyebrow only */
 .label-caps {
-  /* Clamp keeps the small eyebrow aesthetic but never renders below 9px on the
-     narrowest screens while allowing a touch more legibility up to 11px. */
   font-size: clamp(9px, 2vw, 11px);
   font-weight: 600;
   letter-spacing: 0.38em;
   text-transform: uppercase;
-  color: rgba(240, 240, 240, 0.28);
+  color: rgba(250, 250, 250, 0.28);
 }
 
 .section-shell {
@@ -104,55 +95,56 @@ body {
   margin-inline: auto;
   padding-inline: clamp(1rem, 5vw, 4rem);
 }
+
 .section-padding {
   padding-top: clamp(5rem, 12vw, 9rem);
   padding-bottom: clamp(5rem, 12vw, 9rem);
 }
 
-/* Более выраженная иерархия заголовков */
 h1, h2, .h1, .h2 {
   font-weight: 200;
   letter-spacing: -0.04em;
   line-height: 1.05;
 }
 
-h1 {
-  font-size: clamp(2.4rem, 8vw, 5.5rem);
-}
+h1 { font-size: clamp(2.4rem, 8vw, 5.5rem); }
+h2 { font-size: clamp(1.8rem, 5vw, 3.2rem); }
+h3 { font-size: clamp(1.15rem, 2.8vw, 1.75rem); }
 
-h2 {
-  font-size: clamp(1.8rem, 5vw, 3.2rem);
-}
+section { scroll-margin-top: 80px; }
 
-h3 {
-  font-size: clamp(1.15rem, 2.8vw, 1.75rem);
-}
+.content-column      { width: min(100%, 40rem); margin-inline: auto; }
+.content-column-wide { width: min(100%, 52rem); margin-inline: auto; }
 
-/* Увеличенный воздух между секциями */
-section {
-  scroll-margin-top: 80px;
-}
-
-.content-column {
-  width: min(100%, 40rem);
-  margin-inline: auto;
-}
-
-.content-column-wide {
-  width: min(100%, 52rem);
-  margin-inline: auto;
-}
-
-/* Divider: single fine line, used once between sections */
 .section-divider {
   width: 100%;
   height: 1px;
   background: rgba(255, 255, 255, 0.06);
 }
 
-::-webkit-scrollbar { width: 2px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: rgba(127, 176, 255, 0.2); border-radius: 2px; }
+::-webkit-scrollbar       { width: 2px; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.10); border-radius: 2px; }
+
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -161,23 +153,7 @@ section {
   }
 }
 
-/* ─── Mobile utilities ─────────────────────────────── */
 @media (max-width: 640px) {
-  .section-shell {
-    padding-inline: 1rem;
-  }
-  .hide-mobile {
-    display: none !important;
-  }
-}
-
-/* ─── Hover-only affordances ───────────────────────────
-   The scrollbar thumb tint is the only pure-CSS interactive affordance; it is
-   gated behind a hover-capable, fine pointer so it never applies on touch
-   devices. All other hover states are driven by Framer Motion whileHover, which
-   is already touch-safe and does not stick on tap. */
-@media (hover: hover) and (pointer: fine) {
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(127, 176, 255, 0.35);
-  }
+  .section-shell { padding-inline: 1rem; }
+  .hide-mobile   { display: none !important; }
 }
