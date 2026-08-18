@@ -42,7 +42,7 @@ export function StarField() {
       for (const s of stars) {
         ctx.beginPath()
         ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255,255,255,${s.o})`
+        ctx.fillStyle = `rgba(214,229,255,${s.o})`
         ctx.fill()
         if (!reduced) s.y = (s.y + s.drift) % 1
       }

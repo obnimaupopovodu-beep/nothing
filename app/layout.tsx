@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: '#04060E',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -33,6 +33,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <div className="aura aura-a" aria-hidden="true" />
+        <div className="aura aura-b" aria-hidden="true" />
         <div className="grain-overlay" aria-hidden="true" />
         <StarField />
         <AnnouncementBar />

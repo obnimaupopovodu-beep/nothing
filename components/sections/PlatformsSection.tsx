@@ -6,7 +6,7 @@ export function PlatformsSection() {
   return (
     <section
       id="platforms"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ borderTop: '1px solid var(--line-soft)' }}
       aria-label="Streaming platforms"
     >
       <EverywhereReveal />

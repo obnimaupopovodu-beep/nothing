@@ -1,24 +1,31 @@
-import { Navigation }       from '@/components/layout/Navigation'
-import { Footer }           from '@/components/layout/Footer'
-import { StorySection }     from '@/components/sections/StorySection'
-import { StatsBanner }      from '@/components/sections/StatsBanner'
-import { MarqueeBand }      from '@/components/sections/MarqueeBand'
-import { PlatformsSection } from '@/components/sections/PlatformsSection'
-import { AboutSection }     from '@/components/sections/AboutSection'
-import { SocialSection }    from '@/components/sections/SocialSection'
-import { PlaylistsSection } from '@/components/sections/PlaylistsSection'
+import { Navigation }          from '@/components/layout/Navigation'
+import { Footer }              from '@/components/layout/Footer'
+import { HeroSection }         from '@/components/sections/HeroSection'
+import { StatsBanner }         from '@/components/sections/StatsBanner'
+import { MarqueeBand }         from '@/components/sections/MarqueeBand'
+import { AboutSection }        from '@/components/sections/AboutSection'
+import { ReleasePathsSection } from '@/components/sections/ReleasePathsSection'
+import { PlatformsSection }    from '@/components/sections/PlatformsSection'
+import { PlaylistsSection }    from '@/components/sections/PlaylistsSection'
+import { SocialSection }       from '@/components/sections/SocialSection'
+import { FaqSection }          from '@/components/sections/FaqSection'
+import { DemoSection }         from '@/components/sections/DemoSection'
 
 export default function Home() {
   return (
-    <main className="relative" style={{ background: '#000000' }}>
+    <main className="relative">
       <Navigation />
-      <StorySection />
+      <HeroSection />
       <StatsBanner />
       <MarqueeBand />
       <AboutSection />
+      <ReleasePathsSection />
+      {/* untouched by design: the everywhere reveal animation */}
       <PlatformsSection />
-      <SocialSection />
       <PlaylistsSection />
+      <SocialSection />
+      <FaqSection />
+      <DemoSection />
       <Footer />
     </main>
   )

@@ -267,7 +267,7 @@ export function PlaylistsSection() {
       style={{
         position: 'relative',
         padding: 'clamp(56px, 12vw, 180px) 0',
-        background: '#050505',
+        background: 'var(--bg)',
         color: '#fff',
         overflow: 'hidden',
       }}

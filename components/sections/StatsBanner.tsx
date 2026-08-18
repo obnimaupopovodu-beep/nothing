@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useInView } from 'framer-motion'
 
 const STATS = [
-  { value: 90, suffix: '%', label: 'royalties to artist' },
-  { value: 60, suffix: '+', label: 'artists released'    },
-  { value: 48, suffix: 'h', label: 'response time'       },
+  { value: 90, suffix: '%', label: 'royalties stay with the artist' },
+  { value: 60, suffix: '+', label: 'artists released with us'      },
+  { value: 48, suffix: 'h', label: 'answer on every demo sent'     },
 ]
 
 function useCountUp(target: number, active: boolean, duration = 1400) {
@@ -16,7 +16,8 @@ function useCountUp(target: number, active: boolean, duration = 1400) {
   useEffect(() => {
     if (!active) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setCount(target); return
+      setCount(target)
+      return
     }
     const start = performance.now()
     const tick = (now: number) => {
@@ -35,35 +36,62 @@ function useCountUp(target: number, active: boolean, duration = 1400) {
 function StatItem({ value, suffix, label, active }: { value: number; suffix: string; label: string; active: boolean }) {
   const count = useCountUp(value, active)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
-      <span
-        aria-label={`${value}${suffix}`}
-        style={{ fontSize: 'clamp(2.4rem, 6vw, 4rem)', fontWeight: 700, lineHeight: 1, letterSpacing: '-0.04em', color: '#FAFAFA', fontVariantNumeric: 'tabular-nums' }}
-      >
+    <div className="stat">
+      <span className="stat-n num-grad" aria-label={`${value}${suffix}`}>
         {count}{suffix}
       </span>
-      <span style={{ fontSize: 'clamp(10px, 2vw, 12px)', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.32)' }}>
-        {label}
-      </span>
+      <span className="stat-l">{label}</span>
     </div>
   )
 }
 
 export function StatsBanner() {
-  const ref      = useRef<HTMLElement>(null)
+  const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section
-      ref={ref}
-      aria-label="Label statistics"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: 'clamp(2.5rem, 6vw, 4rem) 0', position: 'relative', zIndex: 1, background: '#000000' }}
-    >
-      <div className="section-shell">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(2rem, 8vw, 6rem)', flexWrap: 'wrap' }}>
+    <section ref={ref} aria-label="Label numbers" className="band">
+      <div className="shell">
+        <div className="stats">
           {STATS.map((s) => <StatItem key={s.label} {...s} active={isInView} />)}
         </div>
       </div>
+
+      <style jsx>{`
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          border-top: 1px solid var(--line-soft);
+          border-bottom: 1px solid var(--line-soft);
+        }
+        :global(.stat) {
+          padding: clamp(28px, 4vw, 46px) clamp(18px, 3vw, 38px);
+          border-left: 1px solid var(--line-soft);
+        }
+        :global(.stat:first-child) { border-left: 0; padding-left: 0; }
+        :global(.stat-n) {
+          display: block;
+          font-size: clamp(42px, 6vw, 84px);
+          font-weight: 900;
+          letter-spacing: -0.05em;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        :global(.stat-l) {
+          display: block;
+          margin-top: 14px;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.5;
+          color: var(--ink-2);
+          max-width: 22ch;
+        }
+        @media (max-width: 760px) {
+          .stats { grid-template-columns: 1fr; }
+          :global(.stat) { border-left: 0; border-top: 1px solid var(--line-soft); padding-left: 0; }
+          :global(.stat:first-child) { border-top: 0; }
+        }
+      `}</style>
     </section>
   )
 }

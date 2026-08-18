@@ -1,124 +1,191 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { useMouse } from '@/hooks/useMouse'
 
 const Scene = dynamic(
   () => import('@/components/3d/Scene').then((m) => ({ default: m.Scene })),
   { ssr: false, loading: () => null }
 )
 
-const ACTION_CARDS = [
-  { id: 'playlists', label: 'Playlists', sub: 'Curated selections', href: '#platforms' },
-  { id: 'new-music', label: 'New Music', sub: 'Latest releases', href: '#releases' },
-  { id: 'socials', label: 'Socials', sub: 'Follow the community', href: '#social' },
+/** Satellite links orbiting the sculpture. Angles in degrees on the outer ring. */
+const SATELLITES = [
+  { label: 'Releases',  href: '#releases',  angle: -52 },
+  { label: 'Platforms', href: '#platforms', angle: 4   },
+  { label: 'Playlists', href: '#playlists', angle: 58  },
 ]
 
 export function HeroSection() {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '-15%'])
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0])
+  const mouse = useMouse()
+  const reduce = useReducedMotion()
+
+  const scrollTo = (href: string) => {
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
-    <section id="hero" ref={ref} className="relative w-full" style={{ height: '120vh' }} aria-label="Hero">
-      {/* Hero content is min(420px, 100%) on mobile and grows on larger viewports
-         so the action cards don't feel cramped in the centre of wide screens.
-         Media-query max-width uses !important to override the inline base value. */}
-      <style>{`
-        @media (min-width: 1024px) {
-          .hero-content { max-width: 500px !important; }
-        }
-      `}</style>
-      <div className="sticky top-0 w-full h-dvh overflow-hidden">
-        <div className="absolute inset-0 z-0"><Scene mouseX={0} mouseY={0} /></div>
-
-        <div className="absolute inset-0 z-10 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 90% 70% at 50% 40%, transparent 15%, rgba(5,5,5,0.6) 55%, #050505 100%)'
-        }} />
-        <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none" style={{
-          height: '40%',
-          background: 'linear-gradient(to bottom, transparent 0%, rgba(5,5,5,0.9) 70%, #050505 100%)'
-        }} />
-
-        <motion.div
-          className="relative z-20 flex flex-col items-center justify-center h-full"
-          style={{ y: contentY, opacity: contentOpacity }}
-        >
-          <div className="hero-content w-full px-6" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+    <section
+      id="top"
+      aria-label="Nothing Records"
+      className="band"
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        display: 'grid',
+        alignItems: 'center',
+        paddingTop: 'clamp(20px, 5vh, 56px)',
+        paddingBottom: 'clamp(48px, 8vh, 88px)',
+        background: 'transparent',
+      }}
+    >
+      <div className="shell">
+        <div className="hero-grid">
+          {/* ---------------- copy column ---------------- */}
+          <div>
             <motion.p
-              className="text-center mb-4"
-              style={{ fontSize: '9px', letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(245,245,245,0.28)' }}
-              initial={{ opacity: 0, y: 8 }}
+              className="kicker"
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              Independent Electronic Music Label
+              <i aria-hidden="true" />
+              Independent electronic label
             </motion.p>
 
             <motion.h1
-              className="text-center font-extralight leading-none select-none"
-              style={{ fontSize: 'clamp(3.5rem, 18vw, 9rem)', letterSpacing: '-0.04em', color: '#F5F5F5' }}
-              initial={{ opacity: 0, y: 28 }}
+              className="h1"
+              style={{ marginTop: 24 }}
+              initial={reduce ? false : { opacity: 0, y: 26 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
-              N0THING<br />
-              <span style={{ color: 'rgba(245,245,245,0.45)', fontWeight: 100 }}>RECORDS</span>
+              Nothing
+              <br />
+              <span className="h1-outline">Records</span>
             </motion.h1>
 
-            <motion.div
-              className="mt-8 flex flex-col gap-2"
-              initial={{ opacity: 0, y: 16 }}
+            <motion.p
+              className="lede"
+              style={{ marginTop: 26, maxWidth: '30ch' }}
+              initial={reduce ? false : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
             >
-              {ACTION_CARDS.map((card, i) => (
-                <motion.a
-                  key={card.id}
-                  href={card.href}
-                  className="group flex items-center justify-between px-5 py-4 rounded-2xl"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    backdropFilter: 'blur(12px)',
-                    textDecoration: 'none',
-                  }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 + i * 0.09, ease: [0.16, 1, 0.3, 1] }}
-                  whileHover={{ background: 'rgba(47,109,255,0.07)', borderColor: 'rgba(47,109,255,0.22)' }}
-                  whileTap={{ scale: 0.982 }}
-                >
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', letterSpacing: '0.01em' }}>{card.label}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(245,245,245,0.38)', marginTop: '2px', fontWeight: 300 }}>{card.sub}</div>
-                  </div>
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style={{ color: 'rgba(47,109,255,0.5)', flexShrink: 0 }}>
-                    <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </motion.a>
-              ))}
-            </motion.div>
+              Distribution, promo and straight answers for electronic artists.
+            </motion.p>
 
             <motion.div
-              className="mt-8 flex justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2.2 }}
+              style={{ marginTop: 34, display: 'flex', flexWrap: 'wrap', gap: 14 }}
+              initial={reduce ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
             >
-              <motion.span
-                style={{ fontSize: '9px', letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(245,245,245,0.18)' }}
-                animate={{ opacity: [0.18, 0.35, 0.18] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                ↓ Explore the label
-              </motion.span>
+              <button type="button" className="btn btn-primary" onClick={() => scrollTo('#demo')}>
+                Submit a track
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => scrollTo('#releases')}>
+                Hear the catalog
+              </button>
             </motion.div>
           </div>
-        </motion.div>
+
+          {/* ---------------- sculpture column ---------------- */}
+          <motion.div
+            className="crystal-wrap"
+            initial={reduce ? false : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="orbit-glow" aria-hidden="true" />
+            <div className="orbit" aria-hidden="true" />
+            <div className="orbit-dashed" aria-hidden="true" />
+
+            <div className="crystal-canvas">
+              <Scene mouseX={mouse.x} mouseY={mouse.y} />
+            </div>
+
+            {/* satellite navigation pinned to the outer ring */}
+            <div className="sat-orbit">
+              {SATELLITES.map((s) => (
+                <span
+                  key={s.label}
+                  className="sat-slot"
+                  style={{ transform: `rotate(${s.angle}deg) translate(min(15vw, 208px)) rotate(${-s.angle}deg)` }}
+                >
+                  <button type="button" className="sat" onClick={() => scrollTo(s.href)}>
+                    {s.label}
+                  </button>
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </div>
+
+      <style jsx>{`
+        .hero-grid {
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: clamp(24px, 4vw, 72px);
+          align-items: center;
+        }
+        :global(.crystal-wrap) {
+          position: relative;
+          display: grid;
+          place-items: center;
+          aspect-ratio: 1;
+          width: 100%;
+          max-width: 520px;
+          margin-inline: auto;
+        }
+        .crystal-canvas {
+          position: absolute;
+          inset: 8%;
+          animation: float 7s ease-in-out infinite;
+        }
+        .sat-orbit {
+          position: absolute;
+          inset: 0;
+          display: grid;
+          place-items: center;
+          pointer-events: none;
+        }
+        .sat-slot {
+          position: absolute;
+          display: block;
+        }
+        .sat {
+          pointer-events: auto;
+          border: 1px solid var(--line);
+          background: rgba(7, 11, 22, 0.72);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-radius: var(--pill);
+          padding: 9px 18px;
+          font-size: 11.5px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          cursor: pointer;
+          white-space: nowrap;
+          transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+        .sat:hover {
+          color: var(--ink);
+          border-color: rgba(140, 170, 255, 0.42);
+          background: rgba(120, 155, 255, 0.12);
+        }
+        @media (max-width: 1023px) {
+          .hero-grid { grid-template-columns: 1fr; gap: 12px; }
+          :global(.crystal-wrap) { order: -1; max-width: 340px; }
+        }
+        @media (max-width: 640px) {
+          .sat-orbit { display: none; }
+          :global(.crystal-wrap) { max-width: 250px; }
+        }
+      `}</style>
     </section>
   )
 }

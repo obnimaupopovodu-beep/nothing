@@ -295,7 +295,7 @@ export function EverywhereReveal() {
   if (reducedMotion) {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', background: '#050505', gap: 24 }}>
+        alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', gap: 24 }}>
         <span style={{ fontSize: 'clamp(1.4rem,3.8vw,3.2rem)', fontWeight: 300,
           color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em' }}>Your audience is</span>
         <span style={{ fontSize: 'clamp(2rem,7vw,6rem)', fontWeight: 300,
@@ -316,7 +316,7 @@ export function EverywhereReveal() {
       <div style={{
         position: 'sticky', top: 0, height: '100vh',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#050505', overflow: 'hidden',
+        background: 'var(--bg)', overflow: 'hidden',
       }}>
         <motion.div aria-hidden style={{
           position: 'absolute', top: '50%', left: '50%',

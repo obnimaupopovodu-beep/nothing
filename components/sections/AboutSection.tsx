@@ -1,7 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 const PILLARS = [
   { title: 'Sound',   body: 'Every release is chosen for emotional weight, not algorithmic reach.' },
@@ -10,29 +9,87 @@ const PILLARS = [
 ]
 
 export function AboutSection() {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start 0.3'] })
-  const y       = useTransform(scrollYProgress, [0, 1], [40, 0])
-  const opacity = useTransform(scrollYProgress, [0, 1], [0,  1])
-
   return (
-    <section id="about" ref={ref} className="relative w-full border-t border-white/[0.06]" style={{ background: '#000000', position: 'relative', zIndex: 1 }} aria-label="About">
-      <motion.div className="relative z-10 section-shell" style={{ y, opacity }}>
-        <div className="py-24 md:py-32">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">
-            {PILLARS.map((p, i) => (
-              <motion.div key={p.title} className="border-t border-white/[0.08] pt-6" initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7, delay: i * 0.09, ease: [0.16, 1, 0.3, 1] }}>
-                <span style={{ fontSize: '10px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.28)', display: 'block', marginBottom: '12px' }}>
-                  {p.title}
-                </span>
-                <p className="font-light" style={{ fontSize: '14px', lineHeight: 1.7, color: 'rgba(250,250,250,0.42)', maxWidth: '32ch' }}>
-                  {p.body}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+    <section id="about" aria-label="About the label" className="band sec">
+      <div className="shell">
+        <div className="split">
+          <motion.h2
+            className="h2"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Records that
+            <br />
+            refuse
+            <br />
+            <span className="accent">to blend in.</span>
+          </motion.h2>
+
+          <motion.p
+            className="lede"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Nothing Records signs a small number of electronic artists each year and works each
+            record properly: clean distribution, honest reporting, and promo only when the track
+            can carry it. No inflated promises, no silence after you send a demo.
+          </motion.p>
         </div>
-      </motion.div>
+
+        <div className="pillars">
+          {PILLARS.map((p, i) => (
+            <motion.div
+              key={p.title}
+              className="pillar"
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.7, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h3 className="p-title">{p.title}</h3>
+              <p className="p-body">{p.body}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <style jsx>{`
+        .split {
+          display: grid;
+          grid-template-columns: 1.05fr 0.95fr;
+          gap: clamp(28px, 5vw, 80px);
+          align-items: end;
+        }
+        .accent { color: var(--blue-soft); }
+        .pillars {
+          margin-top: clamp(48px, 8vw, 96px);
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: clamp(22px, 4vw, 48px);
+        }
+        :global(.pillar) { border-top: 1px solid var(--line); padding-top: 20px; }
+        .p-title {
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          color: var(--ink);
+        }
+        .p-body {
+          margin-top: 10px;
+          font-size: 14px;
+          line-height: 1.65;
+          color: var(--ink-2);
+          max-width: 34ch;
+        }
+        @media (max-width: 900px) {
+          .split { grid-template-columns: 1fr; align-items: start; }
+          .pillars { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </section>
   )
 }

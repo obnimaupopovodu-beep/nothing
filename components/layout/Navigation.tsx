@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const navLinks = [
-  { label: 'About',         href: '#about'    },
-  { label: 'Our Playlists', href: '#playlists' },
-  { label: 'Our Socials',   href: '#social'   },
+  { label: 'Releases',  href: '#releases'  },
+  { label: 'Platforms', href: '#platforms' },
+  { label: 'Playlists', href: '#playlists' },
+  { label: 'Socials',   href: '#social'    },
+  { label: 'FAQ',       href: '#faq'       },
 ]
 
 export function Navigation() {
@@ -25,93 +27,173 @@ export function Navigation() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  const handleNavClick = (href: string) => {
+  const go = (href: string) => {
     setMenuOpen(false)
     setTimeout(() => {
       document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+    }, 60)
   }
 
   return (
     <motion.header
-      className="fixed inset-x-0 top-0 z-50"
+      className="nav"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        background:     scrolled || menuOpen ? 'rgba(4,6,14,0.68)' : 'transparent',
+        backdropFilter: scrolled || menuOpen ? 'blur(18px)' : 'none',
+        WebkitBackdropFilter: scrolled || menuOpen ? 'blur(18px)' : 'none',
+        borderBottom:   scrolled || menuOpen ? '1px solid var(--line-soft)' : '1px solid transparent',
+      }}
     >
-      <div
-        className="section-shell flex h-[64px] items-center justify-between"
-        style={{
-          background:     scrolled || menuOpen ? 'rgba(0,0,0,0.90)'          : 'transparent',
-          backdropFilter: scrolled || menuOpen ? 'blur(24px) saturate(1.1)' : 'none',
-          borderBottom:   scrolled || menuOpen ? '1px solid rgba(255,255,255,0.07)' : '1px solid transparent',
-          transition: 'background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease',
-        }}
-      >
-        {/* Wordmark — monochrome dot */}
-        <a href="/" className="inline-flex items-center gap-2.5" aria-label="Nothing Records home" style={{ textDecoration: 'none' }}>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', flexShrink: 0 }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#FFFFFF', opacity: 0.85 }} />
-          </span>
-          <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.88)' }}>
-            Nothing Records
-          </span>
+      <div className="shell nav-in">
+        <a href="#top" className="brand" onClick={(e) => { e.preventDefault(); go('#top') }}>
+          Nothing<span>.</span>
         </a>
 
-        {/* Desktop nav */}
-        <nav className="hidden sm:flex items-center gap-1" aria-label="Primary navigation">
-          {navLinks.map((link) => (
-            <button key={link.label} type="button" onClick={() => handleNavClick(link.href)}
-              style={{ padding: '6px 14px', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.40)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.18s ease', borderRadius: '6px', minHeight: '44px' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(250,250,250,0.88)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(250,250,250,0.40)')}
-            >
-              {link.label}
+        <nav className="nav-links hide-mobile" aria-label="Primary">
+          {navLinks.map((l) => (
+            <button key={l.label} type="button" onClick={() => go(l.href)}>
+              {l.label}
             </button>
           ))}
-          {/* Primary CTA — pill */}
-          <button type="button" onClick={() => handleNavClick('#connect')}
-            style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', padding: '9px 22px', borderRadius: '9999px', background: '#FAFAFA', color: '#09090B', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', transition: 'background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease', minHeight: '44px' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,255,255,0.10)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#FAFAFA';  e.currentTarget.style.transform = 'translateY(0)';    e.currentTarget.style.boxShadow = 'none' }}
-            onMouseDown={(e)  => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-          >
+          <button type="button" className="btn btn-ghost nav-cta" onClick={() => go('#demo')}>
             Submit a track
           </button>
         </nav>
 
-        {/* Mobile hamburger */}
-        <button type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)} className="sm:hidden"
-          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '5px', width: '44px', height: '44px', background: 'none', border: 'none', cursor: 'pointer', padding: '0', flexShrink: 0 }}
+        <button
+          type="button"
+          className="burger"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
         >
-          <motion.span animate={menuOpen ? { rotate: 45,  y:  7 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} style={{ display: 'block', width: '20px', height: '1px', background: 'rgba(250,250,250,0.82)', transformOrigin: 'center' }} />
-          <motion.span animate={menuOpen ? { opacity: 0 }          : { opacity: 1 }}        transition={{ duration: 0.2 }}                                                                                                                                     style={{ display: 'block', width: '14px', height: '1px', background: 'rgba(250,250,250,0.82)', alignSelf: 'flex-start', marginLeft: '12px' }} />
-          <motion.span animate={menuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} style={{ display: 'block', width: '20px', height: '1px', background: 'rgba(250,250,250,0.82)', transformOrigin: 'center' }} />
+          <motion.span animate={menuOpen ? { rotate: 45, y: 5 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} />
+          <motion.span animate={menuOpen ? { rotate: -45, y: -5 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} />
         </button>
       </div>
 
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            style={{ background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '8px 0 20px' }}
+          <motion.div
+            className="nav-drawer"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="section-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {navLinks.map((link) => (
-                <button key={link.label} type="button" onClick={() => handleNavClick(link.href)}
-                  style={{ width: '100%', textAlign: 'left', padding: '14px 0', fontSize: '13px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.60)', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', minHeight: '48px' }}
-                >
-                  {link.label}
+            <div className="shell">
+              {navLinks.map((l) => (
+                <button key={l.label} type="button" className="drawer-link" onClick={() => go(l.href)}>
+                  {l.label}
                 </button>
               ))}
-              <button type="button" onClick={() => handleNavClick('#connect')}
-                style={{ marginTop: '12px', width: '100%', padding: '14px', borderRadius: '9999px', background: '#FAFAFA', color: '#09090B', fontSize: '12px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', border: 'none', cursor: 'pointer', minHeight: '48px' }}
-              >
+              <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: 18 }} onClick={() => go('#demo')}>
                 Submit a track
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style jsx>{`
+        :global(.nav) {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          width: 100%;
+          transition: background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease;
+        }
+        .nav-in {
+          height: 72px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+        }
+        .brand {
+          font-size: 20px;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+          color: var(--ink);
+          text-decoration: none;
+        }
+        .brand span { color: var(--blue-soft); }
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 26px;
+          white-space: nowrap;
+        }
+        .nav-links button {
+          background: none;
+          border: 0;
+          cursor: pointer;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          color: var(--ink-2);
+          transition: color 0.25s ease;
+        }
+        .nav-links button:hover { color: var(--ink); }
+        .nav-links :global(.nav-cta) {
+          margin-left: 4px;
+          padding: 10px 20px;
+          min-height: 40px;
+          font-size: 12px;
+          letter-spacing: 0.06em;
+        }
+        .burger {
+          display: none;
+          width: 44px;
+          height: 44px;
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          background: var(--glass);
+          cursor: pointer;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          flex-shrink: 0;
+        }
+        .burger :global(span) {
+          display: block;
+          width: 16px;
+          height: 1.5px;
+          background: var(--ink);
+        }
+        :global(.nav-drawer) {
+          background: rgba(4, 6, 14, 0.97);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-bottom: 1px solid var(--line);
+          padding: 8px 0 24px;
+        }
+        .drawer-link {
+          display: block;
+          width: 100%;
+          text-align: left;
+          padding: 15px 0;
+          min-height: 48px;
+          background: none;
+          border: 0;
+          border-bottom: 1px solid var(--line-soft);
+          font: inherit;
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--ink-2);
+          cursor: pointer;
+        }
+        .drawer-link:hover { color: var(--ink); }
+        @media (max-width: 900px) {
+          .nav-links { display: none; }
+          .burger { display: flex; }
+        }
+      `}</style>
     </motion.header>
   )
 }

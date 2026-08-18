@@ -9,32 +9,46 @@ export function MarqueeBand() {
   const doubled = [...ARTISTS, ...ARTISTS]
 
   return (
-    <section
-      aria-label="Artist roster"
-      style={{
-        overflow: 'hidden',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: 'clamp(1.2rem, 3vw, 1.8rem) 0',
-        position: 'relative', zIndex: 1,
-        background: '#000000',
-        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%)',
-        maskImage:       'linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%)',
-      }}
-    >
+    <section id="roster" aria-label="Artist roster" className="marquee band">
       <div className="marquee-track">
         {doubled.map((name, i) => (
-          <span key={`${name}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
-            <span
-              style={{ fontSize: 'clamp(10px, 2vw, 13px)', fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(250,250,250,0.28)', padding: '0 clamp(1.2rem, 3vw, 2rem)', transition: 'color 0.2s ease' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(250,250,250,0.72)' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(250,250,250,0.28)' }}
-            >
-              {name}
-            </span>
-            <span aria-hidden="true" style={{ color: 'rgba(250,250,250,0.12)', fontSize: '8px', userSelect: 'none' }}>✶</span>
+          <span key={`${name}-${i}`} className="cell">
+            <span className="name">{name}</span>
+            <span aria-hidden="true" className="star">✶</span>
           </span>
         ))}
       </div>
+
+      <style jsx>{`
+        .marquee {
+          overflow: hidden;
+          padding: clamp(26px, 4vw, 40px) 0;
+          border-bottom: 1px solid var(--line-soft);
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
+        }
+        .cell {
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
+        }
+        .name {
+          padding: 0 clamp(18px, 3vw, 34px);
+          font-size: clamp(26px, 4vw, 52px);
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          text-transform: uppercase;
+          color: rgba(147, 160, 192, 0.32);
+          transition: color 0.3s ease;
+        }
+        .cell:hover .name { color: var(--ink); }
+        .star {
+          font-size: 12px;
+          color: var(--blue-soft);
+          opacity: 0.45;
+          user-select: none;
+        }
+      `}</style>
     </section>
   )
 }
