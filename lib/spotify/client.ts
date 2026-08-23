@@ -144,7 +144,9 @@ export async function fetchPlaylistRaw(playlistId: string): Promise<SpotifyPlayl
 }
 
 export function normalizePlaylist(raw: SpotifyPlaylistRaw): PlaylistSpotifyData {
-  const image = raw.images && raw.images.length > 0 ? raw.images[0] : null;
+  const images = raw.images ?? [];
+  const image = images.length > 0 ? images[0] : null;
+  const ownerId = raw.owner?.id;
 
   return {
     id: raw.id,
@@ -152,11 +154,11 @@ export function normalizePlaylist(raw: SpotifyPlaylistRaw): PlaylistSpotifyData 
     description: raw.description ?? null,
     spotifyUrl: raw.external_urls.spotify,
     imageUrl: image?.url ?? null,
-    owner: raw.owner
+    owner: ownerId
       ? {
-          id: raw.owner.id,
-          displayName: raw.owner.display_name ?? null,
-          spotifyUrl: raw.owner.external_urls?.spotify ?? null,
+          id: ownerId,
+          displayName: raw.owner?.display_name ?? null,
+          spotifyUrl: raw.owner?.external_urls?.spotify ?? null,
         }
       : null,
     tracksCount: raw.tracks.total,

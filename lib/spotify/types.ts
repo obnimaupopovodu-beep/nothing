@@ -15,8 +15,8 @@ export interface SpotifyPlaylistRaw {
   name: string;
   description: string | null;
   external_urls: { spotify: string };
-  images: SpotifyImage[];
-  owner: SpotifyOwnerRaw;
+  images?: SpotifyImage[] | null;
+  owner?: SpotifyOwnerRaw | null;
   followers?: { total: number };
   tracks: { total: number };
   snapshot_id?: string;
@@ -78,6 +78,14 @@ export function isSpotifyTokenResponse(value: unknown): value is SpotifyTokenRes
   );
 }
 
+/**
+ * Validates only the fields required to render a card: id, name, the public
+ * Spotify URL, and a track count. Everything else (images, owner, followers,
+ * description, snapshot_id) is genuinely optional in Spotify's API responses
+ * for some playlists (e.g. algorithmic or ownerless entries) and must not
+ * cause the whole playlist to be rejected — normalizePlaylist() defaults
+ * those fields safely instead.
+ */
 export function isSpotifyPlaylistRaw(value: unknown): value is SpotifyPlaylistRaw {
   if (!isRecord(value)) return false;
   if (typeof value.id !== "string" || typeof value.name !== "string") return false;
@@ -85,13 +93,8 @@ export function isSpotifyPlaylistRaw(value: unknown): value is SpotifyPlaylistRa
   const externalUrls = value.external_urls;
   if (!isRecord(externalUrls) || typeof externalUrls.spotify !== "string") return false;
 
-  if (!Array.isArray(value.images)) return false;
-
   const tracks = value.tracks;
   if (!isRecord(tracks) || typeof tracks.total !== "number") return false;
-
-  const owner = value.owner;
-  if (!isRecord(owner) || typeof owner.id !== "string") return false;
 
   return true;
 }
