@@ -105,8 +105,8 @@ function PlatformNode({
 
   const opacity = useTransform(scrollP, (p) => {
     const fadeIn = lerp(p, activateAt, fullyAt, 0, 1)
-    const fadeP4 = lerp(p, T.P4_START, T.P4_END, 1, 0.7)
-    return clamp01(fadeIn) * (p > T.P4_START ? fadeP4 : 1)
+    const fadeP4 = lerp(p, T.P4_START, T.P4_END, 1, 0.62)
+    return clamp01(fadeIn) * (p > T.P4_START ? fadeP4 : 1) * 0.55
   })
 
   const ox = (orbit.cx / 100) * vw
@@ -161,13 +161,13 @@ function PlatformNode({
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: iconSize, height: iconSize, borderRadius: Math.round(iconSize * 0.24),
-            background: `${platform.squareBg}22`, border: '1px solid rgba(255,255,255,0.10)',
+            background: `${platform.squareBg}14`, border: '1px solid rgba(255,255,255,0.07)',
             flexShrink: 0, textDecoration: 'none', backdropFilter: 'blur(4px)',
             transition: 'background 200ms ease, border-color 200ms ease, transform 200ms ease', cursor: 'pointer',
           }}
           whileHover={{ background: `${platform.squareBg}55`, borderColor: `${platform.squareBg}88`, scale: 1.18 }}
         >
-          <PlatformIcon platform={platform} size={innerSize} color="rgba(255,255,255,0.85)" />
+          <PlatformIcon platform={platform} size={innerSize} color="rgba(255,255,255,0.55)" />
         </motion.a>
       </motion.div>
     </>
@@ -340,8 +340,20 @@ export function EverywhereReveal() {
           />
         ))}
 
+        <motion.div
+          aria-hidden
+          style={{
+            position: 'absolute', top: '50%', left: '50%',
+            translateX: '-50%', translateY: '-50%',
+            width: 'min(94vw, 760px)', height: 'clamp(160px, 28vh, 320px)',
+            borderRadius: '999px',
+            background: 'radial-gradient(ellipse, rgba(5,5,5,0.55) 0%, rgba(5,5,5,0.28) 55%, transparent 78%)',
+            pointerEvents: 'none', zIndex: 2,
+          }}
+        />
+
         <div style={{
-          position: 'relative', zIndex: 2,
+          position: 'relative', zIndex: 3,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           textAlign: 'center', gap: 'clamp(8px, 1.2vw, 18px)',
           pointerEvents: 'none', userSelect: 'none',
@@ -399,4 +411,3 @@ export function EverywhereReveal() {
     </div>
   )
 }
-
