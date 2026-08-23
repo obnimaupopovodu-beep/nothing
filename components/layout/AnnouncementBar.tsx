@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const PLAYLISTS = [
-  { title: 'TikTok Hits June 2026',      accent: '255,100,100',  href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E' },
+  { title: 'TikTok Hits August 2026',      accent: '255,100,100',  href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E' },
   { title: 'yo it\'s giving vibes',       accent: '122,176,255',  href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X' },
   { title: 'HARDTEKK WHAAAT',             accent: '255,210,60',   href: 'https://open.spotify.com/playlist/6OqaK1OlgLzWQOKgBFJ0yz' },
   { title: 'angelcore',                   accent: '214,182,255',  href: 'https://open.spotify.com/playlist/3e42evYodRnDigOVnk0ndd' },
@@ -98,7 +98,7 @@ export function AnnouncementBar() {
                       alignItems: 'center',
                       gap: 5,
                       padding: '4px 10px',
-                      borderRadius: 999,
+                      borderRadius: 10,
                       border: `1px solid rgba(${p.accent}, 0.18)`,
                       background: `rgba(${p.accent}, 0.07)`,
                       fontSize: 10,

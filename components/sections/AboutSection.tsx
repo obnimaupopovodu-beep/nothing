@@ -34,7 +34,7 @@ export function AboutSection() {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            Nothing Records signs a small number of electronic artists each year and works each
+            Nothing Records works each
             record properly: clean distribution, honest reporting, and promo only when the track
             can carry it. No inflated promises, no silence after you send a demo.
           </motion.p>

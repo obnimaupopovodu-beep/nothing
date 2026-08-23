@@ -49,7 +49,7 @@ export function Navigation() {
     >
       <div className="shell nav-in">
         <a href="#top" className="brand" onClick={(e) => { e.preventDefault(); go('#top') }}>
-          Nothing<span>.</span>
+          NB<span>.</span>
         </a>
 
         <nav className="nav-links hide-mobile" aria-label="Primary">

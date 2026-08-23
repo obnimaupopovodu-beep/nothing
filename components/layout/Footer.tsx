@@ -29,7 +29,7 @@ export function Footer() {
 
         <div className="bottom">
           <span>© {new Date().getFullYear()} Nothing Records</span>
-          <span>Moscow, worldwide</span>
+          <span>Worldwide</span>
         </div>
       </div>
 
