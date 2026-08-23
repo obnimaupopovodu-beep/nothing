@@ -4,12 +4,6 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { ArrowUpRight } from '@phosphor-icons/react'
 import { useMemo, useState, useEffect, useRef } from 'react'
 
-import { useSpotifyPlaylists } from '@/hooks/use-spotify-playlists'
-import { extractPlaylistId } from '@/lib/spotify/playlist-id'
-import { formatCompactNumber } from '@/lib/spotify/format'
-import { isPlaylistError } from '@/lib/spotify/types'
-import type { PlaylistResult } from '@/lib/spotify/types'
-
 const SpotifyIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.08)" />
@@ -82,74 +76,6 @@ const playlists = [
   },
 ]
 
-type PlaylistItem = (typeof playlists)[number]
-
-interface PlaylistDisplay {
-  title: string
-  coverUrl: string
-  tracksLabel: string
-  savesLabel: string | null
-  owner: string | null
-  spotifyUrl: string
-  status: 'loading' | 'ready' | 'error'
-}
-
-function mergePlaylistDisplay(
-  item: PlaylistItem,
-  live: PlaylistResult | undefined,
-  isLoading: boolean
-): PlaylistDisplay {
-  if (!live) {
-    return {
-      title: item.title,
-      coverUrl: item.coverUrl,
-      tracksLabel: item.tracks,
-      savesLabel: null,
-      owner: null,
-      spotifyUrl: item.href,
-      status: isLoading ? 'loading' : 'ready',
-    }
-  }
-
-  if (isPlaylistError(live)) {
-    return {
-      title: item.title,
-      coverUrl: item.coverUrl,
-      tracksLabel: item.tracks,
-      savesLabel: null,
-      owner: null,
-      spotifyUrl: item.href,
-      status: 'error',
-    }
-  }
-
-  return {
-    title: live.name || item.title,
-    coverUrl: live.imageUrl || item.coverUrl,
-    tracksLabel: `${formatCompactNumber(live.tracksCount)} tracks`,
-    savesLabel: live.savesCount != null ? `${formatCompactNumber(live.savesCount)} saves` : null,
-    owner: live.owner?.displayName ?? null,
-    spotifyUrl: live.spotifyUrl || item.href,
-    status: 'ready',
-  }
-}
-
-function SkeletonPill({ width = 64 }: { width?: number }) {
-  return (
-    <motion.span
-      animate={{ opacity: [0.35, 0.6, 0.35] }}
-      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-      style={{
-        display: 'inline-block',
-        width,
-        height: 11,
-        borderRadius: 999,
-        background: 'rgba(255,255,255,0.14)',
-      }}
-    />
-  )
-}
-
 function Waveform({ activeColor, active }: { activeColor: string; active: boolean }) {
   const bars = useMemo(() => [20, 36, 25, 46, 32, 16, 42, 22, 35, 28, 44, 19], [])
   return (
@@ -172,25 +98,21 @@ function Waveform({ activeColor, active }: { activeColor: string; active: boolea
   )
 }
 
+/* ─── Mobile carousel card ─────────────────────────────────────── */
 function MobilePlaylistCard({
   playlist,
   index,
   isActive,
-  live,
-  isLoading,
 }: {
-  playlist: PlaylistItem
+  playlist: typeof playlists[number]
   index: number
   isActive: boolean
-  live: PlaylistResult | undefined
-  isLoading: boolean
 }) {
   const number = String(index + 1).padStart(2, '0')
-  const display = mergePlaylistDisplay(playlist, live, isLoading)
 
   return (
     <a
-      href={display.spotifyUrl}
+      href={playlist.href}
       target="_blank"
       rel="noopener noreferrer"
       style={{
@@ -224,10 +146,11 @@ function MobilePlaylistCard({
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 14, overflow: 'hidden', marginBottom: 20, background: 'rgba(255,255,255,0.06)' }}>
+      {/* Cover image */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
         <img
-          src={display.coverUrl}
-          alt={display.title}
+          src={playlist.coverUrl}
+          alt={playlist.title}
           width={320}
           height={320}
           loading="lazy"
@@ -247,51 +170,24 @@ function MobilePlaylistCard({
       <div style={{ marginBottom: 16 }}>
         <Waveform active={isActive} activeColor={playlist.waveColor} />
       </div>
-      <h3 style={{ margin: 0, fontSize: 'clamp(20px, 6vw, 26px)', lineHeight: 1.0, letterSpacing: '-0.04em', color: '#fff', marginBottom: display.owner ? 4 : 12 }}>
-        {display.title}
+      <h3 style={{ margin: 0, fontSize: 'clamp(20px, 6vw, 26px)', lineHeight: 1.0, letterSpacing: '-0.04em', color: '#fff', marginBottom: 12 }}>
+        {playlist.title}
       </h3>
-      {display.owner && (
-        <p style={{ margin: '0 0 12px', fontSize: 12, lineHeight: 1.4, color: 'rgba(255,255,255,0.4)' }}>
-          by {display.owner}
-        </p>
-      )}
       <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: 'rgba(255,255,255,0.52)', flex: 1, marginBottom: 20 }}>
         {playlist.description}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <span style={{ padding: '6px 10px', borderRadius: 999, background: `rgba(${playlist.accentRgb}, 0.1)`, border: `1px solid rgba(${playlist.accentRgb}, 0.2)`, fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: `rgba(${playlist.accentRgb}, 0.9)` }}>
-            {display.status === 'loading' ? <SkeletonPill width={54} /> : display.tracksLabel}
+            {playlist.tracks}
           </span>
-          {display.status === 'loading' && (
-            <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <SkeletonPill width={54} />
-            </span>
-          )}
-          {display.status === 'ready' && display.savesLabel && (
-            <span
-              title="Количество пользователей, сохранивших плейлист в Spotify"
-              style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.68)' }}
-            >
-              {display.savesLabel}
-            </span>
-          )}
-          {display.status === 'error' && (
-            <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', fontSize: 11, lineHeight: 1, letterSpacing: '0.02em', color: 'rgba(255,255,255,0.4)' }}>
-              Data temporarily unavailable
-            </span>
-          )}
-          {display.status !== 'error' && playlist.tags.slice(0, 1).map((tag) => (
+          {playlist.tags.slice(0, 1).map((tag) => (
             <span key={tag} style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', fontSize: 11, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.52)' }}>
               {tag}
             </span>
           ))}
         </div>
-        <span
-          aria-label="Open in Spotify"
-          title="Open in Spotify"
-          style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '999px', border: `1px solid rgba(${playlist.accentRgb}, ${isActive ? 0.3 : 0.1})`, background: isActive ? `rgba(${playlist.accentRgb}, 0.1)` : 'rgba(255,255,255,0.04)', color: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.6)', transition: 'all 0.4s ease' }}
-        >
+        <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '999px', border: `1px solid rgba(${playlist.accentRgb}, ${isActive ? 0.3 : 0.1})`, background: isActive ? `rgba(${playlist.accentRgb}, 0.1)` : 'rgba(255,255,255,0.04)', color: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.6)', transition: 'all 0.4s ease' }}>
           <ArrowUpRight size={16} weight="regular" />
         </span>
       </div>
@@ -299,6 +195,7 @@ function MobilePlaylistCard({
   )
 }
 
+/* ─── Dot indicators ─────────────────────────────────────────────── */
 function CarouselDots({ total, active }: { total: number; active: number }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 8, paddingTop: 28 }}>
@@ -318,17 +215,12 @@ function CarouselDots({ total, active }: { total: number; active: number }) {
   )
 }
 
+/* ─── Main component ──────────────────────────────────────────────── */
 export function PlaylistsSection() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
-
-  const playlistIds = useMemo(
-    () => playlists.map((p) => extractPlaylistId(p.href) ?? p.href),
-    []
-  )
-  const { data: spotifyData, isLoading: spotifyLoading } = useSpotifyPlaylists(playlistIds)
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 700px)')
@@ -380,6 +272,7 @@ export function PlaylistsSection() {
         overflow: 'hidden',
       }}
     >
+      {/* ── MOBILE LAYOUT ──────────────────────────────── */}
       {isMobile && (
         <div>
           <div className="section-shell">
@@ -415,13 +308,7 @@ export function PlaylistsSection() {
             >
               {playlists.map((playlist, index) => (
                 <div key={playlist.title} data-carousel-card data-idx={index} style={{ scrollSnapAlign: 'center', flexShrink: 0 }}>
-                  <MobilePlaylistCard
-                    playlist={playlist}
-                    index={index}
-                    isActive={activeSlide === index}
-                    live={spotifyData[playlistIds[index]]}
-                    isLoading={spotifyLoading}
-                  />
+                  <MobilePlaylistCard playlist={playlist} index={index} isActive={activeSlide === index} />
                 </div>
               ))}
             </div>
@@ -441,8 +328,12 @@ export function PlaylistsSection() {
         </div>
       )}
 
+      {/* ── DESKTOP LAYOUT ────────────────────────────── */}
       {!isMobile && (
         <div className="section-shell">
+          {/* Between 701-1023px the two-column sticky layout feels cramped, so we
+             collapse to a single column (heading on top) and only restore the
+             sticky sidebar at ≥ 1024px. */}
           <style>{`
             .pl-desktop-grid {
               grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.35fr);
@@ -457,6 +348,7 @@ export function PlaylistsSection() {
             gap: 'clamp(28px, 5vw, 72px)',
             alignItems: 'start',
           }}>
+            {/* Sticky sidebar */}
             <div className="pl-desktop-sidebar" style={{ position: 'sticky', top: 120, alignSelf: 'start' }}>
               <motion.div
                 initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
@@ -477,6 +369,7 @@ export function PlaylistsSection() {
               </motion.div>
             </div>
 
+            {/* Desktop playlist cards, capped so they don't over-stretch on wide (1920px) screens */}
             <div onMouseLeave={() => setActiveIndex(null)} style={{ display: 'grid', gap: 10, maxWidth: 680, width: '100%' }}>
               {playlists.map((playlist, index) => {
                 const isActive = activeIndex === index
@@ -488,13 +381,10 @@ export function PlaylistsSection() {
                 const paddingTop = isIdle ? 20 : isActive ? 24 : 14
                 const paddingBottom = isIdle ? 20 : isActive ? 24 : 14
 
-                const live = spotifyData[playlistIds[index]]
-                const display = mergePlaylistDisplay(playlist, live, spotifyLoading)
-
                 return (
                   <motion.a
                     key={playlist.title}
-                    href={display.spotifyUrl}
+                    href={playlist.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onMouseEnter={() => setActiveIndex(index)}
@@ -536,6 +426,7 @@ export function PlaylistsSection() {
                       transition: 'border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease',
                     }}
                   >
+                    {/* Cover image, subtle background on hover */}
                     <div
                       style={{
                         position: 'absolute',
@@ -551,7 +442,7 @@ export function PlaylistsSection() {
                       }}
                     >
                       <img
-                        src={display.coverUrl}
+                        src={playlist.coverUrl}
                         alt=""
                         width={140}
                         height={120}
@@ -596,28 +487,9 @@ export function PlaylistsSection() {
                           transition={softTransition}
                           style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8, fontSize: 11, lineHeight: 1, letterSpacing: '0.22em', textTransform: 'uppercase' }}
                         >
-                          <span>{display.status === 'loading' ? <SkeletonPill width={60} /> : display.tracksLabel}</span>
+                          <span>{playlist.tracks}</span>
                           <span style={{ width: 4, height: 4, borderRadius: 999, background: isActive ? `rgb(${playlist.accentRgb})` : 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
                           <span>{playlist.mood}</span>
-                          {display.status === 'ready' && display.savesLabel && (
-                            <>
-                              <span style={{ width: 4, height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
-                              <span
-                                title="Количество пользователей, сохранивших плейлист в Spotify"
-                                style={{ textTransform: 'none', letterSpacing: '0.02em' }}
-                              >
-                                {display.savesLabel}
-                              </span>
-                            </>
-                          )}
-                          {display.status === 'error' && (
-                            <>
-                              <span style={{ width: 4, height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.22)', flexShrink: 0 }} />
-                              <span style={{ textTransform: 'none', letterSpacing: '0.02em', color: 'rgba(255,255,255,0.32)' }}>
-                                Data temporarily unavailable
-                              </span>
-                            </>
-                          )}
                         </motion.div>
 
                         <motion.h3
@@ -633,13 +505,8 @@ export function PlaylistsSection() {
                             overflowWrap: 'break-word',
                           }}
                         >
-                          {display.title}
+                          {playlist.title}
                         </motion.h3>
-                        {display.owner && (
-                          <p style={{ margin: '4px 0 0', fontSize: 12, lineHeight: 1.4, color: 'rgba(255,255,255,0.4)' }}>
-                            by {display.owner}
-                          </p>
-                        )}
 
                         <motion.div
                           animate={{
@@ -673,8 +540,6 @@ export function PlaylistsSection() {
                           <motion.span
                             animate={{ x: isActive ? 4 : 0, y: isActive ? -1 : 0, opacity: isIdle ? 0.8 : isActive ? 0.96 : 0.56, scale: isActive ? 1 : 0.975 }}
                             transition={springTransition}
-                            aria-label="Open in Spotify"
-                            title="Open in Spotify"
                             style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 999, border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.04)', color: '#fff', flexShrink: 0 }}
                           >
                             <ArrowUpRight size={18} weight="regular" />
