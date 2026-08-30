@@ -136,9 +136,10 @@ section { scroll-margin-top: 88px; }
 }
 
 .h1-outline {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.374);
+  color: rgba(255, 255, 255, 0.34);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.34);
+  -webkit-text-stroke: 0;
+  letter-spacing: -0.035em;
 }
 
 .h2 {

@@ -1,7 +1,7 @@
 'use client'
 
 const LINKS = [
-  { label: 'Releases',  href: '#releases'  },
+  { label: 'How we work',  href: '#releases'  },
   { label: 'Platforms', href: '#platforms' },
   { label: 'Playlists', href: '#playlists' },
   { label: 'Socials',   href: '#social'    },

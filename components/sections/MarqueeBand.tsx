@@ -1,8 +1,8 @@
 'use client'
 
 const ARTISTS = [
-  'NO NAME', 'UEBAN', 'NOCTURNE', 'SPECTER', 'DUSK', 'HEXFORM',
-  'BLACKSITE', 'SOLARIS', 'ECHO DEPTH', 'MANTIS', 'PHANTASM', 'CIPHER',
+  'NO NAME', 'UEBAN', 'DJ NXW', 'Hiderest', 'Kootmane', 's._a._t._e._n',
+  'yo are you really readin it', 'who cares', 'lol', 'fame btw', 'super musician', 'who we worked with',
 ]
 
 export function MarqueeBand() {

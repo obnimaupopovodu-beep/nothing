@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SmoothScroll }    from '@/components/layout/SmoothScroll'
-import { AnnouncementBar } from '@/components/layout/AnnouncementBar'
 import { StarField }       from '@/components/animations/StarField'
 
 export const metadata: Metadata = {
@@ -37,7 +36,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="aura aura-b" aria-hidden="true" />
         <div className="grain-overlay" aria-hidden="true" />
         <StarField />
-        <AnnouncementBar />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

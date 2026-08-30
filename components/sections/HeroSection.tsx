@@ -11,7 +11,7 @@ const Scene = dynamic(
 
 /** Satellite links orbiting the sculpture. Angles in degrees on the outer ring. */
 const SATELLITES = [
-  { label: 'Releases',  href: '#releases',  angle: -52 },
+  { label: 'How we work',  href: '#releases',  angle: -52 },
   { label: 'Platforms', href: '#platforms', angle: 4   },
   { label: 'Playlists', href: '#playlists', angle: 58  },
 ]
