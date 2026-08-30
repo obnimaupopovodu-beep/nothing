@@ -35,8 +35,11 @@ export class DemoSubmissionError extends Error {
 
 export function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY
-  return { url, key, configured: Boolean(url && key) }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.SUPABASE_ANON_KEY
+  const key = serviceRoleKey ?? anonKey
+  const keySource = serviceRoleKey ? 'service_role' : anonKey ? 'anon' : 'none'
+  return { url, key, keySource, configured: Boolean(url && key) }
 }
 
 function getHeaders(key: string) {
@@ -64,8 +67,12 @@ export function isDemoSubmissionsConfigured() {
 }
 
 export async function createDemoSubmission(input: DemoSubmissionInput) {
-  const { url, key } = getSupabaseConfig()
+  const { url, key, keySource } = getSupabaseConfig()
   if (!url || !key) {
+    console.error('[demoSubmissions] Supabase not configured', {
+      hasUrl: Boolean(url),
+      hasKey: Boolean(key),
+    })
     throw new DemoSubmissionError('Supabase is not configured yet.', 503)
   }
 
@@ -87,6 +94,18 @@ export async function createDemoSubmission(input: DemoSubmissionInput) {
   if (!response.ok) {
     const details = await response.text()
 
+    // Server-side only: never sent to the client. This is the actual
+    // Supabase/PostgREST error body, which tells us exactly what's wrong
+    // (bad apikey, RLS policy name, missing table, etc.) instead of a
+    // generic message.
+    console.error('[demoSubmissions] Supabase insert failed', {
+      status: response.status,
+      statusText: response.statusText,
+      keySource,
+      supabaseUrl: url,
+      body: details,
+    })
+
     if (response.status === 404) {
       throw new DemoSubmissionError('Supabase table demo_submissions was not found.', 500)
     }
@@ -106,7 +125,7 @@ export async function createDemoSubmission(input: DemoSubmissionInput) {
 }
 
 export async function listDemoSubmissions() {
-  const { url, key } = getSupabaseConfig()
+  const { url, key, keySource } = getSupabaseConfig()
   if (!url || !key) {
     return { configured: false, submissions: [] as DemoSubmission[] }
   }
@@ -122,7 +141,15 @@ export async function listDemoSubmissions() {
   })
 
   if (!response.ok) {
-    throw new Error(await response.text())
+    const details = await response.text()
+    console.error('[demoSubmissions] Supabase list failed', {
+      status: response.status,
+      statusText: response.statusText,
+      keySource,
+      supabaseUrl: url,
+      body: details,
+    })
+    throw new Error(details)
   }
 
   const rows = (await response.json()) as SupabaseSubmissionRow[]
