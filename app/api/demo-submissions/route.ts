@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/adminAuth'
-import { createDemoSubmission, listDemoSubmissions } from '@/lib/demoSubmissions'
+import { DemoSubmissionError, createDemoSubmission, listDemoSubmissions } from '@/lib/demoSubmissions'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const soundCloudPattern = /^https?:\/\/(www\.)?(soundcloud\.com|on\.soundcloud\.com)\/.+/i
@@ -43,7 +43,14 @@ export async function POST(request: Request) {
 
     const submission = await createDemoSubmission({ alias, email, scLink, notes })
     return NextResponse.json({ submission }, { status: 201 })
-  } catch {
+  } catch (err) {
+    if (err instanceof DemoSubmissionError) {
+      return NextResponse.json(
+        { error: err.message },
+        { status: err.status }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Unable to save demo submission.' },
       { status: 500 }

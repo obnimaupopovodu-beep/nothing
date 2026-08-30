@@ -23,7 +23,17 @@ type SupabaseSubmissionRow = {
 
 const TABLE = 'demo_submissions'
 
-function getSupabaseConfig() {
+export class DemoSubmissionError extends Error {
+  status: number
+
+  constructor(message: string, status = 500) {
+    super(message)
+    this.name = 'DemoSubmissionError'
+    this.status = status
+  }
+}
+
+export function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY
   return { url, key, configured: Boolean(url && key) }
@@ -56,7 +66,7 @@ export function isDemoSubmissionsConfigured() {
 export async function createDemoSubmission(input: DemoSubmissionInput) {
   const { url, key } = getSupabaseConfig()
   if (!url || !key) {
-    throw new Error('Supabase is not configured.')
+    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
   }
 
   const response = await fetch(`${url}/rest/v1/${TABLE}`, {
@@ -75,7 +85,20 @@ export async function createDemoSubmission(input: DemoSubmissionInput) {
   })
 
   if (!response.ok) {
-    throw new Error(await response.text())
+    const details = await response.text()
+
+    if (response.status === 404) {
+      throw new DemoSubmissionError('Supabase table demo_submissions was not found.', 500)
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      throw new DemoSubmissionError('Supabase key or table policy does not allow saving demos.', 500)
+    }
+
+    throw new DemoSubmissionError(
+      details || 'Supabase rejected the demo submission.',
+      500
+    )
   }
 
   const rows = (await response.json()) as SupabaseSubmissionRow[]
