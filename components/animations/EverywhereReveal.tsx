@@ -3,6 +3,7 @@
 import { platforms } from '@/components/data/platforms'
 import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import {
+  animate,
   motion,
   useMotionTemplate,
   useMotionValue,
@@ -34,6 +35,12 @@ const T = {
   P3_END:      0.42,
   P4_START:    0.46,
   P4_END:      1.50,
+} as const
+
+const PROGRESS_CATCHUP = {
+  MIN_DURATION: 0.12,
+  MAX_DURATION: 0.42,
+  DURATION_PER_PROGRESS: 0.62,
 } as const
 
 function lerp(p: number, a: number, b: number, from: number, to: number) {
@@ -260,34 +267,56 @@ export function EverywhereReveal() {
     offset: ['start start', 'end end'],
   })
 
+  const stableProgress = useMotionValue(0)
+  const progressTweenRef = useRef<{ stop: () => void } | null>(null)
+
+  useEffect(() => {
+    return scrollYProgress.on('change', (next) => {
+      progressTweenRef.current?.stop()
+
+      const distance = Math.abs(next - stableProgress.get())
+      const duration = Math.min(
+        PROGRESS_CATCHUP.MAX_DURATION,
+        Math.max(PROGRESS_CATCHUP.MIN_DURATION, distance * PROGRESS_CATCHUP.DURATION_PER_PROGRESS)
+      )
+
+      progressTweenRef.current = animate(stableProgress, next, {
+        duration,
+        ease: 'linear',
+      })
+    })
+  }, [scrollYProgress, stableProgress])
+
+  useEffect(() => () => progressTweenRef.current?.stop(), [])
+
   const maxSpacingNum = 0.55
   const letterSpacingNum = useTransform(
-    scrollYProgress,
+    stableProgress,
     (p) => -0.03 + lerp(p, 0.0, T.P1_END, 0, 1) * (maxSpacingNum + 0.03)
   )
   const letterSpacingEm = useMotionTemplate`${letterSpacingNum}em`
 
   // 'everywhere' and eyebrow both fade out over the second phase
-  const wordFinalOpacity = useTransform(scrollYProgress, (p) =>
+  const wordFinalOpacity = useTransform(stableProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
   )
 
-  const eyebrowOpacity = useTransform(scrollYProgress, (p) =>
+  const eyebrowOpacity = useTransform(stableProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 1, 0))
   )
 
-  const glowOpacity = useTransform(scrollYProgress, (p) =>
+  const glowOpacity = useTransform(stableProgress, (p) =>
     clamp01(lerp(p, T.P2_START, T.P2_END, 0, 1)) *
     clamp01(lerp(p, T.P3_START, T.P3_END, 1, 0))
   )
 
-  const bodyOpacity = useTransform(scrollYProgress, (p) => {
+  const bodyOpacity = useTransform(stableProgress, (p) => {
     const fadeIn  = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
     const fadeOut = clamp01(lerp(p, T.P4_END - 0.06, T.P4_END, 1, 0))
     return Math.min(fadeIn, fadeOut)
   })
 
-  const bodyY = useTransform(scrollYProgress, (p) => {
+  const bodyY = useTransform(stableProgress, (p) => {
     const progress = clamp01(lerp(p, T.P3_END, T.P4_START + 0.08, 0, 1))
     return `${(1 - progress) * 20}px`
   })
@@ -327,14 +356,14 @@ export function EverywhereReveal() {
           opacity: glowOpacity, pointerEvents: 'none', zIndex: 0,
         }} />
 
-        <PulseRing scrollP={scrollYProgress} delay={0} />
-        <PulseRing scrollP={scrollYProgress} delay={0.06} />
-        <PulseRing scrollP={scrollYProgress} delay={0.12} />
+        <PulseRing scrollP={stableProgress} delay={0} />
+        <PulseRing scrollP={stableProgress} delay={0.06} />
+        <PulseRing scrollP={stableProgress} delay={0.12} />
 
         {visiblePlatforms.map((platform, i) => (
           <PlatformNode
             key={platform.name} platform={platform} orbit={ORBIT[i]}
-            scrollP={scrollYProgress} index={i}
+            scrollP={stableProgress} index={i}
             mouseX={mouseX} mouseY={mouseY}
             vw={vw} vh={vh}
           />
@@ -406,7 +435,7 @@ export function EverywhereReveal() {
           </div>
         </div>
 
-        <CounterDisplay scrollP={scrollYProgress} />
+        <CounterDisplay scrollP={stableProgress} />
       </div>
     </div>
   )

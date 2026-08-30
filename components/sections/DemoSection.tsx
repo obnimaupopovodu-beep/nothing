@@ -12,10 +12,8 @@ const COMMITMENTS = [
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
-const MAIL = 'hello@nothingrecords.com'
-
 export function DemoSection() {
-  const [artist, setArtist] = useState('')
+  const [alias, setAlias]   = useState('')
   const [email, setEmail]   = useState('')
   const [link, setLink]     = useState('')
   const [note, setNote]     = useState('')
@@ -26,27 +24,38 @@ export function DemoSection() {
     e.preventDefault()
     setError('')
 
-    if (!artist.trim())                     return setError('Tell us the artist name you release under.')
+    if (!alias.trim())                      return setError('Tell us the alias you release under.')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError('Enter an email address we can answer to.')
-    if (!/^https?:\/\/.+/i.test(link.trim())) return setError('Add a public link to the track, starting with https.')
+    if (!/^https?:\/\/(www\.)?(soundcloud\.com|on\.soundcloud\.com)\/.+/i.test(link.trim())) {
+      return setError('Add a SoundCloud link to the track, starting with https.')
+    }
 
     setStatus('loading')
     try {
-      const body = [
-        `Artist: ${artist}`,
-        `Email: ${email}`,
-        `Track: ${link}`,
-        '',
-        note || 'No additional notes.',
-      ].join('\n')
+      const response = await fetch('/api/demo-submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alias,
+          email,
+          scLink: link,
+          notes: note,
+        }),
+      })
 
-      await new Promise((r) => setTimeout(r, 700))
-      window.location.href =
-        `mailto:${MAIL}?subject=${encodeURIComponent(`Demo from ${artist}`)}&body=${encodeURIComponent(body)}`
+      if (!response.ok) {
+        const result = await response.json().catch(() => null)
+        throw new Error(result?.error ?? 'Unable to save demo submission.')
+      }
+
       setStatus('success')
-    } catch {
+      setAlias('')
+      setEmail('')
+      setLink('')
+      setNote('')
+    } catch (err) {
       setStatus('error')
-      setError(`Something broke on our side. Write to ${MAIL} instead.`)
+      setError(err instanceof Error ? err.message : 'Unable to save demo submission.')
     }
   }
 
@@ -95,10 +104,10 @@ export function DemoSection() {
             {status === 'success' ? (
               <div className="done" role="status">
                 <CheckCircle size={30} weight="light" className="ic" aria-hidden="true" />
-                <h3 className="h3">Your mail client is open.</h3>
+                <h3 className="h3">Your demo is in.</h3>
                 <p className="done-b">
-                  Send the message and we answer within 48 hours. If nothing opened, write straight
-                  to <a href={`mailto:${MAIL}`}>{MAIL}</a>.
+                  The submission is saved for review. We answer within 48 hours if the record fits
+                  the label direction.
                 </p>
                 <button type="button" className="btn btn-ghost" onClick={() => setStatus('idle')}>
                   Send another track
@@ -107,8 +116,8 @@ export function DemoSection() {
             ) : (
               <form onSubmit={submit} noValidate>
                 <div className="f">
-                  <label className="field-label" htmlFor="artist">Artist name</label>
-                  <input id="artist" className="field" value={artist} onChange={(e) => setArtist(e.target.value)}
+                  <label className="field-label" htmlFor="alias">Alias</label>
+                  <input id="alias" className="field" value={alias} onChange={(e) => setAlias(e.target.value)}
                     placeholder="How you are credited" autoComplete="off" />
                 </div>
 
@@ -119,7 +128,7 @@ export function DemoSection() {
                 </div>
 
                 <div className="f">
-                  <label className="field-label" htmlFor="link">Track link</label>
+                  <label className="field-label" htmlFor="link">SoundCloud link</label>
                   <input id="link" className="field" value={link} onChange={(e) => setLink(e.target.value)}
                     placeholder="https://soundcloud.com/..." autoComplete="off" />
                 </div>
