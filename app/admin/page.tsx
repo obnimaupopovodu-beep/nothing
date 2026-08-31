@@ -1,14 +1,8 @@
 import Link from 'next/link'
 import { listDemoSubmissions } from '@/lib/demoSubmissions'
+import { AdminSubmissionsList } from './AdminSubmissionsList'
 
 export const dynamic = 'force-dynamic'
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
 
 export default async function AdminPage() {
   let configured = false
@@ -62,55 +56,7 @@ export default async function AdminPage() {
           </section>
         )}
 
-        {configured && !loadError && submissions.length === 0 && (
-          <section className="admin-empty">
-            <span className="admin-empty-label">Clean slate</span>
-            <h2>No demos yet.</h2>
-            <p>When an artist submits the form at the bottom of the site, the entry will land here.</p>
-          </section>
-        )}
-
-        {submissions.length > 0 && (
-          <section className="admin-list" aria-label="Demo submissions">
-            {submissions.map((submission, index) => (
-              <article key={submission.id} className="admin-card">
-                <div className="admin-card-top">
-                  <span className="admin-number">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="admin-status">{submission.status}</span>
-                </div>
-
-                <div className="admin-main">
-                  <div>
-                    <span className="admin-label">Alias</span>
-                    <h2>{submission.alias}</h2>
-                  </div>
-
-                  <div className="admin-grid">
-                    <div>
-                      <span className="admin-label">Email</span>
-                      <a href={`mailto:${submission.email}`}>{submission.email}</a>
-                    </div>
-                    <div>
-                      <span className="admin-label">SoundCloud</span>
-                      <a href={submission.scLink} target="_blank" rel="noopener noreferrer">
-                        Open track
-                      </a>
-                    </div>
-                    <div>
-                      <span className="admin-label">Submitted</span>
-                      <span>{formatDate(submission.createdAt)}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="admin-label">Notes</span>
-                    <p>{submission.notes || 'No notes added.'}</p>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </section>
-        )}
+        {configured && !loadError && <AdminSubmissionsList initialSubmissions={submissions} />}
       </div>
     </main>
   )

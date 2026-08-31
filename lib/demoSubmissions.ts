@@ -5,6 +5,13 @@ export type DemoSubmissionInput = {
   notes: string
 }
 
+const ALLOWED_STATUSES = ['new', 'approved', 'rejected'] as const
+export type DemoSubmissionStatus = (typeof ALLOWED_STATUSES)[number]
+
+export function isValidDemoSubmissionStatus(value: string): value is DemoSubmissionStatus {
+  return (ALLOWED_STATUSES as readonly string[]).includes(value)
+}
+
 export type DemoSubmission = DemoSubmissionInput & {
   id: string
   status: string
@@ -66,6 +73,16 @@ export function isDemoSubmissionsConfigured() {
   return getSupabaseConfig().configured
 }
 
+function logSupabaseFailure(action: string, response: Response, keySource: string, url: string, body: string) {
+  console.error(`[demoSubmissions] Supabase ${action} failed`, {
+    status: response.status,
+    statusText: response.statusText,
+    keySource,
+    supabaseUrl: url,
+    body,
+  })
+}
+
 export async function createDemoSubmission(input: DemoSubmissionInput) {
   const { url, key, keySource } = getSupabaseConfig()
   if (!url || !key) {
@@ -98,13 +115,7 @@ export async function createDemoSubmission(input: DemoSubmissionInput) {
     // Supabase/PostgREST error body, which tells us exactly what's wrong
     // (bad apikey, RLS policy name, missing table, etc.) instead of a
     // generic message.
-    console.error('[demoSubmissions] Supabase insert failed', {
-      status: response.status,
-      statusText: response.statusText,
-      keySource,
-      supabaseUrl: url,
-      body: details,
-    })
+    logSupabaseFailure('insert', response, keySource, url, details)
 
     if (response.status === 404) {
       throw new DemoSubmissionError('Supabase table demo_submissions was not found.', 500)
@@ -142,16 +153,70 @@ export async function listDemoSubmissions() {
 
   if (!response.ok) {
     const details = await response.text()
-    console.error('[demoSubmissions] Supabase list failed', {
-      status: response.status,
-      statusText: response.statusText,
-      keySource,
-      supabaseUrl: url,
-      body: details,
-    })
+    logSupabaseFailure('list', response, keySource, url, details)
     throw new Error(details)
   }
 
   const rows = (await response.json()) as SupabaseSubmissionRow[]
   return { configured: true, submissions: rows.map(mapRow) }
+}
+
+export async function updateDemoSubmissionStatus(id: string, status: DemoSubmissionStatus) {
+  const { url, key, keySource } = getSupabaseConfig()
+  if (!url || !key) {
+    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
+  }
+
+  const response = await fetch(`${url}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      ...getHeaders(key),
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({ status }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text()
+    logSupabaseFailure('status update', response, keySource, url, details)
+
+    if (response.status === 401 || response.status === 403) {
+      throw new DemoSubmissionError('Supabase key or table policy does not allow updating demos.', 500)
+    }
+
+    throw new DemoSubmissionError(details || 'Supabase rejected the status update.', 500)
+  }
+
+  const rows = (await response.json()) as SupabaseSubmissionRow[]
+  if (!rows[0]) {
+    throw new DemoSubmissionError('Submission not found.', 404)
+  }
+
+  return mapRow(rows[0])
+}
+
+export async function deleteDemoSubmission(id: string) {
+  const { url, key, keySource } = getSupabaseConfig()
+  if (!url || !key) {
+    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
+  }
+
+  const response = await fetch(`${url}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: {
+      ...getHeaders(key),
+      Prefer: 'return=minimal',
+    },
+  })
+
+  if (!response.ok) {
+    const details = await response.text()
+    logSupabaseFailure('delete', response, keySource, url, details)
+
+    if (response.status === 401 || response.status === 403) {
+      throw new DemoSubmissionError('Supabase key or table policy does not allow deleting demos.', 500)
+    }
+
+    throw new DemoSubmissionError(details || 'Supabase rejected the delete request.', 500)
+  }
 }
