@@ -10,23 +10,27 @@ import { PlaylistsSection }    from '@/components/sections/PlaylistsSection'
 import { SocialSection }       from '@/components/sections/SocialSection'
 import { FaqSection }          from '@/components/sections/FaqSection'
 import { DemoSection }         from '@/components/sections/DemoSection'
+import { IntroNavigation }     from '@/components/intro/IntroNavigation'
 
 export default function Home() {
   return (
-    <main className="relative">
-      <Navigation />
-      <HeroSection />
-      <StatsBanner />
-      <MarqueeBand />
-      <AboutSection />
-      <ReleasePathsSection />
-      {/* untouched by design: the everywhere reveal animation */}
-      <PlatformsSection />
-      <PlaylistsSection />
-      <SocialSection />
-      <FaqSection />
-      <DemoSection />
-      <Footer />
-    </main>
+    <>
+      <IntroNavigation />
+      <main className="relative">
+        <Navigation />
+        <HeroSection />
+        <StatsBanner />
+        <MarqueeBand />
+        <AboutSection />
+        <ReleasePathsSection />
+        {/* untouched by design: the everywhere reveal animation */}
+        <PlatformsSection />
+        <PlaylistsSection />
+        <SocialSection />
+        <FaqSection />
+        <DemoSection />
+        <Footer />
+      </main>
+    </>
   )
 }
