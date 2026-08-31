@@ -23,7 +23,7 @@ const playlists = [
     mood: 'Trending',
     color: 'rgba(209, 209, 209, 0.1)',
     waveColor: 'rgba(164, 164, 164, 0.66)',
-    accentRgb: '255,100,100',
+    accentRgb: '220, 220, 220',
     tags: ['TikTok', 'Viral', 'August 2026'],
   },
   {
@@ -35,7 +35,7 @@ const playlists = [
     mood: 'Vibes',
     color: 'rgba(146, 108, 108, 0.23)',
     waveColor: 'rgba(255, 100, 100, 0.66)',
-    accentRgb: '122,176,255',
+    accentRgb: '255, 200, 200',
     tags: ['Chill', 'Aesthetic', 'Lowkey'],
   },
   {
@@ -47,7 +47,7 @@ const playlists = [
     mood: 'Hard & Fast',
     color: 'rgba(109, 105, 105, 0.1)',
     waveColor: 'rgba(80, 80, 80, 0.68)',
-    accentRgb: '255,210,60',
+    accentRgb: '97, 97, 97',
     tags: ['Hardtekk', 'Rave', 'Hard dance'],
   },
   {
@@ -71,8 +71,8 @@ const playlists = [
     mood: 'Focus',
     color: 'rgba(97, 97, 97, 0.1)',
     waveColor: 'rgba(96, 96, 96, 0.66)',
-    accentRgb: '111,255,163',
-    tags: ['Motivation', 'Focus', '2026'],
+    accentRgb: '97, 97, 97',
+    tags: ['Rap', 'Focus', '2026'],
   },
   {
     title: 'DISCIPLINE PAYS OFF 2026',
@@ -83,7 +83,7 @@ const playlists = [
     mood: 'Focus',
     color: 'rgba(97, 97, 97, 0.1)',
     waveColor: 'rgba(155, 155, 145, 0.66)',
-    accentRgb: '111,255,163',
+    accentRgb: '97, 97, 97',
     tags: ['Motivation', 'Focus', '2026'],
   },
   {
@@ -95,8 +95,8 @@ const playlists = [
     mood: 'Madness',
     color: 'rgba(109, 85, 85, 0.13)',
     waveColor: 'rgba(160, 134, 134, 0.66)',
-    accentRgb: '111,255,163',
-    tags: ['Motivation', 'Focus', '2026'],
+    accentRgb: '109, 85, 85',
+    tags: ['Metal', 'Focus', '2026'],
   },
 ]
 
