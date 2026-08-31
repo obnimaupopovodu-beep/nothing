@@ -17,7 +17,7 @@ const WHEEL_THRESHOLD = 60
 const SWIPE_THRESHOLD = 50
 const CURTAIN_EASE = [0.65, 0, 0.35, 1] as const
 const MENU_ITEM_EASE = [0.16, 1, 0.3, 1] as const
-const SESSION_KEY = 'nothing-intro-seen'
+export const INTRO_REVEAL_EVENT = 'nothing-intro:reveal'
 
 function moveToTarget(target: string | null) {
   if (!target) {
@@ -38,16 +38,10 @@ export function IntroNavigation() {
   const finishedRef = useRef(false)
 
   useEffect(() => {
-    const alreadySeen =
-      typeof window !== 'undefined' && sessionStorage.getItem(SESSION_KEY) === 'true'
-
-    if (alreadySeen) {
-      setState('closed')
-      return
-    }
-
+    // Intro plays on every load/reload by design — no session gate.
     if (reducedMotion) {
       setState('menu')
+      window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT))
       return
     }
 
@@ -58,11 +52,6 @@ export function IntroNavigation() {
   const finishIntro = useCallback(() => {
     if (finishedRef.current) return
     finishedRef.current = true
-
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(SESSION_KEY, 'true')
-    }
-
     setState('closed')
   }, [])
 
@@ -76,6 +65,8 @@ export function IntroNavigation() {
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
+            window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT))
+
             if (reducedMotion) {
               finishIntro()
             } else {
