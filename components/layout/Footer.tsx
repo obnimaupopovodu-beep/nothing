@@ -24,7 +24,7 @@ export function Footer() {
             ))}
           </nav>
 
-          <a className="mail" href="mailto:hello@nothingrecords.com">hello@nothingrecords.com</a>
+          <a className="mail" href="mailto:demo@nothingrecords.com">demo@nothingrecords.com</a>
         </div>
 
         <div className="bottom">
