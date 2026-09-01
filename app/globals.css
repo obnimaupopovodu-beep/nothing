@@ -632,7 +632,12 @@ section { scroll-margin-top: 88px; }
   inset: 0;
   z-index: 200;
   overflow: hidden;
-  background: var(--bg);
+  background: transparent;
+  pointer-events: none;
+}
+
+.intro-root > * {
+  pointer-events: auto;
 }
 
 .intro-boot {

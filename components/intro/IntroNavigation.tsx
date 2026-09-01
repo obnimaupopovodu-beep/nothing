@@ -135,6 +135,11 @@ export function IntroNavigation() {
 
   const menuVisible = state === 'opening' || state === 'menu' || state === 'navigating'
   const isInteractive = state === 'menu'
+  // The black backdrop must only exist while the white curtain hasn't
+  // fully covered the screen yet. Once it has (menu/navigating/revealing),
+  // it needs to disappear so the curtain acts as a real mask over the
+  // actual page underneath instead of a solid black layer.
+  const showBootBackdrop = state === 'boot' || state === 'opening'
 
   return (
     <div
@@ -143,7 +148,7 @@ export function IntroNavigation() {
       aria-modal="true"
       aria-label="Choose where to explore Nothing Records"
     >
-      <div className="intro-boot" aria-hidden="true" />
+      {showBootBackdrop && <div className="intro-boot" aria-hidden="true" />}
 
       <motion.div
         className="intro-curtain"
