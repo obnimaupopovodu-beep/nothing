@@ -8,6 +8,7 @@ import {
   TiktokLogo,
   TelegramLogo,
   XLogo,
+  GlobeIcon,
 } from '@phosphor-icons/react'
 import type { Icon } from '@phosphor-icons/react'
 
@@ -49,6 +50,13 @@ const SOCIALS: Social[] = [
     href: 'https://t.me/nothing_records',
     contexts: ['new release', 'pre-save now', 'tour update', 'pff idk'],
     Icon: TelegramLogo,
+  },
+  {
+    name: 'External link',
+    handle: 'linktr.ee/nothing.bass',
+    href: 'https://linktr.ee/nothing.bass',
+    contexts: ['quick links', 'all socials in one'],
+    Icon: GlobeIcon,
   },
 ]
 
