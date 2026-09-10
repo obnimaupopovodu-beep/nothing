@@ -98,6 +98,18 @@ const playlists = [
     accentRgb: '109, 85, 85',
     tags: ['Metal', 'Focus', '2026'],
   },
+  {
+    title: 'Everyrhing is house | 2026',
+    description: "House music litteraly for everything. from working to partying, this playlist will make you feel like you're in a house music festival 24/7",
+    tracks: '60+ tracks',
+    href: 'https://open.spotify.com/playlist/5z0MFQz5yHFnxOp8HKvEz2?si=d4d79d0005a44ba2',
+    coverUrl: 'https://i.scdn.co/image/ab67706c0000bebbe7044c737654b57579a95291',
+    mood: 'Madness',
+    color: 'rgba(217, 217, 217, 0.13)',
+    waveColor: 'rgba(203, 206, 186, 0.66)',
+    accentRgb: '209, 211, 197',
+    tags: ['House', 'Vibes', '2026'],
+  },
 ]
 
 function Waveform({ activeColor, active }: { activeColor: string; active: boolean }) {
