@@ -87,7 +87,7 @@ const playlists = [
     tags: ['Motivation', 'Focus', '2026'],
   },
   {
-    title: 'Obsession | metal for pushing your best',
+    title: 'Metalcore Workout 2026',
     description: "Rock/metal songs for proving you're able to step over your best results",
     tracks: '50+ tracks',
     href: 'https://open.spotify.com/playlist/4XeBGr96wUNXxdOKjhB3BE?si=8bcc4f55a3e74f6c',
