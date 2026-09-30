@@ -14,7 +14,7 @@ export function Footer() {
       <div className="shell">
         <div className="top">
           <div>
-            <span className="brand">Nothing<span className="dot">.</span></span>
+            <span className="brand">U Wont Believe<span className="dot">.</span></span>
             <p className="tag">Independent electronic music label.</p>
           </div>
 
@@ -24,12 +24,17 @@ export function Footer() {
             ))}
           </nav>
 
-          <a className="mail" href="mailto:demo@nothingrecords.com">demo@nothingrecords.com</a>
-          <a className="mail" href="mailto:newhiderest@gmail.com">newhiderest@gmail.com</a>
+          <div className="contact">
+            <a className="mail" href="mailto:demo@nothingrecords.site">demo@nothingrecords.site</a>
+            <div className="upcoming">
+              <a className="mail mail-upcoming" href="mailto:demo@uwbelieve.com">demo@uwbelieve.com</a>
+              <span className="soon">(soon)</span>
+            </div>
+          </div>
         </div>
 
         <div className="bottom">
-          <span>© {new Date().getFullYear()} Nothing Records</span>
+          <span>© {new Date().getFullYear()} U Wont Believe</span>
           <span>Worldwide</span>
         </div>
       </div>
@@ -63,6 +68,9 @@ export function Footer() {
           width: fit-content;
         }
         .links a:hover { color: var(--ink); }
+        .contact { display: grid; gap: 12px; justify-items: start; min-width: 0; }
+        .upcoming { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+        .soon { font-size: 12px; color: var(--ink-3); }
         .mail {
           font-size: 13.5px;
           font-weight: 700;
@@ -71,7 +79,9 @@ export function Footer() {
           border-bottom: 1px solid var(--line);
           padding-bottom: 3px;
           transition: border-color 0.25s ease;
+          overflow-wrap: anywhere;
         }
+        .mail-upcoming { color: var(--ink-2); }
         .mail:hover { border-bottom-color: var(--blue-soft); }
         .bottom {
           margin-top: clamp(40px, 6vw, 72px);

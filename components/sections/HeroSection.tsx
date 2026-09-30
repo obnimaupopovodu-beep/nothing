@@ -1,8 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useMouse } from '@/hooks/useMouse'
+import { useMagneticButton } from '@/hooks/useMagneticButton'
 
 const Scene = dynamic(
   () => import('@/components/3d/Scene').then((m) => ({ default: m.Scene })),
@@ -17,8 +19,10 @@ const SATELLITES = [
 ]
 
 export function HeroSection() {
-  const mouse = useMouse()
   const reduce = useReducedMotion()
+  const sculptureRef = useRef<HTMLDivElement>(null)
+  const mouse = useMouse(sculptureRef, Boolean(reduce))
+  const magneticSubmit = useMagneticButton()
 
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -60,9 +64,9 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
-              Nothing
+              u wont
               <br />
-              <span className="h1-outline">Records</span>
+              <span className="h1-outline">believe</span>
             </motion.h1>
 
             <motion.p
@@ -81,9 +85,9 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
             >
-              <button type="button" className="btn btn-primary" onClick={() => scrollTo('#demo')}>
+              <motion.button type="button" className="btn btn-primary magnetic-btn" onClick={() => scrollTo('#demo')} {...magneticSubmit}>
                 Submit a track
-              </button>
+              </motion.button>
               <button type="button" className="btn btn-ghost" onClick={() => scrollTo('#releases')}>
                 Hear the catalog
               </button>
@@ -92,6 +96,7 @@ export function HeroSection() {
 
           {/* ---------------- sculpture column ---------------- */}
           <motion.div
+            ref={sculptureRef}
             className="crystal-wrap"
             initial={reduce ? false : { opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -102,7 +107,7 @@ export function HeroSection() {
             <div className="orbit-dashed" aria-hidden="true" />
 
             <div className="crystal-canvas">
-              <Scene mouseX={mouse.x} mouseY={mouse.y} />
+              <Scene mouse={mouse} />
             </div>
 
             {/* satellite navigation pinned to the outer ring */}

@@ -21,9 +21,9 @@ export default function Home() {
         <main className="relative">
           <Navigation />
           <HeroSection />
+          <AboutSection />
           <StatsBanner />
           <MarqueeBand />
-          <AboutSection />
           <ReleasePathsSection />
           {/* untouched by design: the everywhere reveal animation */}
           <PlatformsSection />

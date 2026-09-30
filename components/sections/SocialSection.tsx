@@ -7,7 +7,6 @@ import {
   InstagramLogo,
   TiktokLogo,
   TelegramLogo,
-  XLogo,
   GlobeIcon,
 } from '@phosphor-icons/react'
 import type { Icon } from '@phosphor-icons/react'
@@ -71,7 +70,7 @@ function SocialRow({ social, index }: { social: Social; index: number }) {
       href={social.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="row"
+      className="social-row"
       aria-label={`${social.name} — ${social.handle}`}
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -120,13 +119,7 @@ export function SocialSection() {
       <div className="shell">
         <div className="wrap">
           <div className="head-col">
-            <motion.div
-              className="head"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.8, ease: EASE }}
-            >
+            <div className="social-heading">
               <p className="kicker"><i aria-hidden="true" />Community</p>
               <h2 className="h2">
                 Stay in
@@ -137,12 +130,12 @@ export function SocialSection() {
                 Every channel is a live frequency. Releases, sessions, and dispatches
                 from the studio, always transmitting.
               </p>
-            </motion.div>
+            </div>
           </div>
 
           <div className="list">
             {SOCIALS.map((social, i) => (
-              <SocialRow key={social.name} social={social} index={i} />
+              <SocialRow key={social.href} social={social} index={i} />
             ))}
 
             <motion.div
@@ -169,14 +162,15 @@ export function SocialSection() {
         }
         .head-col {
           position: relative;
+          align-self: stretch;
         }
-        :global(.head .kicker) { margin-bottom: 20px; }
+        .social-heading .kicker { margin-bottom: 20px; }
         .accent { color: var(--blue-soft); }
-        :global(.head .lede) { margin-top: clamp(18px, 2.5vw, 28px); max-width: 34ch; }
+        .social-heading .lede { margin-top: clamp(18px, 2.5vw, 28px); max-width: 34ch; }
 
         .list { border-top: 1px solid var(--line-soft); }
 
-        :global(a.row) {
+        :global(.social-row) {
           display: grid;
           grid-template-columns: 2.5rem 1fr auto;
           align-items: center;
@@ -188,8 +182,8 @@ export function SocialSection() {
           color: inherit;
           transition: background 0.25s ease;
         }
-        :global(a.row:hover),
-        :global(a.row:focus-visible) {
+        :global(.social-row:hover),
+        :global(.social-row:focus-visible) {
           background: var(--glass);
         }
 
@@ -253,8 +247,8 @@ export function SocialSection() {
           color: var(--ink-3);
           transition: color 0.25s ease;
         }
-        :global(a.row:hover .arrow),
-        :global(a.row:focus-visible .arrow) { color: var(--blue-soft); }
+        :global(.social-row:hover .arrow),
+        :global(.social-row:focus-visible .arrow) { color: var(--blue-soft); }
 
         .foot {
           display: flex;
@@ -278,7 +272,7 @@ export function SocialSection() {
         }
 
         @media (min-width: 901px) {
-          .head-col {
+          .social-heading {
             position: sticky;
             top: 5.5rem;
           }
@@ -289,7 +283,7 @@ export function SocialSection() {
         @media (max-width: 640px) {
           :global(.ctx) { display: none; }
           :global(.ctx-mobile) { display: block; }
-          :global(a.row) {
+          :global(.social-row) {
             grid-template-columns: 2rem 1fr auto;
             padding: 18px 0;
           }

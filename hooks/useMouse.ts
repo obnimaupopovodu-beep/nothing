@@ -1,42 +1,39 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 
-export function useMouse() {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 })
-  const smooth = useRef({ x: 0, y: 0 })
-  const target = useRef({ x: 0, y: 0 })
-  const raf = useRef<number | null>(null)
+export type MousePosition = { x: number; y: number }
+
+export function useMouse(target: RefObject<HTMLElement | null>, disabled = false) {
+  const mouse = useRef<MousePosition>({ x: 0, y: 0 })
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      target.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      target.current.y = -(e.clientY / window.innerHeight) * 2 + 1
-    }
-    const onOrientation = (e: DeviceOrientationEvent) => {
-      if (e.beta !== null && e.gamma !== null) {
-        target.current.x = (e.gamma / 45) * 0.5
-        target.current.y = ((e.beta - 45) / 45) * 0.5
-      }
-    }
-    window.addEventListener('mousemove', onMove, { passive: true })
-    window.addEventListener('deviceorientation', onOrientation, { passive: true })
+    if (disabled || !window.matchMedia('(pointer: fine)').matches) return
 
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-    const tick = () => {
-      smooth.current.x = lerp(smooth.current.x, target.current.x, 0.05)
-      smooth.current.y = lerp(smooth.current.y, target.current.y, 0.05)
-      setMouse({ x: smooth.current.x, y: smooth.current.y })
-      raf.current = requestAnimationFrame(tick)
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return
+      const bounds = target.current?.getBoundingClientRect()
+      if (!bounds) return
+
+      const centerX = bounds.left + bounds.width / 2
+      const centerY = bounds.top + bounds.height / 2
+      mouse.current.x = Math.max(-1, Math.min(1, (event.clientX - centerX) / (window.innerWidth / 2)))
+      mouse.current.y = Math.max(-1, Math.min(1, (centerY - event.clientY) / (window.innerHeight / 2)))
     }
-    raf.current = requestAnimationFrame(tick)
+    const onLeave = () => {
+      mouse.current.x = 0
+      mouse.current.y = 0
+    }
+
+    window.addEventListener('pointermove', onMove, { passive: true })
+    document.addEventListener('pointerleave', onLeave)
 
     return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('deviceorientation', onOrientation)
-      if (raf.current) cancelAnimationFrame(raf.current)
+      window.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerleave', onLeave)
     }
-  }, [])
+  }, [disabled, target])
 
   return mouse
 }

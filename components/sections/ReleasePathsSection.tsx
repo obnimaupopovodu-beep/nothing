@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import type { PointerEvent } from 'react'
 import { VinylRecord, Sparkle, WaveSine } from '@phosphor-icons/react/dist/ssr'
 
 const MODES = [
@@ -27,6 +28,13 @@ const MODES = [
   },
 ]
 
+function moveCardLight(event: PointerEvent<HTMLElement>) {
+  if (event.pointerType !== 'mouse') return
+  const bounds = event.currentTarget.getBoundingClientRect()
+  event.currentTarget.style.setProperty('--glow-x', `${event.clientX - bounds.left}px`)
+  event.currentTarget.style.setProperty('--glow-y', `${event.clientY - bounds.top}px`)
+}
+
 export function ReleasePathsSection() {
   return (
     <section id="releases" aria-label="Ways to release with us" className="band sec">
@@ -46,7 +54,8 @@ export function ReleasePathsSection() {
           {MODES.map((m, i) => (
             <motion.article
               key={m.tag}
-              className={m.wide ? 'card cell cell-wide' : 'card cell'}
+              className={m.wide ? 'card cell cell-wide pointer-card' : 'card cell pointer-card'}
+              onPointerMove={moveCardLight}
               initial={{ opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
@@ -71,6 +80,21 @@ export function ReleasePathsSection() {
           align-items: stretch;
         }
         :global(.cell) { display: flex; flex-direction: column; }
+        :global(.pointer-card) { position: relative; overflow: hidden; isolation: isolate; }
+        :global(.pointer-card > *) { position: relative; z-index: 1; }
+        @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+          :global(.pointer-card::before) {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(190px circle at var(--glow-x, 50%) var(--glow-y, 50%), rgba(75, 111, 255, 0.17), transparent 75%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+          :global(.pointer-card:hover::before) { opacity: 1; }
+          :global(.pointer-card:hover) { border-color: rgba(108, 141, 255, 0.32); }
+        }
         :global(.cell-wide) { padding: clamp(26px, 3.4vw, 44px); }
         :global(.cell .ic) { color: var(--blue-soft); }
         .tag {

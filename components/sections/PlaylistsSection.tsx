@@ -3,6 +3,7 @@
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { ArrowUpRight } from '@phosphor-icons/react'
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { PlaylistContours } from '@/components/animations/PlaylistContours'
 
 const SpotifyIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -27,11 +28,11 @@ const playlists = [
     tags: ['TikTok', 'Viral', 'August 2026'],
   },
   {
-    title: "Yo it's giving vibes",
+    title: "Outsider house 2026 bangers",
     description: 'A mood board in playlist form, lowkey, atmospheric, no skip zone.',
     tracks: '25+ tracks',
     href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X',
-    coverUrl: 'https://i.scdn.co/image/ab67706c0000da84e3a767f5ecba81eee7a178a6',
+    coverUrl: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84fd30f20e62d6d5553078dc4d',
     mood: 'Vibes',
     color: 'rgba(146, 108, 108, 0.23)',
     waveColor: 'rgba(255, 100, 100, 0.66)',
@@ -51,11 +52,11 @@ const playlists = [
     tags: ['Hardtekk', 'Rave', 'Hard dance'],
   },
   {
-    title: 'angelcore',
+    title: 'Outsider angelcore ✨',
     description: 'Soft, dreamy, heavenly. Floaty textures and ethereal sounds for celestial minds.',
     tracks: '25+ tracks',
     href: 'https://open.spotify.com/playlist/3e42evYodRnDigOVnk0ndd',
-    coverUrl: 'https://mosaic.scdn.co/640/ab67616d00001e020dfc4abe47219f9094a8d6d0ab67616d00001e02695c129f5cf1179ce1b8c484ab67616d00001e02a84161d44069af42bf00fc4eab67616d00001e02ce94c7e86e1fbf3d10bb8c394',
+    coverUrl: 'https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da845851555df005ffb959370fb8',
     mood: 'Ethereal',
     color: 'rgba(86, 86, 86, 0.1)',
     waveColor: 'rgba(86, 86, 86, 0.68)',
@@ -253,6 +254,7 @@ function CarouselDots({ total, active }: { total: number; active: number }) {
 
 /* ─── Main component ──────────────────────────────────────────────── */
 export function PlaylistsSection() {
+  const sectionRef = useRef<HTMLElement>(null)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
@@ -300,17 +302,32 @@ export function PlaylistsSection() {
   return (
     <section
       id="playlists"
+      ref={sectionRef}
       style={{
         position: 'relative',
+        isolation: 'isolate',
         padding: 'clamp(56px, 12vw, 180px) 0',
         background: 'var(--bg)',
         color: '#fff',
         overflow: 'hidden',
       }}
     >
+      <PlaylistContours target={sectionRef} />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          insetInline: 0,
+          bottom: 0,
+          height: 'clamp(220px, 30vh, 360px)',
+          zIndex: 0,
+          pointerEvents: 'none',
+          background: 'linear-gradient(to bottom, rgba(5, 5, 5, 0), rgba(5, 5, 5, 0.45) 42%, var(--bg) 92%)',
+        }}
+      />
       {/* ── MOBILE LAYOUT ──────────────────────────────── */}
       {isMobile && (
-        <div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="section-shell">
             <motion.div
               initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
@@ -396,7 +413,7 @@ export function PlaylistsSection() {
                   Our<br />Playlists.
                 </h2>
                 <p style={{ marginTop: 24, marginBottom: 0, maxWidth: '28ch', fontSize: 16, lineHeight: 1.65, color: 'rgba(255,255,255,0.58)' }}>
-                  Handpicked collections from the Nothing Records team, shaped as living listening routes, not static lists.
+                  Handpicked collections from the U Wont Believe Records team, shaped as living listening routes, not static lists.
                 </p>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 24, fontSize: 13, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.4)' }}>
                   <SpotifyIcon />

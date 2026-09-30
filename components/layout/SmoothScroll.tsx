@@ -1,9 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
+import { createContext, useContext, useEffect, useRef, type RefObject } from 'react'
 import Lenis from 'lenis'
 
+const SmoothScrollContext = createContext<RefObject<Lenis | null> | null>(null)
+
+export function useSmoothScroll() {
+  return useContext(SmoothScrollContext)
+}
+
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
+  const controller = useRef<Lenis | null>(null)
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -12,6 +20,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       wheelMultiplier: 0.8,
       touchMultiplier: 1.5,
     })
+    controller.current = lenis
 
     let raf: number
     function animate(time: number) {
@@ -23,8 +32,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     return () => {
       cancelAnimationFrame(raf)
       lenis.destroy()
+      controller.current = null
     }
   }, [])
 
-  return <>{children}</>
+  return <SmoothScrollContext.Provider value={controller}>{children}</SmoothScrollContext.Provider>
 }
