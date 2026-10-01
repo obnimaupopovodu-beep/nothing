@@ -80,6 +80,7 @@ export function AboutSection() {
     let startedAt = 0
     let lockedAt = 0
     let releaseScroll: (() => void) | null = null
+    let releaseMobileScroll: (() => void) | null = null
     let previousScroll = window.scrollY
     let previousTime = performance.now()
 
@@ -90,6 +91,8 @@ export function AboutSection() {
       active = false
       holdFinalFrame.current = showFinalFrame
       if (showFinalFrame) progress.set(1)
+      releaseMobileScroll?.()
+      releaseMobileScroll = null
       releaseScroll?.()
       releaseScroll = null
       previousScroll = window.scrollY
@@ -140,6 +143,21 @@ export function AboutSection() {
             progress.set(0)
             lenis?.stop()
             releaseScroll = () => lenis?.start()
+            if (window.matchMedia('(max-width: 700px)').matches) {
+              // Lenis does not own native touch momentum. Pin the page at its
+              // current offset so a swipe cannot carry it through the scene.
+              const body = document.body
+              const { position, top, left, right, width } = body.style
+              body.style.position = 'fixed'
+              body.style.top = `${-lockedAt}px`
+              body.style.left = '0'
+              body.style.right = '0'
+              body.style.width = '100%'
+              releaseMobileScroll = () => {
+                Object.assign(body.style, { position, top, left, right, width })
+                window.scrollTo({ top: lockedAt, behavior: 'instant' })
+              }
+            }
           }
         } else {
           // Returning from below always uses scroll control, even on the first visit.
@@ -156,7 +174,7 @@ export function AboutSection() {
       if (active) {
         // Explicit navigation or dragging the scrollbar releases the presentation.
         // Never pull the page back to an anchor or jump forward on completion.
-        if (Math.abs(window.scrollY - lockedAt) > 2) {
+        if (!releaseMobileScroll && Math.abs(window.scrollY - lockedAt) > 2) {
           finish(false)
           frame = window.requestAnimationFrame(update)
           return
@@ -179,6 +197,7 @@ export function AboutSection() {
       window.removeEventListener('touchmove', blockTouch, true)
       window.removeEventListener('keydown', blockKeys)
       document.removeEventListener('visibilitychange', handleVisibility)
+      releaseMobileScroll?.()
       releaseScroll?.()
     }
   }, [progress, reduced, scrollController])
