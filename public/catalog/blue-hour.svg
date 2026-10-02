@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="blue hour abstract cover">
+ <defs><linearGradient id="glow" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#122152"/><stop offset=".5" stop-color="#759bff"/><stop offset="1" stop-color="#091229"/></linearGradient><radialGradient id="ground"><stop stop-color="#759bff" stop-opacity=".14"/><stop offset="1" stop-color="#080c1d"/></radialGradient></defs>
+ <rect width="600" height="600" fill="#080c1d"/><rect width="600" height="600" fill="url(#ground)"/>
+ <g><circle cx="300" cy="295" r="143" fill="url(#glow)" fill-opacity=".8"/><rect x="0" y="320" width="600" height="280" fill="#050712"/><path d="M0 320 H600 M0 361 H600 M0 404 H600" stroke="#84a0f2" stroke-opacity=".27"/><path d="M100 320 L38 600 M300 320 L300 600 M500 320 L562 600" stroke="#84a0f2" stroke-opacity=".28"/></g><path d="M32 32 H92 M32 32 V92 M568 32 H508 M568 32 V92 M32 568 H92 M32 568 V508 M568 568 H508 M568 568 V508" fill="none" stroke="#e8efff" stroke-opacity=".3" stroke-width="1"/>
+ <circle cx="542" cy="542" r="3" fill="#759bff"/>
+</svg>

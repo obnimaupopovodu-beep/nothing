@@ -48,6 +48,32 @@ body {
   min-height: 100dvh;
 }
 
+.elastic-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.elastic-cursor-active,
+  html.elastic-cursor-active * {
+    cursor: none !important;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .elastic-cursor { display: none; }
+}
+
 ::selection { background: var(--blue); color: #fff; }
 
 :focus-visible {

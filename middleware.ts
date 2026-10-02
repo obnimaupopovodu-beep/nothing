@@ -1,24 +1,82 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { isAdminAuthenticated } from '@/lib/adminAuth'
+import { sessionCookieOptions, supabaseConfig } from '@/lib/supabase/config'
 
 export async function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl
-  const isLoginPage = pathname === '/admin/login'
-  const authenticated = await isAdminAuthenticated(request)
-
-  if (isLoginPage && authenticated) {
-    return NextResponse.redirect(new URL('/admin', request.url))
+  const host = (request.headers.get('host') || request.nextUrl.hostname).split(':')[0].toLowerCase()
+  const prefix =
+    host === process.env.ARTIST_HOSTNAME
+      ? '/artists'
+      : host === process.env.ADMIN_HOSTNAME
+        ? '/admin'
+        : ''
+  if (prefix && request.nextUrl.pathname === '/login' && !request.nextUrl.searchParams.has('workspace')) {
+    const login = request.nextUrl.clone()
+    login.searchParams.set('workspace', prefix === '/admin' ? 'admin' : 'artists')
+    return NextResponse.redirect(login)
   }
-
-  if (!isLoginPage && !authenticated) {
-    const loginUrl = new URL('/admin/login', request.url)
-    loginUrl.searchParams.set('next', `${pathname}${search}`)
-    return NextResponse.redirect(loginUrl)
+  const url = request.nextUrl.clone()
+  if (
+    prefix &&
+    (url.pathname === '/' ||
+      /^\/(releases|profile|notifications|demos|artists)(\/|$)/.test(url.pathname)) &&
+    !url.pathname.startsWith(prefix)
+  ) {
+    url.pathname = `${prefix}${url.pathname === '/' ? '' : url.pathname}`
   }
-
-  return NextResponse.next()
+  let response =
+    url.pathname === request.nextUrl.pathname
+      ? NextResponse.next({ request })
+      : NextResponse.rewrite(url, { request })
+  if (url.pathname === '/' && !prefix) return response
+  const config = supabaseConfig()
+  if (!config) return response
+  const client = createServerClient(config.url, config.key, {
+    cookieOptions: sessionCookieOptions,
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (values) => {
+        values.forEach(({ name, value }) => request.cookies.set(name, value))
+        response =
+          url.pathname === request.nextUrl.pathname
+            ? NextResponse.next({ request })
+            : NextResponse.rewrite(url, { request })
+        values.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, { ...options, ...sessionCookieOptions })
+        )
+      },
+    },
+  })
+  const {
+    data: { user },
+  } = await client.auth.getUser()
+  const protectedPage =
+    /^\/(artists|admin)(\/|$)/.test(url.pathname) && url.pathname !== '/admin/login'
+  if (protectedPage && (!user || user.is_anonymous)) {
+    const login = new URL('/login', request.url)
+    login.searchParams.set('workspace', url.pathname.startsWith('/admin') ? 'admin' : 'artists')
+    login.searchParams.set('next', url.pathname)
+    const redirect = NextResponse.redirect(login)
+    response.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+    return redirect
+  }
+  response.headers.set('Cache-Control', 'private, no-store')
+  return response
 }
-
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/artists/:path*',
+    '/admin/:path*',
+    '/login',
+    '/auth/:path*',
+    '/api/auth/:path*',
+    '/api/releases/:path*',
+    '/api/profile',
+    '/api/notifications',
+    '/',
+    '/releases/:path*',
+    '/profile',
+    '/notifications',
+    '/demos',
+  ],
 }

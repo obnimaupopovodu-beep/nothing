@@ -1,58 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { isAdminAuthenticated } from '@/lib/adminAuth'
-import {
-  DemoSubmissionError,
-  deleteDemoSubmission,
-  isValidDemoSubmissionStatus,
-  updateDemoSubmissionStatus,
-} from '@/lib/demoSubmissions'
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!await isAdminAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  }
-
-  const { id } = await params
-  const body = await request.json().catch(() => null)
-  const status = String(body?.status ?? '')
-
-  if (!isValidDemoSubmissionStatus(status)) {
-    return NextResponse.json({ error: 'Invalid status.' }, { status: 400 })
-  }
-
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { apiActor, apiError, checkOrigin, readJson } from '@/lib/portal/http'
+import { deleteDemoSubmission, updateDemoSubmissionStatus } from '@/lib/demoSubmissions'
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const submission = await updateDemoSubmissionStatus(id, status)
-    return NextResponse.json({ submission })
-  } catch (err) {
-    if (err instanceof DemoSubmissionError) {
-      return NextResponse.json({ error: err.message }, { status: err.status })
-    }
-
-    return NextResponse.json({ error: 'Unable to update submission.' }, { status: 500 })
-  }
+    const id=z.uuid().parse((await params).id)
+    const {status}=z.object({status:z.enum(['new','approved','rejected'])}).strict().parse(await readJson(request,1024))
+    const actor=await apiActor(true)
+    return NextResponse.json({submission:await updateDemoSubmissionStatus(actor.client,id,status)})
+  } catch(error) { return apiError(error) }
 }
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!await isAdminAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  }
-
-  const { id } = await params
-
-  try {
-    await deleteDemoSubmission(id)
-    return NextResponse.json({ ok: true })
-  } catch (err) {
-    if (err instanceof DemoSubmissionError) {
-      return NextResponse.json({ error: err.message }, { status: err.status })
-    }
-
-    return NextResponse.json({ error: 'Unable to delete submission.' }, { status: 500 })
-  }
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try { checkOrigin(request); const id=z.uuid().parse((await params).id); const actor=await apiActor(true); await deleteDemoSubmission(actor.client,id); return NextResponse.json({ok:true}) } catch(error) { return apiError(error) }
 }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="drifting patterns abstract cover">
+ <defs><linearGradient id="glow" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#122152"/><stop offset=".5" stop-color="#a3bafa"/><stop offset="1" stop-color="#091229"/></linearGradient><radialGradient id="ground"><stop stop-color="#a3bafa" stop-opacity=".14"/><stop offset="1" stop-color="#060a12"/></radialGradient></defs>
+ <rect width="600" height="600" fill="#060a12"/><rect width="600" height="600" fill="url(#ground)"/>
+ <g><circle cx="305" cy="309" r="180" fill="#0d1528" stroke="#7394da" stroke-opacity=".42" stroke-width="2"/><path d="M100 300 Q300 250 500 316 M80 350 Q310 290 520 365 M100 399 Q300 330 500 409" fill="none" stroke="url(#glow)" stroke-width="10" stroke-opacity=".8"/><circle cx="305" cy="309" r="90" fill="#192744"/></g><path d="M32 32 H92 M32 32 V92 M568 32 H508 M568 32 V92 M32 568 H92 M32 568 V508 M568 568 H508 M568 568 V508" fill="none" stroke="#e8efff" stroke-opacity=".3" stroke-width="1"/>
+ <circle cx="542" cy="542" r="3" fill="#a3bafa"/>
+</svg>

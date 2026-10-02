@@ -217,15 +217,13 @@ export function AboutSection() {
               className="about-title"
               style={{ left: reduced ? '0%' : desktopLeft, x: reduced ? '0%' : desktopX }}
             >
-              <span>U Wont</span>
-              <span>Believe.</span>
+              <span>uwbelieve.</span>
             </motion.h2>
           </div>
 
           <div className="mobile-title-track">
             <motion.h2 className="about-title" style={{ x: reduced ? '0%' : '-50%', y: reduced ? 0 : mobileY }}>
-              <span>U Wont</span>
-              <span>Believe.</span>
+              <span>uwbelieve.</span>
             </motion.h2>
           </div>
 

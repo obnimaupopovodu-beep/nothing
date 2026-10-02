@@ -146,7 +146,7 @@ export function IntroNavigation() {
       className="intro-root"
       role="dialog"
       aria-modal="true"
-      aria-label="Choose where to explore Nothing Records"
+      aria-label="Choose where to explore uwbelieve"
     >
       {showBootBackdrop && <div className="intro-boot" aria-hidden="true" />}
 

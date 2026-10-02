@@ -14,7 +14,7 @@ export function Footer() {
       <div className="shell">
         <div className="top">
           <div>
-            <span className="brand">U Wont Believe<span className="dot">.</span></span>
+            <span className="brand">uwbelieve<span className="dot">.</span></span>
             <p className="tag">Independent electronic music label.</p>
           </div>
 
@@ -25,16 +25,15 @@ export function Footer() {
           </nav>
 
           <div className="contact">
-            <a className="mail" href="mailto:demo@nothingrecords.site">demo@nothingrecords.site</a>
+            <a className="mail" href="mailto:info@uwbelieve.com">info@uwbelieve.com</a>
             <div className="upcoming">
-              <a className="mail mail-upcoming" href="mailto:demo@uwbelieve.com">demo@uwbelieve.com</a>
-              <span className="soon">(soon)</span>
+              <a className="mail" href="mailto:demo@nothingrecords.site">demo@nothingrecords.site</a>
             </div>
           </div>
         </div>
 
         <div className="bottom">
-          <span>© {new Date().getFullYear()} U Wont Believe</span>
+          <span>© {new Date().getFullYear()} uwbelieve</span>
           <span>Worldwide</span>
         </div>
       </div>

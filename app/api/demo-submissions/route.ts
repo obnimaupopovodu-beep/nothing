@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { isAdminAuthenticated } from '@/lib/adminAuth'
+import { NextResponse } from 'next/server'
+import { apiActor, apiError, readJson } from '@/lib/portal/http'
 import { DemoSubmissionError, createDemoSubmission, listDemoSubmissions } from '@/lib/demoSubmissions'
 import { sendDemoNotification } from '@/lib/demoNotification'
 
@@ -8,34 +8,21 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const soundCloudPattern = /^https?:\/\/(www\.)?(soundcloud\.com|on\.soundcloud\.com)\/.+/i
 
 
-export async function GET(request: NextRequest) {
-  if (!await isAdminAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  }
-
-
-  try {
-    const result = await listDemoSubmissions()
-    return NextResponse.json(result)
-  } catch {
-    return NextResponse.json(
-      { error: 'Unable to load demo submissions.' },
-      { status: 500 }
-    )
-  }
+export async function GET() {
+  try { const actor = await apiActor(true); return NextResponse.json(await listDemoSubmissions(actor.client)) }
+  catch (error) { return apiError(error) }
 }
-
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await readJson(request, 16384)
     const alias = String(body.alias ?? '').trim()
     const email = String(body.email ?? '').trim()
     const scLink = String(body.scLink ?? '').trim()
     const notes = String(body.notes ?? '').trim()
 
 
-    if (!alias) {
+    if (!alias || alias.length > 120 || notes.length > 4000 || scLink.length > 2048 || email.length > 254) {
       return NextResponse.json({ error: 'Alias is required.' }, { status: 400 })
     }
 
@@ -68,9 +55,6 @@ export async function POST(request: Request) {
     }
 
 
-    return NextResponse.json(
-      { error: 'Unable to save demo submission.' },
-      { status: 500 }
-    )
+    return apiError(err)
   }
 }

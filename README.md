@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Artist and label workspaces
+
+Local implementation, SQL setup instructions, Auth configuration and subdomains:
+[Artist platform guide](docs/artist-platform.md).
+
+Run `npm run dev`, then visit `/preview` to explore sample workspaces without a database.
+Run `npm run test:platform` for isolated database access and release workflow checks.

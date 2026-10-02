@@ -32,12 +32,12 @@ export async function sendDemoNotification() {
     to: [to],
     subject: 'New demo submission',
     text: [
-      'A new demo has been submitted on Nothing Records.',
+      'A new demo has been submitted on uwbelieve.',
       '',
       `Open admin inbox: ${adminUrl}`,
     ].join('\n'),
     html: [
-      '<p>A new demo has been submitted on Nothing Records.</p>',
+      '<p>A new demo has been submitted on uwbelieve.</p>',
       `<p><a href="${adminUrl}">Open admin inbox</a></p>`,
     ].join(''),
   })

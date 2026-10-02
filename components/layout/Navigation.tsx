@@ -49,7 +49,7 @@ export function Navigation() {
     >
       <div className="shell nav-in">
         <a href="#top" className="brand" onClick={(e) => { e.preventDefault(); go('#top') }}>
-          UWBelieve<span>.</span>
+          uwbelieve<span>.</span>
         </a>
 
         <nav className="nav-links hide-mobile" aria-label="Primary">
@@ -58,6 +58,7 @@ export function Navigation() {
               {l.label}
             </button>
           ))}
+          <a href="/artists" style={{ fontSize: 12, color: "var(--ink-2)", textDecoration: "none" }}>Artist portal ↗</a>
           <button type="button" className="btn btn-ghost nav-cta" onClick={() => go('#demo')}>
             Submit a track
           </button>
@@ -90,6 +91,7 @@ export function Navigation() {
                   {l.label}
                 </button>
               ))}
+              <a href="/artists" className="drawer-link">Artist portal ↗</a>
               <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: 18 }} onClick={() => go('#demo')}>
                 Submit a track
               </button>

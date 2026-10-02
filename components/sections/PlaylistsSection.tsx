@@ -16,7 +16,7 @@ const SpotifyIcon = () => (
 
 const playlists = [
   {
-    title: 'Tiktok hits August 2026',
+    title: 'Tiktok hits | October 2026',
     description: 'fresh tiktok sounds and new trendy ones you might discover here',
     tracks: '120+ tracks',
     href: 'https://open.spotify.com/playlist/1hw4cbGCBd9UDik4fhZZ9E',
@@ -28,14 +28,14 @@ const playlists = [
     tags: ['TikTok', 'Viral', 'August 2026'],
   },
   {
-    title: "Outsider house 2026 bangers",
+    title: "Outsider vibe 2026 bangers",
     description: 'A mood board in playlist form, lowkey, atmospheric, no skip zone.',
     tracks: '25+ tracks',
     href: 'https://open.spotify.com/playlist/5XcTJB2F5ISVTkV6VW830X',
     coverUrl: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84fd30f20e62d6d5553078dc4d',
     mood: 'Vibes',
-    color: 'rgba(146, 108, 108, 0.23)',
-    waveColor: 'rgba(255, 100, 100, 0.66)',
+    color: 'rgba(108, 113, 146, 0.23)',
+    waveColor: 'rgba(60, 161, 244, 0.66)',
     accentRgb: '255, 200, 200',
     tags: ['Chill', 'Aesthetic', 'Lowkey'],
   },
@@ -413,7 +413,7 @@ export function PlaylistsSection() {
                   Our<br />Playlists.
                 </h2>
                 <p style={{ marginTop: 24, marginBottom: 0, maxWidth: '28ch', fontSize: 16, lineHeight: 1.65, color: 'rgba(255,255,255,0.58)' }}>
-                  Handpicked collections from the U Wont Believe Records team, shaped as living listening routes, not static lists.
+                  Handpicked collections from the uwbelieve team, shaped as living listening routes, not static lists.
                 </p>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 24, fontSize: 13, lineHeight: 1, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.4)' }}>
                   <SpotifyIcon />

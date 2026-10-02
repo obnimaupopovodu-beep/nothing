@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="resonant fields abstract cover">
+ <defs><linearGradient id="glow" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#122152"/><stop offset=".5" stop-color="#6f8ed4"/><stop offset="1" stop-color="#091229"/></linearGradient><radialGradient id="ground"><stop stop-color="#6f8ed4" stop-opacity=".14"/><stop offset="1" stop-color="#05080e"/></radialGradient></defs>
+ <rect width="600" height="600" fill="#05080e"/><rect width="600" height="600" fill="url(#ground)"/>
+ <g><path d="M0 345 Q100 180 205 350 T407 345 T600 345" fill="none" stroke="url(#glow)" stroke-width="25"/><path d="M0 391 Q100 226 205 396 T407 391 T600 391" fill="none" stroke="#abc6ff" stroke-opacity=".7" stroke-width="3"/><circle cx="301" cy="300" r="215" fill="none" stroke="#8399d3" stroke-opacity=".23"/></g><path d="M32 32 H92 M32 32 V92 M568 32 H508 M568 32 V92 M32 568 H92 M32 568 V508 M568 568 H508 M568 568 V508" fill="none" stroke="#e8efff" stroke-opacity=".3" stroke-width="1"/>
+ <circle cx="542" cy="542" r="3" fill="#6f8ed4"/>
+</svg>

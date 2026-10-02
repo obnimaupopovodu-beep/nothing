@@ -1,63 +1,58 @@
 import Link from 'next/link'
-import { listDemoSubmissions } from '@/lib/demoSubmissions'
-import { AdminSubmissionsList } from './AdminSubmissionsList'
-
+import { PortalShell, PortalHeading, EmptyState } from '@/components/portal/PortalShell'
+import { ReleaseList } from '@/components/portal/ReleaseList'
+import { requireActor } from '@/lib/portal/auth'
+import { listReleases } from '@/lib/portal/releases'
 export const dynamic = 'force-dynamic'
-
 export default async function AdminPage() {
-  let configured = false
-  let loadError = ''
-  let submissions: Awaited<ReturnType<typeof listDemoSubmissions>>['submissions'] = []
-
-  try {
-    const result = await listDemoSubmissions()
-    configured = result.configured
-    submissions = result.submissions
-  } catch {
-    configured = true
-    loadError = 'Could not load submissions from Supabase.'
-  }
-
+  const actor = await requireActor('admin')
+  const releases = await listReleases(actor, true)
+  const queue = releases.filter((r) => ['submitted', 'under_review'].includes(r.status))
   return (
-    <main className="band admin-page">
-      <div className="shell">
-        <header className="admin-hero">
-          <div className="admin-actions">
-            <Link href="/" className="admin-back">Back to site</Link>
-            <form action="/api/admin/logout" method="post">
-              <button type="submit" className="admin-logout">Log out</button>
-            </form>
+    <PortalShell actor={actor} workspace="admin">
+      <PortalHeading
+        kicker="Label / Overview"
+        title="Keep it moving"
+        description="A shared workspace for your artists and their next records."
+        action={
+          <Link className="portal-button" href="/admin/releases">
+            Open release queue ↗
+          </Link>
+        }
+      />
+      <section className="portal-stats">
+        {[
+          ['New submissions', releases.filter((r) => r.status === 'submitted').length],
+          ['In review', releases.filter((r) => r.status === 'under_review').length],
+          ['Approved', releases.filter((r) => r.status === 'approved').length],
+        ].map(([label, count]) => (
+          <div key={label}>
+            <span className="portal-eyebrow">{label}</span>
+            <strong>{String(count).padStart(2, '0')}</strong>
           </div>
-          <div>
-            <p className="kicker"><i aria-hidden="true" />Admin</p>
-            <h1 className="admin-title">Demo inbox</h1>
-          </div>
-          <p className="admin-lede">
-            Review aliases, emails, SoundCloud links, and notes from artists who submitted a track.
-          </p>
-        </header>
-
-        {!configured && (
-          <section className="admin-empty">
-            <span className="admin-empty-label">Supabase not connected</span>
-            <h2>Connect the submissions table to start receiving demos.</h2>
-            <p>
-              Add Supabase env variables and create the `demo_submissions` table. Once connected,
-              incoming form submissions will appear here automatically.
-            </p>
-          </section>
-        )}
-
-        {loadError && (
-          <section className="admin-empty">
-            <span className="admin-empty-label">Load error</span>
-            <h2>{loadError}</h2>
-            <p>Check the Supabase table name, API keys, and row-level security policy.</p>
-          </section>
-        )}
-
-        {configured && !loadError && <AdminSubmissionsList initialSubmissions={submissions} />}
+        ))}
+      </section>
+      <div className="portal-section-title">
+        <h2>Ready for your attention</h2>
+        <Link href="/admin/demos">Demo inbox ↗</Link>
       </div>
-    </main>
+      {queue.length ? (
+        <ReleaseList team releases={queue} />
+      ) : (
+        <EmptyState
+          title="The queue is clear."
+          detail="Submitted releases will appear here, ready for review."
+        />
+      )}
+      <section className="portal-team-note">
+        <span className="portal-eyebrow">Your label, connected</span>
+        <h2>
+          Good records.
+          <br />
+          Clear direction.
+        </h2>
+        <p>Review metadata, share useful feedback, and approve releases from one place.</p>
+      </section>
+    </PortalShell>
   )
 }

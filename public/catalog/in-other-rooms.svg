@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="in other rooms abstract cover">
+ <defs><linearGradient id="glow" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#122152"/><stop offset=".5" stop-color="#9bb7ff"/><stop offset="1" stop-color="#091229"/></linearGradient><radialGradient id="ground"><stop stop-color="#9bb7ff" stop-opacity=".14"/><stop offset="1" stop-color="#050a17"/></radialGradient></defs>
+ <rect width="600" height="600" fill="#050a17"/><rect width="600" height="600" fill="url(#ground)"/>
+ <g><path d="M0 490 L261 282 L600 490" fill="none" stroke="#263d7e" stroke-width="2"/><path d="M180 600 L180 120 L416 120 L416 600" fill="none" stroke="#9bb7ff" stroke-width="3"/><path d="M294 580 L294 88" stroke="url(#glow)" stroke-width="12"/><path d="M180 120 L416 120 L294 88 Z" fill="#94b6ff" fill-opacity=".12"/></g><path d="M32 32 H92 M32 32 V92 M568 32 H508 M568 32 V92 M32 568 H92 M32 568 V508 M568 568 H508 M568 568 V508" fill="none" stroke="#e8efff" stroke-opacity=".3" stroke-width="1"/>
+ <circle cx="542" cy="542" r="3" fill="#9bb7ff"/>
+</svg>

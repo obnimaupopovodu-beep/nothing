@@ -1,222 +1,94 @@
-export type DemoSubmissionInput = {
-  alias: string
-  email: string
-  scLink: string
-  notes: string
-}
-
+import 'server-only'
+import { randomUUID } from 'node:crypto'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { supabaseConfig } from '@/lib/supabase/config'
+export type DemoSubmissionInput = { alias: string; email: string; scLink: string; notes: string }
 const ALLOWED_STATUSES = ['new', 'approved', 'rejected'] as const
 export type DemoSubmissionStatus = (typeof ALLOWED_STATUSES)[number]
-
 export function isValidDemoSubmissionStatus(value: string): value is DemoSubmissionStatus {
   return (ALLOWED_STATUSES as readonly string[]).includes(value)
 }
-
-export type DemoSubmission = DemoSubmissionInput & {
-  id: string
-  status: string
-  createdAt: string
-}
-
-type SupabaseSubmissionRow = {
+export type DemoSubmission = DemoSubmissionInput & { id: string; status: string; createdAt: string }
+type Row = {
   id: string
   alias: string
   email: string
   sc_link: string
   notes: string | null
-  status: string | null
+  status: string
   created_at: string
 }
-
-const TABLE = 'demo_submissions'
-
 export class DemoSubmissionError extends Error {
-  status: number
-
-  constructor(message: string, status = 500) {
+  constructor(
+    message: string,
+    public status = 500
+  ) {
     super(message)
     this.name = 'DemoSubmissionError'
-    this.status = status
   }
 }
-
-export function getSupabaseConfig() {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const anonKey = process.env.SUPABASE_ANON_KEY
-  const key = serviceRoleKey ?? anonKey
-  const keySource = serviceRoleKey ? 'service_role' : anonKey ? 'anon' : 'none'
-  return { url, key, keySource, configured: Boolean(url && key) }
-}
-
-function getHeaders(key: string) {
-  return {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
-    'Content-Type': 'application/json',
-  }
-}
-
-function mapRow(row: SupabaseSubmissionRow): DemoSubmission {
+function map(row: Row): DemoSubmission {
   return {
     id: row.id,
     alias: row.alias,
     email: row.email,
     scLink: row.sc_link,
-    notes: row.notes ?? '',
-    status: row.status ?? 'new',
+    notes: row.notes || '',
+    status: row.status,
     createdAt: row.created_at,
   }
 }
-
 export function isDemoSubmissionsConfigured() {
-  return getSupabaseConfig().configured
+  return Boolean(supabaseConfig())
 }
-
-function logSupabaseFailure(action: string, response: Response, keySource: string, url: string, body: string) {
-  console.error(`[demoSubmissions] Supabase ${action} failed`, {
-    status: response.status,
-    statusText: response.statusText,
-    keySource,
-    supabaseUrl: url,
-    body,
-  })
-}
-
 export async function createDemoSubmission(input: DemoSubmissionInput) {
-  const { url, key, keySource } = getSupabaseConfig()
-  if (!url || !key) {
-    console.error('[demoSubmissions] Supabase not configured', {
-      hasUrl: Boolean(url),
-      hasKey: Boolean(key),
-    })
-    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
-  }
-
-  const response = await fetch(`${url}/rest/v1/${TABLE}`, {
-    method: 'POST',
-    headers: {
-      ...getHeaders(key),
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      alias: input.alias,
-      email: input.email,
-      sc_link: input.scLink,
-      notes: input.notes,
-      status: 'new',
-    }),
+  const config = supabaseConfig()
+  if (!config) throw new DemoSubmissionError('Demo submissions are temporarily unavailable.', 503)
+  // The public role can insert, but cannot read any submitted contact information.
+  const client = createClient(config.url, config.key, {
+    auth: { persistSession: false, autoRefreshToken: false },
   })
-
-  if (!response.ok) {
-    const details = await response.text()
-
-    // Server-side only: never sent to the client. This is the actual
-    // Supabase/PostgREST error body, which tells us exactly what's wrong
-    // (bad apikey, RLS policy name, missing table, etc.) instead of a
-    // generic message.
-    logSupabaseFailure('insert', response, keySource, url, details)
-
-    if (response.status === 404) {
-      throw new DemoSubmissionError('Supabase table demo_submissions was not found.', 500)
-    }
-
-    if (response.status === 401 || response.status === 403) {
-      throw new DemoSubmissionError('Supabase key or table policy does not allow saving demos.', 500)
-    }
-
-    throw new DemoSubmissionError(
-      details || 'Supabase rejected the demo submission.',
-      500
-    )
+  const row: Row = {
+    id: randomUUID(),
+    alias: input.alias,
+    email: input.email,
+    sc_link: input.scLink,
+    notes: input.notes,
+    status: 'new',
+    created_at: new Date().toISOString(),
   }
-
-  const rows = (await response.json()) as SupabaseSubmissionRow[]
-  return mapRow(rows[0])
+  const { error } = await client.from('demo_submissions').insert(row)
+  if (error) {
+    console.error('[demo] Insert failed', { code: error.code })
+    throw new DemoSubmissionError('Unable to save demo submission.', 503)
+  }
+  return map(row)
 }
-
-export async function listDemoSubmissions() {
-  const { url, key, keySource } = getSupabaseConfig()
-  if (!url || !key) {
-    return { configured: false, submissions: [] as DemoSubmission[] }
-  }
-
-  const query = new URLSearchParams({
-    select: '*',
-    order: 'created_at.desc',
-  })
-
-  const response = await fetch(`${url}/rest/v1/${TABLE}?${query}`, {
-    headers: getHeaders(key),
-    cache: 'no-store',
-  })
-
-  if (!response.ok) {
-    const details = await response.text()
-    logSupabaseFailure('list', response, keySource, url, details)
-    throw new Error(details)
-  }
-
-  const rows = (await response.json()) as SupabaseSubmissionRow[]
-  return { configured: true, submissions: rows.map(mapRow) }
+export async function listDemoSubmissions(client: SupabaseClient) {
+  const { data, error } = await client
+    .from('demo_submissions')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw new DemoSubmissionError('Unable to load demo submissions.', 503)
+  return { configured: true, submissions: (data as Row[]).map(map) }
 }
-
-export async function updateDemoSubmissionStatus(id: string, status: DemoSubmissionStatus) {
-  const { url, key, keySource } = getSupabaseConfig()
-  if (!url || !key) {
-    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
-  }
-
-  const response = await fetch(`${url}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: {
-      ...getHeaders(key),
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({ status }),
-  })
-
-  if (!response.ok) {
-    const details = await response.text()
-    logSupabaseFailure('status update', response, keySource, url, details)
-
-    if (response.status === 401 || response.status === 403) {
-      throw new DemoSubmissionError('Supabase key or table policy does not allow updating demos.', 500)
-    }
-
-    throw new DemoSubmissionError(details || 'Supabase rejected the status update.', 500)
-  }
-
-  const rows = (await response.json()) as SupabaseSubmissionRow[]
-  if (!rows[0]) {
-    throw new DemoSubmissionError('Submission not found.', 404)
-  }
-
-  return mapRow(rows[0])
+export async function updateDemoSubmissionStatus(
+  client: SupabaseClient,
+  id: string,
+  status: DemoSubmissionStatus
+) {
+  const { data, error } = await client
+    .from('demo_submissions')
+    .update({ status })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle()
+  if (error) throw new DemoSubmissionError('Unable to update demo submission.', 503)
+  if (!data) throw new DemoSubmissionError('Submission not found.', 404)
+  return map(data as Row)
 }
-
-export async function deleteDemoSubmission(id: string) {
-  const { url, key, keySource } = getSupabaseConfig()
-  if (!url || !key) {
-    throw new DemoSubmissionError('Supabase is not configured yet.', 503)
-  }
-
-  const response = await fetch(`${url}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: {
-      ...getHeaders(key),
-      Prefer: 'return=minimal',
-    },
-  })
-
-  if (!response.ok) {
-    const details = await response.text()
-    logSupabaseFailure('delete', response, keySource, url, details)
-
-    if (response.status === 401 || response.status === 403) {
-      throw new DemoSubmissionError('Supabase key or table policy does not allow deleting demos.', 500)
-    }
-
-    throw new DemoSubmissionError(details || 'Supabase rejected the delete request.', 500)
-  }
+export async function deleteDemoSubmission(client: SupabaseClient, id: string) {
+  const { error } = await client.from('demo_submissions').delete().eq('id', id)
+  if (error) throw new DemoSubmissionError('Unable to delete demo submission.', 503)
 }

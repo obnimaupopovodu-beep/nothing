@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="after the silence abstract cover">
+ <defs><linearGradient id="glow" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#122152"/><stop offset=".5" stop-color="#507dff"/><stop offset="1" stop-color="#091229"/></linearGradient><radialGradient id="ground"><stop stop-color="#507dff" stop-opacity=".14"/><stop offset="1" stop-color="#080b17"/></radialGradient></defs>
+ <rect width="600" height="600" fill="#080b17"/><rect width="600" height="600" fill="url(#ground)"/>
+ <g><path d="M55 495 C175 305 209 394 324 113 S525 154 551 426" fill="none" stroke="url(#glow)" stroke-width="78" stroke-linecap="round"/><path d="M68 470 C200 302 244 347 326 125 S512 194 526 429" fill="none" stroke="#d5e1ff" stroke-opacity=".75" stroke-width="4"/></g><path d="M32 32 H92 M32 32 V92 M568 32 H508 M568 32 V92 M32 568 H92 M32 568 V508 M568 568 H508 M568 568 V508" fill="none" stroke="#e8efff" stroke-opacity=".3" stroke-width="1"/>
+ <circle cx="542" cy="542" r="3" fill="#507dff"/>
+</svg>

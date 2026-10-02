@@ -12,7 +12,13 @@ function formatDate(value: string) {
 
 type RowState = 'idle' | 'working' | 'error'
 
-export function AdminSubmissionsList({ initialSubmissions }: { initialSubmissions: DemoSubmission[] }) {
+export function AdminSubmissionsList({
+  initialSubmissions,
+  preview = false,
+}: {
+  initialSubmissions: DemoSubmission[]
+  preview?: boolean
+}) {
   const [submissions, setSubmissions] = useState<DemoSubmission[]>(initialSubmissions)
   const [rowState, setRowState] = useState<Record<string, RowState>>({})
   const [rowError, setRowError] = useState<Record<string, string>>({})
@@ -23,6 +29,7 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
   }
 
   const updateStatus = async (id: string, status: DemoSubmissionStatus) => {
+    if (preview) return
     setState(id, 'working')
     try {
       const response = await fetch(`/api/demo-submissions/${id}`, {
@@ -45,6 +52,7 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
   }
 
   const remove = async (id: string) => {
+    if (preview) return
     if (typeof window !== 'undefined' && !window.confirm('Delete this submission permanently?')) {
       return
     }
@@ -76,15 +84,16 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
 
   return (
     <section className="admin-list" aria-label="Demo submissions">
-      {submissions.map((submission, index) => {
+      {submissions.map((submission) => {
         const working = rowState[submission.id] === 'working'
         const error = rowError[submission.id]
 
         return (
           <article key={submission.id} className="admin-card">
             <div className="admin-card-top">
-              <span className="admin-number">{String(index + 1).padStart(2, '0')}</span>
-              <span className={`admin-status admin-status--${submission.status}`}>{submission.status}</span>
+              <span className={`admin-status admin-status--${submission.status}`}>
+                {submission.status}
+              </span>
             </div>
 
             <div className="admin-main">
@@ -96,12 +105,25 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
               <div className="admin-grid">
                 <div>
                   <span className="admin-label">Email</span>
-                  <a href={`mailto:${submission.email}`}>{submission.email}</a>
+                  <a href={preview ? undefined : `mailto:${submission.email}`}>
+                    {submission.email}
+                  </a>
                 </div>
                 <div>
                   <span className="admin-label">SoundCloud</span>
-                  <a href={submission.scLink} target="_blank" rel="noopener noreferrer">
-                    Open track
+                  <a
+                    href={
+                      !preview &&
+                      /^https?:\/\/(www\.)?(soundcloud\.com|on\.soundcloud\.com)\/.+/i.test(
+                        submission.scLink
+                      )
+                        ? submission.scLink
+                        : undefined
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {preview ? 'Sample track' : 'Open track'}
                   </a>
                 </div>
                 <div>
@@ -119,7 +141,7 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
                 <button
                   type="button"
                   className="btn btn-ghost admin-action"
-                  disabled={working || submission.status === 'approved'}
+                  disabled={preview || working || submission.status === 'approved'}
                   onClick={() => updateStatus(submission.id, 'approved')}
                 >
                   Approve
@@ -127,7 +149,7 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
                 <button
                   type="button"
                   className="btn btn-ghost admin-action"
-                  disabled={working || submission.status === 'rejected'}
+                  disabled={preview || working || submission.status === 'rejected'}
                   onClick={() => updateStatus(submission.id, 'rejected')}
                 >
                   Reject
@@ -135,7 +157,7 @@ export function AdminSubmissionsList({ initialSubmissions }: { initialSubmission
                 <button
                   type="button"
                   className="admin-action-delete"
-                  disabled={working}
+                  disabled={preview || working}
                   onClick={() => remove(submission.id)}
                 >
                   Delete
