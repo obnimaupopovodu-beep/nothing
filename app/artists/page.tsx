@@ -3,29 +3,33 @@ import { PortalHeading, EmptyState } from '@/components/portal/PortalShell'
 import { ReleaseList } from '@/components/portal/ReleaseList'
 import { requireActor } from '@/lib/portal/auth'
 import { listReleases } from '@/lib/portal/releases'
+import { listArtistDemoSubmissions } from '@/lib/demoSubmissions'
+import { ArtistSubmissions } from '@/components/portal/ArtistSubmissions'
 export default async function ArtistDashboard() {
   const actor = await requireActor()
-  const releases = await listReleases(actor)
+  const [releases, submissions] = await Promise.all([
+    listReleases(actor), listArtistDemoSubmissions(actor.client, actor.user.id),
+  ])
   return (
     <>
       <PortalHeading
         kicker="Your next chapter"
         title={`Welcome${actor.profile?.display_name ? ', ' + actor.profile.display_name : ' back'}`}
-        description="Keep your records moving. From the first draft to release day."
+        description="Send a first listen, follow the label's response, then build your release."
         action={
-          <Link className="portal-button" href="/artists/releases/new">
-            New release <span>＋</span>
+          <Link className="portal-button" href="/artists/submissions">
+            Submit a demo <span>↗</span>
           </Link>
         }
       />
       <section className="portal-stats">
         {[
-          ['Your releases', releases.length],
+          ['Your demos', submissions.length],
           [
-            'In progress',
-            releases.filter((r) => ['submitted', 'under_review'].includes(r.status)).length,
+            'Under review',
+            submissions.filter((s) => s.status === 'new').length,
           ],
-          ['Needs your attention', releases.filter((r) => r.status === 'changes_requested').length],
+          ['Ready for details', submissions.filter((s) => s.status === 'approved' && !s.releaseId).length],
         ].map(([label, count]) => (
           <div key={label}>
             <span className="portal-eyebrow">{label}</span>
@@ -33,6 +37,11 @@ export default async function ArtistDashboard() {
           </div>
         ))}
       </section>
+      <div className="portal-section-title">
+        <h2>Your submissions</h2>
+        <Link href="/artists/submissions">View all ↗</Link>
+      </div>
+      <ArtistSubmissions initialSubmissions={submissions.slice(0, 3)} email={actor.user.email || ''} initialAlias={actor.profile?.display_name || ''} />
       <div className="portal-section-title">
         <h2>Your records</h2>
         <Link href="/artists/releases">View all ↗</Link>
@@ -42,10 +51,10 @@ export default async function ArtistDashboard() {
       ) : (
         <EmptyState
           title="The next one is yours."
-          detail="Create a release, collect your credits, and send it to the label when you’re ready."
+          detail="When your demo is approved, add the credits, artwork and delivery links here."
           action={
-            <Link className="portal-button" href="/artists/releases/new">
-              Start a release ↗
+            <Link className="portal-button" href="/artists/submissions">
+              Submit a demo ↗
             </Link>
           }
         />
@@ -54,8 +63,8 @@ export default async function ArtistDashboard() {
         <span className="portal-eyebrow">From idea to release</span>
         <div>
           {[
-            ['01', 'Make it yours', 'Add the release, artists and track credits.'],
-            ['02', 'Send it through', 'Review every detail and submit to the label.'],
+            ['01', 'Send a first listen', 'Share a SoundCloud link with the label.'],
+            ['02', 'Build the release', 'After approval, add artists, credits and audio links.'],
             ['03', 'Keep it moving', 'Follow feedback and release progress here.'],
           ].map(([num, title, desc]) => (
             <article key={num}>

@@ -21,6 +21,7 @@ const migration = (await readdir('supabase/migrations')).find((f) =>
 )
 await db.exec(await readFile(`supabase/migrations/${migration}`, 'utf8'))
 await db.exec(await readFile('supabase/migrations/20261002213408_artist_team_access.sql', 'utf8'))
+await db.exec(await readFile('supabase/migrations/20261003093000_demo_release_flow.sql', 'utf8'))
 const owner = '10000000-0000-4000-8000-000000000001',
   other = '10000000-0000-4000-8000-000000000002',
   staff = '10000000-0000-4000-8000-000000000003'
@@ -28,9 +29,10 @@ await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,'o
 await db.query("insert into public.label_roles values($1,'label_manager')", [staff])
 async function actor(uid, role = 'authenticated') {
   await db.exec('reset role')
+  const email = uid === owner ? 'owner@example.com' : uid === other ? 'other@example.com' : uid === staff ? 'staff@example.com' : ''
   await db.query(
     "select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",
-    [uid || '', JSON.stringify({ sub: uid, role, is_anonymous: false })]
+    [uid || '', JSON.stringify({ sub: uid, role, email, is_anonymous: false })]
   )
   await db.exec(`set role ${role}`)
 }
@@ -55,6 +57,10 @@ checks++
 await denies(
   "insert into public.demo_submissions(alias,email,sc_link,status) values('Artist','artist@example.com','url','approved')"
 )
+await denies(
+  "insert into public.demo_submissions(alias,email,sc_link,artist_user_id) values('Artist','artist@example.com','https://soundcloud.com/artist/track',$1)",
+  [owner]
+)
 await actor(owner)
 await db.query('select public.label_ensure_profile()')
 await count('label_roles', 1)
@@ -73,13 +79,28 @@ const payload = {
       version: '',
       explicit: false,
       language: 'Instrumental',
+      audio_url: 'https://example.com/track-master.wav',
       credits: [{ first_name: 'Legal', last_name: 'Name', role: 'composer' }],
     },
   ],
 }
-const created = await db.query('select public.label_save_release(null,0,$1) as id', [payload])
+async function approvedDemo() {
+  await actor(owner)
+  const demo = await db.query("insert into public.demo_submissions(alias,email,sc_link,artist_user_id) values('Artist','owner@example.com','https://soundcloud.com/artist/track',$1) returning id", [owner])
+  await actor(staff)
+  await db.query("update public.demo_submissions set status='approved' where id=$1", [demo.rows[0].id])
+  await actor(owner)
+  return demo.rows[0].id
+}
+await denies('select public.label_save_release(null,0,$1)', [payload])
+const firstDemo = await approvedDemo()
+const created = await db.query('select public.label_save_release(null,0,$1) as id', [{ ...payload, demo_submission_id: firstDemo }])
 const rid = created.rows[0].id.id
 checks++
+await denies('select public.label_save_release(null,0,$1)', [{ ...payload, demo_submission_id: firstDemo }], '23505')
+await actor(staff)
+await denies('delete from public.demo_submissions where id=$1', [firstDemo], '23001')
+await actor(owner)
 await count('label_releases', 1)
 await count('label_credits', 1)
 await denies('update public.label_releases set owner_id=$1 where id=$2', [other, rid])
@@ -111,7 +132,7 @@ await db.query('select public.label_ensure_profile()')
 await count('label_releases', 1)
 await count('label_tracks', 1)
 await count('label_credits', 1)
-await count('demo_submissions', 1)
+await count('demo_submissions', 2)
 await db.query("update public.demo_submissions set status='approved'")
 await denies("update public.demo_submissions set email='stolen@example.com'")
 await db.query("select public.label_transition_release($1,4,'under_review','Checking credits')", [
@@ -155,7 +176,7 @@ const unread = await db.query(
 )
 assert.equal(unread.rows[0].n, 0)
 checks++
-const draft = await db.query('select public.label_save_release(null,0,$1) as id', [payload])
+const draft = await db.query('select public.label_save_release(null,0,$1) as id', [{ ...payload, demo_submission_id: await approvedDemo() }])
 await actor(staff)
 const hidden = await db.query('select id from public.label_releases where id=$1', [
   draft.rows[0].id.id,
@@ -194,7 +215,7 @@ await actor(owner)
 const ownArt = await db.query('select * from storage.objects')
 assert.equal(ownArt.rows.length, 1)
 checks++
-const teamDraft = await db.query('select public.label_save_release(null,0,$1) as result', [payload])
+const teamDraft = await db.query('select public.label_save_release(null,0,$1) as result', [{ ...payload, demo_submission_id: await approvedDemo() }])
 const teamRid = teamDraft.rows[0].result.id
 await db.query("select public.label_add_team_member('other@example.com','viewer')")
 await actor(other)
@@ -233,6 +254,19 @@ await db.query("select public.label_remove_staff($1,'label_manager')", [other])
 await denies("select public.label_remove_staff($1,'admin')", [owner], '22023')
 const removed = await db.query("select count(*)::int as n from public.label_roles where user_id=$1 and role='label_manager'", [other])
 assert.equal(removed.rows[0].n, 0)
+checks++
+await actor(owner)
+const audioDemo = await approvedDemo()
+const withoutAudio = {
+  ...payload,
+  tracks: [{ ...payload.tracks[0], audio_url: '' }],
+  demo_submission_id: audioDemo,
+}
+const audioDraft = await db.query('select public.label_save_release(null,0,$1) as result', [withoutAudio])
+await denies("select public.label_transition_release($1,1,'submitted','')", [audioDraft.rows[0].result.id], '22023')
+await actor(other)
+const privateDemo = await db.query('select id from public.demo_submissions where id=$1', [audioDemo])
+assert.equal(privateDemo.rows.length, 0)
 checks++
 await db.close()
 console.log(`Artist platform: ${checks} database security and workflow checks passed.`)

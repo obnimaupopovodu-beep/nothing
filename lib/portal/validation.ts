@@ -47,6 +47,7 @@ export const trackSchema = z
     version: text(120),
     explicit: z.boolean(),
     language: text(60),
+    audio_url: text(2048).refine((value) => !value || /^https:\/\/[^\s]+$/i.test(value), 'Use a secure HTTPS link.'),
     credits: z.array(creditSchema).max(50),
   })
   .strict()
@@ -77,6 +78,7 @@ export const emptyRelease: ReleaseInput = {
       version: '',
       explicit: false,
       language: 'Instrumental',
+      audio_url: '',
       credits: [{ first_name: '', last_name: '', role: 'composer' }],
     },
   ],
@@ -98,6 +100,7 @@ export function submissionIssues(
   value.tracks.forEach((track, index) => {
     if (!track.title) issues.push(`Track ${index + 1}: add a title.`)
     if (!track.language) issues.push(`Track ${index + 1}: add a language or Instrumental.`)
+    if (!track.audio_url) issues.push(`Track ${index + 1}: add a WAV or FLAC download link.`)
     if (!track.credits.some((c) => c.role === 'composer' && c.first_name && c.last_name))
       issues.push(`Track ${index + 1}: add a composer with their legal first and last names.`)
     if (track.credits.some((c) => !c.first_name || !c.last_name))

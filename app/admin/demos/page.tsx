@@ -10,7 +10,7 @@ export default async function DemosPage() {
       <PortalHeading
         kicker="Label / Discovery"
         title="Demo inbox"
-        description="Tracks submitted through the landing page, ready for a first listen."
+        description="Tracks submitted through the landing page and artist accounts, ready for a first listen."
       />
       <AdminSubmissionsList initialSubmissions={submissions} />
     </PortalShell>

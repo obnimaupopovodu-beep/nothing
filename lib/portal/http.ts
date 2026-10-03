@@ -52,6 +52,8 @@ export function dbError(error: { code?: string; message: string } | null) {
   if (error.code === 'P0002') throw new HttpError(404, 'Release not found.')
   if (error.code === '40001')
     throw new HttpError(409, 'This release changed. Reload it before saving.')
+  if (error.code === '23505')
+    throw new HttpError(409, 'Release details have already been started for this demo.')
   if (error.code === '22023' || error.code === '23514')
     throw new HttpError(400, 'Check the release details and current status.')
   if (error.code === '54000')

@@ -29,6 +29,7 @@ export function PortalShell({
       ]
     : [
         ['Overview', '/artists'],
+        ['Submissions', '/artists/submissions'],
         ['My releases', '/artists/releases'],
         ['Artist team', '/artists/team'],
         ['Artist profile', '/artists/profile'],

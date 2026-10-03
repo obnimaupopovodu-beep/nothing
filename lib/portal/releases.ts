@@ -16,6 +16,7 @@ export type ReleaseRow = {
   status: ReleaseStatus
   revision: number
   artwork_path: string | null
+  demo_submission_id: string | null
   created_at: string
   updated_at: string
 }
@@ -77,6 +78,7 @@ export async function loadRelease(actor: Actor, id: string) {
       version: t.version,
       explicit: t.explicit,
       language: t.language,
+      audio_url: t.audio_url,
       credits: [...t.label_credits]
         .sort((a, b) => a.position - b.position)
         .map(({ first_name, last_name, role }) => ({ first_name, last_name, role })),

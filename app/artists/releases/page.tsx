@@ -13,8 +13,8 @@ export default async function ReleasesPage() {
         title="Our releases"
         description="Your records and the releases shared by your artist team."
         action={
-          <Link className="portal-button" href="/artists/releases/new">
-            New release ＋
+          <Link className="portal-button" href="/artists/submissions">
+            Your submissions ↗
           </Link>
         }
       />
@@ -23,10 +23,10 @@ export default async function ReleasesPage() {
       ) : (
         <EmptyState
           title="A blank side. A new start."
-          detail="Your releases will appear here as soon as you save your first draft."
+          detail="Approved demos become release drafts here once you add their details."
           action={
-            <Link className="portal-button" href="/artists/releases/new">
-              Create release ↗
+            <Link className="portal-button" href="/artists/submissions">
+              Submit a demo ↗
             </Link>
           }
         />

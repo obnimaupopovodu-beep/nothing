@@ -24,12 +24,14 @@ export function ReleaseEditor({
   id,
   initialRevision = 0,
   initialArtwork = null,
+  submissionId,
   preview = false,
 }: {
   initial: ReleaseInput
   id?: string
   initialRevision?: number
   initialArtwork?: string | null
+  submissionId?: string
   preview?: boolean
 }) {
   const router = useRouter()
@@ -72,7 +74,7 @@ export function ReleaseEditor({
     let currentId = releaseId
     let currentRevision = revision
     if (!currentId) {
-      const result = await send('/api/releases', 'POST', parsed.data)
+      const result = await send('/api/releases', 'POST', { release: parsed.data, submissionId })
       currentId = result.id
       currentRevision = 1
       setReleaseId(currentId)
@@ -465,6 +467,19 @@ export function ReleaseEditor({
                           })
                         }
                       />
+                    </label>
+                    <label className="portal-full">
+                      WAV / FLAC file link
+                      <input
+                        className="portal-input"
+                        type="url"
+                        inputMode="url"
+                        value={track.audio_url}
+                        maxLength={2048}
+                        placeholder="https://..."
+                        onChange={(e) => update((d) => { d.tracks[index].audio_url = e.target.value })}
+                      />
+                      <small>Use an accessible HTTPS download link. We do not store your audio files.</small>
                     </label>
                     <label className="portal-check">
                       <input

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { INTRO_REVEAL_EVENT } from './IntroNavigation'
+import { catalogReturnRequested } from '@/lib/catalogReturn'
 
 /**
  * Wraps the main site so it fades/scales into view smoothly right as the
@@ -12,6 +13,7 @@ export function SiteReveal({ children }: { children: React.ReactNode }) {
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
+    if (catalogReturnRequested()) setRevealed(true)
     function handleReveal() {
       setRevealed(true)
     }

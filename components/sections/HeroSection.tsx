@@ -13,6 +13,7 @@ import {
 import { catalogReleases } from '@/components/data/catalog'
 import { useMagneticButton } from '@/hooks/useMagneticButton'
 import { useSmoothScroll } from '@/components/layout/SmoothScroll'
+import { catalogReturnRequested, consumeCatalogReturn, rememberCatalogReturn } from '@/lib/catalogReturn'
 import './HeroSection.css'
 
 type Phase = 'idle' | 'exit' | 'pitch' | 'reveal' | 'catalog' | 'return'
@@ -64,6 +65,7 @@ export function HeroSection() {
   const sceneStarsRef = useRef<HTMLDivElement>(null)
   const carrierRef = useRef<HTMLDivElement>(null)
   const cubeRef = useRef<HTMLDivElement>(null)
+  const orbRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const marqueeRef = useRef<HTMLDivElement>(null)
@@ -111,6 +113,39 @@ export function HeroSection() {
   const active = (run: number) => sequence.current === run
   const scrollTo = (selector: string) => document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   const isOpen = phase !== 'idle'
+
+  useEffect(() => {
+    if (!catalogReturnRequested()) return
+    openCatalog(true)
+    requestAnimationFrame(() => consumeCatalogReturn())
+    // Returning from a release is a one-time mount action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function pitchScene(target: number, duration: number) {
+    const scene = sceneRef.current
+    const overlay = overlayRef.current
+    const stars = sceneStarsRef.current?.querySelectorAll('.catalog-scene-star')
+    if (!scene || !overlay) return
+    const motion = { progress: 0 }
+    const trackMotion = tween(motion, {
+      progress: 1,
+      duration,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        const strength = Math.sin(Math.PI * motion.progress) ** 1.5
+        overlay.style.setProperty('--streak-strength', strength.toFixed(3))
+        overlay.style.setProperty('--star-brightness', (1 + 1.45 * strength).toFixed(3))
+      },
+    })
+    await Promise.all([
+      tween(scene, { rotationX: target, duration, ease: 'power3.inOut' }),
+      stars ? tween(stars, { rotationX: -target, duration, ease: 'power3.inOut' }) : Promise.resolve(),
+      trackMotion,
+    ])
+    overlay.style.setProperty('--streak-strength', '0')
+    overlay.style.setProperty('--star-brightness', '1')
+  }
 
   function positionStampedCards() {
     const track = trackRef.current
@@ -248,7 +283,6 @@ export function HeroSection() {
     const scene = sceneRef.current
     const carrier = carrierRef.current
     const cube = cubeRef.current
-    const stars = sceneStarsRef.current?.querySelectorAll('.catalog-scene-star')
     if (!holder || !overlay || !scene || !carrier || !cube) return
     const heroRect = holder.getBoundingClientRect()
     const cardSize = carrier.getBoundingClientRect().width
@@ -292,15 +326,8 @@ export function HeroSection() {
     ])
     if (!active(run)) return
     updatePhase('pitch')
-    overlay.dataset.streak = 'true'
-    if (stars) gsap.to(stars, { opacity: (index: number) => Math.min(0.92, sceneStars[index].opacity * 2.35), duration: 0.42, ease: 'sine.out' })
-    await Promise.all([
-      tween(scene, { rotationX: CATALOG_MOTION.pitchDegrees, duration: CATALOG_MOTION.pitch, ease: 'power3.inOut' }),
-      stars ? tween(stars, { rotationX: -CATALOG_MOTION.pitchDegrees, duration: CATALOG_MOTION.pitch, ease: 'power3.inOut' }) : Promise.resolve(),
-    ])
+    await pitchScene(CATALOG_MOTION.pitchDegrees, CATALOG_MOTION.pitch)
     if (!active(run)) return
-    delete overlay.dataset.streak
-    if (stars) gsap.to(stars, { opacity: (index: number) => sceneStars[index].opacity, duration: 0.72, ease: 'sine.inOut' })
     await Promise.all([
       tween(headingRef.current, { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' }),
       tween(trackRef.current, { opacity: 1, duration: 0.55, ease: 'power2.out' }),
@@ -348,7 +375,43 @@ export function HeroSection() {
     updatePhase('catalog')
   }
 
-  function openCatalog() {
+  async function showCatalogInstant(run: number) {
+    await waitFrame()
+    if (!active(run)) return
+    const overlay = overlayRef.current
+    const carrier = carrierRef.current
+    const scene = sceneRef.current
+    if (!overlay || !carrier || !scene) return
+    const cardSize = carrier.getBoundingClientRect().width
+    const gap = window.innerWidth < 640 ? CATALOG_MOTION.marqueeGapMobile : CATALOG_MOTION.marqueeGapDesktop
+    const centerY = (window.innerHeight - cardSize) / 2
+    gsap.set(overlay, { opacity: 1, backgroundColor: '#050505' })
+    gsap.set(scene, { rotationX: CATALOG_MOTION.pitchDegrees })
+    gsap.set(sceneStarsRef.current, { opacity: 1 })
+    if (sceneStarsRef.current) gsap.set(sceneStarsRef.current.querySelectorAll('.catalog-scene-star'), { rotationX: -CATALOG_MOTION.pitchDegrees })
+    gsap.set(carrier, { opacity: 0 })
+    gsap.set([titleRef.current, kickerRef.current, ledeRef.current, actionsRef.current, heroCubeHolderRef.current], { opacity: 0 })
+    gsap.set(headingRef.current, { opacity: 1, y: 0 })
+    setProgress(catalogReleases.length)
+    if (reduceMotion) {
+      const width = catalogReleases.length * (cardSize + gap)
+      setWorldOffset(width)
+      setStamped(catalogReleases.map((_, index) => ({ index, left: 24 + index * (cardSize + gap) - width, top: centerY, size: cardSize, panAtStamp: 0 })))
+      gsap.set(trackRef.current, { opacity: 1 })
+    } else {
+      const batchWidth = catalogReleases.length * (cardSize + gap)
+      const copies = Math.max(7, 2 * Math.ceil(window.innerWidth / batchWidth) + 5)
+      setMarquee({ left: (window.innerWidth - cardSize) / 2, top: centerY, size: cardSize, gap, batchWidth, copies, anchor: Math.floor(copies / 2) })
+      gsap.set(trackRef.current, { opacity: 0 })
+    }
+    updatePhase('catalog')
+    await waitFrame()
+    if (!active(run)) return
+    if (marqueeRef.current) gsap.set(marqueeRef.current, { opacity: 1 })
+    setMarqueeMoving(!reduceMotion)
+  }
+
+  function openCatalog(instant = false) {
     if (phaseRef.current !== 'idle') return
     setCatalogHover(false)
     const run = ++sequence.current
@@ -363,7 +426,7 @@ export function HeroSection() {
     setMarquee(null)
     setMarqueeMoving(false)
     updatePhase('exit')
-    requestAnimationFrame(() => { void play(run) })
+    requestAnimationFrame(() => { void (instant ? showCatalogInstant(run) : play(run)) })
   }
 
   async function restoreHero() {
@@ -383,33 +446,42 @@ export function HeroSection() {
     const scene = sceneRef.current
     const holder = heroCubeHolderRef.current
     const overlay = overlayRef.current
-    const stars = sceneStarsRef.current?.querySelectorAll('.catalog-scene-star')
-    if (carrier && cube && scene && holder && overlay) {
+    const orb = orbRef.current
+    if (carrier && cube && scene && holder && overlay && orb) {
       const target = holder.getBoundingClientRect()
       const cardSize = carrier.getBoundingClientRect().width
       const initial = initialCubeArtwork()
       facesRef.current = initial
       flushSync(() => setFaces(initial))
-      gsap.killTweensOf([carrier, cube, scene])
+      gsap.killTweensOf([carrier, cube, scene, orb])
+      gsap.set(cube.querySelectorAll('.glass-cube__face img'), { clearProps: 'opacity' })
       gsap.set(carrier, { x: (window.innerWidth - cardSize) / 2, y: (window.innerHeight - cardSize) / 2, opacity: 0, scale: 1 })
-      gsap.set(cube, { rotationX: 0, rotationY: 0, rotationZ: 0 })
+      gsap.set(cube, { rotationX: 0, rotationY: 0, rotationZ: 0, opacity: 1, scale: 1 })
+      gsap.set(orb, { opacity: 0, scale: 0.56 })
+      gsap.set(holder, { opacity: 0, scale: 0.72, filter: 'blur(8px)' })
       await Promise.all([
         tween(trackRef.current, { opacity: 0, duration: 0.38, ease: 'power2.inOut' }),
         marqueeRef.current ? tween(marqueeRef.current, { opacity: 0, duration: 0.38, ease: 'power2.inOut' }) : Promise.resolve(),
         tween(headingRef.current, { opacity: 0, y: -24, duration: 0.38, ease: 'power2.inOut' }),
         tween(carrier, { opacity: 1, duration: 0.38, ease: 'power2.out' }),
-        tween(scene, { rotationX: 0, duration: 0.9, ease: 'power3.inOut' }),
-        stars ? tween(stars, { rotationX: 0, duration: 0.9, ease: 'power3.inOut' }) : Promise.resolve(),
+        pitchScene(0, 0.9),
+      ])
+      await Promise.all([
+        tween(cube, { opacity: 0, scale: 0.72, duration: 0.48, ease: 'power2.inOut' }),
+        tween(orb, { opacity: 1, scale: 1, duration: 0.48, ease: 'power2.inOut' }),
       ])
       await Promise.all([
         tween(carrier, { x: target.left, y: target.top, scale: target.width / cardSize, duration: 0.9, ease: 'power3.inOut' }),
-        tween(cube, { rotationX: angles.current.x, rotationY: angles.current.y, rotationZ: angles.current.z, duration: 0.9, ease: 'power3.inOut' }),
         tween(overlay, { backgroundColor: 'rgba(5,5,5,0)', duration: 0.9, ease: 'power2.inOut' }),
         tween(sceneStarsRef.current, { opacity: 0, duration: 0.75, ease: 'power2.inOut' }),
         tween(titleRef.current, { x: 0, opacity: 1, duration: 0.85, ease: 'power3.out' }),
         tween(kickerRef.current, { x: 0, opacity: 1, duration: 0.65, ease: 'power3.out' }),
         tween(ledeRef.current, { x: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }),
         tween(actionsRef.current, { y: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }),
+      ])
+      await Promise.all([
+        tween(orb, { opacity: 0, scale: 0.62, duration: 0.48, ease: 'power2.inOut' }),
+        tween(holder, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.48, ease: 'power2.inOut' }),
       ])
     }
     gsap.set(heroCubeHolderRef.current, { opacity: 1 })
@@ -429,7 +501,7 @@ export function HeroSection() {
           <div ref={ledeRef}><motion.p className="lede" style={{ marginTop: 26, maxWidth: '30ch' }} initial={reduceMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.22 }}>Distribution, promo and straight answers for electronic artists.</motion.p></div>
           <div ref={actionsRef}><motion.div className="hero-actions" initial={reduceMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.32 }}>
             <motion.button type="button" className="btn btn-primary magnetic-btn" onClick={() => scrollTo('#demo')} {...magneticSubmit}>Submit a track</motion.button>
-            <button ref={hearButtonRef} type="button" className="btn btn-ghost" onClick={openCatalog} onPointerEnter={() => setCatalogHover(true)} onPointerLeave={() => setCatalogHover(false)} onFocus={() => setCatalogHover(true)} onBlur={() => setCatalogHover(false)}>Hear the catalog</button>
+            <button ref={hearButtonRef} type="button" className="btn btn-ghost" onClick={() => openCatalog()} onPointerEnter={() => setCatalogHover(true)} onPointerLeave={() => setCatalogHover(false)} onFocus={() => setCatalogHover(true)} onBlur={() => setCatalogHover(false)}>Hear the catalog</button>
           </motion.div></div>
         </div>
         <motion.div className="crystal-wrap" initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.3, delay: 0.1 }}>
@@ -440,11 +512,11 @@ export function HeroSection() {
     {isOpen && createPortal(<div ref={overlayRef} className="catalog-overlay" data-phase={phase} data-marquee={Boolean(marquee)} role="dialog" aria-modal="true" aria-label="Release catalog" tabIndex={-1} style={{ '--art-opacity': CATALOG_MOTION.artworkOpacity } as CSSProperties}>
       <div className="catalog-scene-stage" aria-hidden="true"><div ref={sceneRef} className="catalog-scene">
         <div ref={sceneStarsRef} className="catalog-scene-stars">{sceneStars.map((star, index) => <span key={index} className="catalog-scene-star" style={{ left: `${star.x}%`, top: `${star.y}%`, transform: `translateZ(${star.z}px)`, opacity: star.opacity, width: star.size, height: star.size, '--trail-angle': star.z >= 0 ? '90deg' : '-90deg', '--trail-length': `${12 + Math.round(Math.abs(star.z) * 0.035)}px` } as CSSProperties} />)}</div>
-        <div ref={carrierRef} className="catalog-carrier"><GlassCube ref={cubeRef} faces={faces} /></div>
+        <div ref={carrierRef} className="catalog-carrier"><GlassCube ref={cubeRef} faces={faces} /><div ref={orbRef} className="catalog-return-orb" /></div>
       </div></div>
       <div ref={headingRef} className="catalog-overlay__head"><p>uwbelieve / releases</p><h2>The catalog.</h2><span>One record at a time. A world of sound.</span></div>
       <div ref={trackRef} className="catalog-track" aria-hidden={Boolean(marquee)}><div className="catalog-track__inner" style={{ width: `calc(100vw + ${worldOffset}px)` }}>
-        {stamped.map(({ index, left, top, size }) => { const release = catalogReleases[index]; return <a key={release.slug} data-release-index={index} href={release.href} className="catalog-slot catalog-slot--visible" style={{ left: worldOffset + left, top, width: size, opacity: reduceMotion ? 1 : undefined }} tabIndex={phase === 'catalog' && !marquee ? 0 : -1}>
+        {stamped.map(({ index, left, top, size }) => { const release = catalogReleases[index]; return <a key={release.slug} data-release-index={index} href={release.href} onClick={rememberCatalogReturn} className="catalog-slot catalog-slot--visible" style={{ left: worldOffset + left, top, width: size, opacity: reduceMotion ? 1 : undefined }} tabIndex={phase === 'catalog' && !marquee ? 0 : -1}>
           <div className="catalog-slot__art" style={{ width: size, height: size }}><img src={release.artwork} alt={`${release.title} cover`} draggable={false} /></div>
           <span className="catalog-slot__index">{String(index + 1).padStart(2, '0')}</span><strong>{release.title}</strong><span className="catalog-slot__artist">{release.artist} · {release.year}</span>
         </a> })}
@@ -452,7 +524,7 @@ export function HeroSection() {
       {marquee && <div ref={marqueeRef} className="catalog-marquee" data-moving={marqueeMoving} style={{ '--marquee-travel': `-${marquee.batchWidth}px`, '--marquee-duration': `${CATALOG_MOTION.marqueeSecondsPerBatch}s` } as CSSProperties}>
         <div className="catalog-marquee__inner" style={{ left: marquee.left - marquee.anchor * marquee.batchWidth, top: marquee.top }}>
           {Array.from({ length: marquee.copies }, (_, batch) => <div className="catalog-marquee__batch" key={batch} aria-hidden={batch !== marquee.anchor}>
-            {[...catalogReleases].reverse().map((release, reverseIndex) => { const index = catalogReleases.length - 1 - reverseIndex; return <a key={`${batch}-${release.slug}`} href={release.href} className="catalog-marquee__item" style={{ width: marquee.size, marginRight: marquee.gap }} tabIndex={phase === 'catalog' && batch === marquee.anchor ? 0 : -1}>
+            {[...catalogReleases].reverse().map((release, reverseIndex) => { const index = catalogReleases.length - 1 - reverseIndex; return <a key={`${batch}-${release.slug}`} href={release.href} onClick={rememberCatalogReturn} className="catalog-marquee__item" style={{ width: marquee.size, marginRight: marquee.gap }} tabIndex={phase === 'catalog' && batch === marquee.anchor ? 0 : -1}>
               <div className="catalog-slot__art" style={{ width: marquee.size, height: marquee.size }}><img src={release.artwork} alt={batch === marquee.anchor ? `${release.title} cover` : ''} draggable={false} /></div>
               <span className="catalog-slot__index">{String(index + 1).padStart(2, '0')}</span><strong>{release.title}</strong><span className="catalog-slot__artist">{release.artist} · {release.year}</span>
             </a> })}

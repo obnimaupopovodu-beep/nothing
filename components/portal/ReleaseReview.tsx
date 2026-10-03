@@ -62,6 +62,7 @@ export function ReleaseReview({
                 {t.version || 'Original'} · {t.language || 'Language pending'}
                 {t.explicit ? ' · Explicit' : ''}
               </span>
+              {t.audio_url && <a href={t.audio_url} target="_blank" rel="noopener noreferrer">WAV / FLAC file ↗</a>}
             </div>
             {t.credits.map((c, ci) => (
               <p key={ci}>

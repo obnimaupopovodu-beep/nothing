@@ -18,7 +18,7 @@ export default async function CatalogReleasePage({ params }: { params: Promise<{
   const release = catalogReleases.find((item) => item.slug === slug)
   if (!release) notFound()
   return <main className="catalog-detail">
-    <header className="catalog-detail__nav"><a href="/">uwbelieve<span>.</span></a><a href="/#top">← Back to the label</a></header>
+    <header className="catalog-detail__nav"><a href="/">uwbelieve<span>.</span></a><a href="/?catalog=1">← Back to catalog</a></header>
     <div className="catalog-detail__content">
       <div className="catalog-detail__art"><img src={release.artwork} alt={`${release.title} cover`} /></div>
       <div className="catalog-detail__info">
@@ -27,7 +27,7 @@ export default async function CatalogReleasePage({ params }: { params: Promise<{
         <h2>{release.artist}</h2>
         <span>{release.year}</span>
         <p className="catalog-detail__note">{release.description}</p>
-        <a href="/#top" className="btn btn-ghost">Back to homepage</a>
+        <a href="/?catalog=1" className="btn btn-ghost">Back to catalog</a>
       </div>
     </div>
   </main>

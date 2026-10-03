@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { catalogReleases } from '@/components/data/catalog'
+import { catalogReturnRequested } from '@/lib/catalogReturn'
 
 type IntroState = 'boot' | 'opening' | 'menu' | 'navigating' | 'revealing' | 'closed'
 
@@ -12,7 +14,8 @@ const ROUTES: { label: string; target: string | null }[] = [
   { label: 'Submit a song', target: '#demo' },
 ]
 
-const BOOT_DELAY_MS = 1000
+const MIN_LOAD_MS = 700
+const MAX_LOAD_MS = 8500
 const WHEEL_THRESHOLD = 60
 const SWIPE_THRESHOLD = 50
 const CURTAIN_EASE = [0.65, 0, 0.35, 1] as const
@@ -31,6 +34,7 @@ function moveToTarget(target: string | null) {
 export function IntroNavigation() {
   const [state, setState] = useState<IntroState>('boot')
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
+  const [loadingProgress, setLoadingProgress] = useState(4)
   const reducedMotion = useReducedMotion()
 
   const wheelProgress = useRef(0)
@@ -38,15 +42,52 @@ export function IntroNavigation() {
   const finishedRef = useRef(false)
 
   useEffect(() => {
-    // Intro plays on every load/reload by design — no session gate.
-    if (reducedMotion) {
-      setState('menu')
-      window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT))
+    if (catalogReturnRequested()) {
+      setState('closed')
+      requestAnimationFrame(() => window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT)))
       return
     }
-
-    const timer = window.setTimeout(() => setState('opening'), BOOT_DELAY_MS)
-    return () => window.clearTimeout(timer)
+    let cancelled = false
+    const started = performance.now()
+    const assets = new Set([
+      ...catalogReleases.map((release) => release.artwork),
+      ...Array.from(document.images, (image) => image.currentSrc || image.src).filter(Boolean),
+    ])
+    const jobs: Promise<unknown>[] = [document.fonts.ready]
+    if (document.readyState !== 'complete') {
+      jobs.push(new Promise<void>((resolve) => window.addEventListener('load', () => resolve(), { once: true })))
+    }
+    for (const source of assets) {
+      jobs.push(new Promise<void>((resolve) => {
+        const image = new Image()
+        image.onload = () => resolve()
+        image.onerror = () => resolve()
+        image.src = source
+        if (image.complete) resolve()
+      }))
+    }
+    let completed = 0
+    const tracked = jobs.map((job) => Promise.resolve(job).catch(() => undefined).then(() => {
+      completed += 1
+      if (!cancelled) setLoadingProgress(Math.min(96, Math.round(completed / jobs.length * 100)))
+    }))
+    void (async () => {
+      await Promise.race([
+        Promise.all(tracked),
+        new Promise<void>((resolve) => window.setTimeout(resolve, MAX_LOAD_MS)),
+      ])
+      await new Promise<void>((resolve) => window.setTimeout(resolve, Math.max(0, MIN_LOAD_MS - (performance.now() - started))))
+      if (cancelled) return
+      setLoadingProgress(100)
+      requestAnimationFrame(() => {
+        if (cancelled) return
+        if (reducedMotion) {
+          setState('menu')
+          window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT))
+        } else setState('opening')
+      })
+    })()
+    return () => { cancelled = true }
   }, [reducedMotion])
 
   const finishIntro = useCallback(() => {
@@ -148,7 +189,14 @@ export function IntroNavigation() {
       aria-modal="true"
       aria-label="Choose where to explore uwbelieve"
     >
-      {showBootBackdrop && <div className="intro-boot" aria-hidden="true" />}
+      {showBootBackdrop && <div className="intro-boot" data-opening={state === 'opening'}>
+        <div className="intro-loader__top"><span>uwbelieve</span><span>Loading experience</span></div>
+        <div className="intro-loader__center" role="status" aria-live="polite">
+          <span>Preparing the sound and space</span>
+          <strong>{String(loadingProgress).padStart(2, '0')}<small>%</small></strong>
+        </div>
+        <div className="intro-loader__bottom"><span>Stay for the whole picture</span><div className="intro-loader__bar"><i style={{ width: `${loadingProgress}%` }} /></div></div>
+      </div>}
 
       <motion.div
         className="intro-curtain"

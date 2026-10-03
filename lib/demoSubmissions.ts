@@ -17,6 +17,7 @@ type Row = {
   notes: string | null
   status: string
   created_at: string
+  artist_user_id?: string | null
 }
 export class DemoSubmissionError extends Error {
   constructor(
@@ -63,6 +64,38 @@ export async function createDemoSubmission(input: DemoSubmissionInput) {
     throw new DemoSubmissionError('Unable to save demo submission.', 503)
   }
   return map(row)
+}
+export async function createArtistDemoSubmission(
+  client: SupabaseClient,
+  userId: string,
+  input: DemoSubmissionInput
+) {
+  const { data, error } = await client.from('demo_submissions').insert({
+    alias: input.alias,
+    email: input.email,
+    sc_link: input.scLink,
+    notes: input.notes,
+    status: 'new',
+    artist_user_id: userId,
+  }).select('*').single()
+  if (error) {
+    console.error('[demo] Artist insert failed', { code: error.code })
+    throw new DemoSubmissionError('Unable to save your demo. Please try again.', 503)
+  }
+  return map(data as Row)
+}
+export type ArtistDemoSubmission = DemoSubmission & { releaseId: string | null }
+export async function listArtistDemoSubmissions(client: SupabaseClient, userId: string): Promise<ArtistDemoSubmission[]> {
+  const { data, error } = await client.from('demo_submissions').select('*')
+    .eq('artist_user_id', userId).order('created_at', { ascending: false }).limit(100)
+  if (error) throw new DemoSubmissionError('Unable to load your demos.', 503)
+  const ids = (data as Row[]).map((row) => row.id)
+  if (!ids.length) return []
+  const linked = await client.from('label_releases').select('id,demo_submission_id')
+    .eq('owner_id', userId).in('demo_submission_id', ids)
+  if (linked.error) throw new DemoSubmissionError('Unable to load your release links.', 503)
+  const releaseByDemo = new Map((linked.data ?? []).map((release) => [release.demo_submission_id, release.id]))
+  return (data as Row[]).map((row) => ({ ...map(row), releaseId: releaseByDemo.get(row.id) ?? null }))
 }
 export async function listDemoSubmissions(client: SupabaseClient) {
   const { data, error } = await client
