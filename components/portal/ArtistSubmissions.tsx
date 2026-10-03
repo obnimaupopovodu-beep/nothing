@@ -15,11 +15,13 @@ export function ArtistSubmissions({
   email,
   initialAlias,
   showForm = false,
+  preview = false,
 }: {
   initialSubmissions: ArtistDemoSubmission[]
   email: string
   initialAlias: string
   showForm?: boolean
+  preview?: boolean
 }) {
   const [submissions, setSubmissions] = useState(initialSubmissions)
   const [alias, setAlias] = useState(initialAlias)
@@ -32,6 +34,7 @@ export function ArtistSubmissions({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    if (preview) return
     if (!alias.trim()) return setError('Add your artist name.')
     if (!/^https?:\/\/(www\.)?(soundcloud\.com|on\.soundcloud\.com)\/.+/i.test(scLink.trim())) {
       return setError('Add a SoundCloud track link.')
@@ -62,6 +65,7 @@ export function ArtistSubmissions({
         <span className="portal-eyebrow">01 / First listen</span>
         <h2>Send the sound first.</h2>
         <p>Share a SoundCloud link. When the label approves your demo, you can add the full release details and a WAV or FLAC delivery link for each track.</p>
+        {preview && <p className="portal-muted">Preview only · Sending is disabled.</p>}
       </div>
       <form onSubmit={submit} className="portal-demo-form__fields">
         <div className="portal-form-grid">
@@ -81,7 +85,7 @@ export function ArtistSubmissions({
         </div>
         {error && <p className="portal-demo-form__error" role="alert">{error}</p>}
         {success && <p className="portal-demo-form__success" role="status">Your demo is in. You can follow its status below.</p>}
-        <button type="submit" className="portal-button" disabled={busy}>{busy ? 'Sending…' : 'Send your demo ↗'}</button>
+        <button type="submit" className="portal-button" disabled={busy || preview}>{busy ? 'Sending…' : 'Send your demo ↗'}</button>
       </form>
     </section>}
     <section className="portal-demo-list" aria-label="Your demo submissions">
@@ -94,8 +98,8 @@ export function ArtistSubmissions({
         </div>
         <span className={`portal-demo-status portal-demo-status--${submission.status}`}>{statusText[submission.status] || submission.status}</span>
         <div className="portal-demo-row__action">
-          {submission.releaseId ? <Link className="portal-button secondary" href={`/artists/releases/${submission.releaseId}`}>Continue release ↗</Link>
-            : submission.status === 'approved' ? <Link className="portal-button" href={`/artists/releases/new?submission=${submission.id}`}>Add release details ↗</Link>
+          {submission.releaseId ? <Link className="portal-button secondary" href={preview ? '/preview?view=release' : `/artists/releases/${submission.releaseId}`}>Continue release ↗</Link>
+            : submission.status === 'approved' ? <Link className="portal-button" href={preview ? '/preview?view=new' : `/artists/releases/new?submission=${submission.id}`}>Add release details ↗</Link>
               : <span className="portal-muted">{submission.status === 'rejected' ? 'You can send another demo.' : 'Waiting for the label'}</span>}
         </div>
       </article>)}

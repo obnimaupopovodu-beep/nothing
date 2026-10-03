@@ -8,6 +8,7 @@ import { Notifications } from '@/components/portal/Notifications'
 import { AdminSubmissionsList } from '@/app/admin/AdminSubmissionsList'
 import { FeedbackCarousel } from '@/components/portal/FeedbackCarousel'
 import { ReleaseEditor } from '@/components/portal/ReleaseEditor'
+import { ArtistSubmissions } from '@/components/portal/ArtistSubmissions'
 import { ReleaseHistory, ReleaseReview, ReviewActions } from '@/components/portal/ReleaseReview'
 import type { ReleaseRow } from '@/lib/portal/releases'
 import { emptyRelease, type ReleaseInput } from '@/lib/portal/validation'
@@ -125,6 +126,14 @@ export default async function LocalPreview({
             description="Explore all five steps. Changes here are temporary and cannot be sent to the database."
           />
           <ReleaseEditor initial={sample} preview />
+        </>
+      ) : view === 'submissions' && workspace === 'artists' ? (
+        <>
+          <PortalHeading kicker="Your music / First listen" title="Your demos" description="Send a first listen. Approval unlocks the full release form." />
+          <ArtistSubmissions preview showForm email="artist@example.com" initialAlias="Naivity" initialSubmissions={[
+            { id: 'preview-approved', alias: 'Naivity', email: 'artist@example.com', scLink: 'https://soundcloud.com/naivity/after-the-silence', notes: '', status: 'approved', createdAt: '2026-10-02T10:00:00Z', releaseId: null },
+            { id: 'preview-new', alias: 'Naivity', email: 'artist@example.com', scLink: 'https://soundcloud.com/naivity/next-demo', notes: '', status: 'new', createdAt: '2026-10-01T10:00:00Z', releaseId: null },
+          ]} />
         </>
       ) : view === 'release' ? (
         <>
