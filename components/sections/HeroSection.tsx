@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import gsap from 'gsap'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -24,6 +24,11 @@ const pause = (ms: number) => new Promise<void>((resolve) => window.setTimeout(r
 const tween = (target: gsap.TweenTarget, vars: gsap.TweenVars) => new Promise<void>((resolve) => {
   gsap.to(target, { ...vars, onComplete: resolve, onInterrupt: resolve })
 })
+// A bounded version of the user's log(-x) curve: slow contraction, then a
+// rapid final collapse without an infinite slope at zero.
+const logCollapse = (progress: number) => 1 - Math.log2(1 + 63 * (1 - Math.max(0, Math.min(1, progress)))) / 6
+const logExpand = (progress: number) => 1 - logCollapse(1 - progress)
+const ReturnBead3D = lazy(() => import('@/components/3d/ReturnBead3D').then((module) => ({ default: module.ReturnBead3D })))
 const fraction = (value: number) => value - Math.floor(value)
 const sceneStars = Array.from({ length: 130 }, (_, index) => ({
   x: fraction(Math.sin((index + 1) * 127.1) * 43758.5453) * 100,
@@ -47,6 +52,7 @@ export function HeroSection() {
   const [worldOffset, setWorldOffset] = useState(0)
   const [marquee, setMarquee] = useState<MarqueeLayout | null>(null)
   const [marqueeMoving, setMarqueeMoving] = useState(false)
+  const [returnBeadReady, setReturnBeadReady] = useState(false)
   const panRef = useRef(0)
   const projectionScaleRef = useRef(1)
   const gapRef = useRef({ value: 0 })
@@ -413,6 +419,7 @@ export function HeroSection() {
 
   function openCatalog(instant = false) {
     if (phaseRef.current !== 'idle') return
+    void import('@/components/3d/ReturnBead3D')
     setCatalogHover(false)
     const run = ++sequence.current
     facesRef.current = initialCubeArtwork()
@@ -425,6 +432,7 @@ export function HeroSection() {
     setProgress(0)
     setMarquee(null)
     setMarqueeMoving(false)
+    setReturnBeadReady(false)
     updatePhase('exit')
     requestAnimationFrame(() => { void (instant ? showCatalogInstant(run) : play(run)) })
   }
@@ -455,10 +463,11 @@ export function HeroSection() {
       flushSync(() => setFaces(initial))
       gsap.killTweensOf([carrier, cube, scene, orb])
       gsap.set(cube.querySelectorAll('.glass-cube__face img'), { clearProps: 'opacity' })
-      gsap.set(carrier, { x: (window.innerWidth - cardSize) / 2, y: (window.innerHeight - cardSize) / 2, opacity: 0, scale: 1 })
-      gsap.set(cube, { rotationX: 0, rotationY: 0, rotationZ: 0, opacity: 1, scale: 1 })
-      gsap.set(orb, { opacity: 0, scale: 0.56 })
-      gsap.set(holder, { opacity: 0, scale: 0.72, filter: 'blur(8px)' })
+      const targetScale = target.width / cardSize
+      gsap.set(carrier, { x: (window.innerWidth - cardSize) / 2, y: (window.innerHeight - cardSize) / 2, z: 0, opacity: 0, scale: 1 })
+      gsap.set(cube, { rotationX: 0, rotationY: 0, rotationZ: 0, z: 0, opacity: 1, scale: 1 })
+      gsap.set(orb, { opacity: 0, scale: 1, z: 0, rotationX: 0, rotationY: 0 })
+      gsap.set(holder, { opacity: 0, scale: 0.025, filter: 'none' })
       await Promise.all([
         tween(trackRef.current, { opacity: 0, duration: 0.38, ease: 'power2.inOut' }),
         marqueeRef.current ? tween(marqueeRef.current, { opacity: 0, duration: 0.38, ease: 'power2.inOut' }) : Promise.resolve(),
@@ -466,23 +475,27 @@ export function HeroSection() {
         tween(carrier, { opacity: 1, duration: 0.38, ease: 'power2.out' }),
         pitchScene(0, 0.9),
       ])
+      flushSync(() => setReturnBeadReady(true))
+      await waitFrame()
+      await tween(cube, { opacity: 0, scale: 0.025, z: -cardSize * 0.35, rotationX: -28, rotationY: 42, duration: 0.72, ease: logCollapse })
+      gsap.set(orb, { scale: 0.025 })
+      await tween(orb, { opacity: 1, scale: 1.13, z: 70, duration: 0.34, ease: logExpand })
+      await tween(orb, { scale: 1, z: 48, duration: 0.2, ease: 'power2.out' })
       await Promise.all([
-        tween(cube, { opacity: 0, scale: 0.72, duration: 0.48, ease: 'power2.inOut' }),
-        tween(orb, { opacity: 1, scale: 1, duration: 0.48, ease: 'power2.inOut' }),
+        tween(carrier, { x: target.left + target.width / 2 - cardSize / 2, y: target.top + target.height / 2 - cardSize / 2, scale: targetScale, duration: 1.02, ease: 'back.out(1.35)' }),
+        tween(carrier, { z: 105, duration: 0.51, repeat: 1, yoyo: true, ease: 'sine.inOut' }),
+        tween(orb, { scale: 1 / targetScale, z: 26, duration: 1.02, ease: 'back.out(1.35)' }),
+        tween(overlay, { backgroundColor: 'rgba(5,5,5,0)', duration: 1.02, ease: 'power2.inOut' }),
+        tween(sceneStarsRef.current, { opacity: 0, duration: 0.82, ease: 'power2.inOut' }),
+        tween(titleRef.current, { x: 0, opacity: 1, duration: 0.93, ease: 'power3.out' }),
+        tween(kickerRef.current, { x: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }),
+        tween(ledeRef.current, { x: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }),
+        tween(actionsRef.current, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }),
       ])
-      await Promise.all([
-        tween(carrier, { x: target.left, y: target.top, scale: target.width / cardSize, duration: 0.9, ease: 'power3.inOut' }),
-        tween(overlay, { backgroundColor: 'rgba(5,5,5,0)', duration: 0.9, ease: 'power2.inOut' }),
-        tween(sceneStarsRef.current, { opacity: 0, duration: 0.75, ease: 'power2.inOut' }),
-        tween(titleRef.current, { x: 0, opacity: 1, duration: 0.85, ease: 'power3.out' }),
-        tween(kickerRef.current, { x: 0, opacity: 1, duration: 0.65, ease: 'power3.out' }),
-        tween(ledeRef.current, { x: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }),
-        tween(actionsRef.current, { y: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }),
-      ])
-      await Promise.all([
-        tween(orb, { opacity: 0, scale: 0.62, duration: 0.48, ease: 'power2.inOut' }),
-        tween(holder, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.48, ease: 'power2.inOut' }),
-      ])
+      await tween(orb, { opacity: 0, scale: 0.025 / targetScale, z: -cardSize * 0.25, duration: 0.52, ease: logCollapse })
+      gsap.set(heroMeshRef.current, { rotationX: angles.current.x, rotationY: angles.current.y, rotationZ: angles.current.z })
+      await tween(holder, { opacity: 1, scale: 1.1, duration: 0.43, ease: logExpand })
+      await tween(holder, { scale: 1, duration: 0.22, ease: 'power2.out' })
     }
     gsap.set(heroCubeHolderRef.current, { opacity: 1 })
     updatePhase('idle')
@@ -512,7 +525,7 @@ export function HeroSection() {
     {isOpen && createPortal(<div ref={overlayRef} className="catalog-overlay" data-phase={phase} data-marquee={Boolean(marquee)} role="dialog" aria-modal="true" aria-label="Release catalog" tabIndex={-1} style={{ '--art-opacity': CATALOG_MOTION.artworkOpacity } as CSSProperties}>
       <div className="catalog-scene-stage" aria-hidden="true"><div ref={sceneRef} className="catalog-scene">
         <div ref={sceneStarsRef} className="catalog-scene-stars">{sceneStars.map((star, index) => <span key={index} className="catalog-scene-star" style={{ left: `${star.x}%`, top: `${star.y}%`, transform: `translateZ(${star.z}px)`, opacity: star.opacity, width: star.size, height: star.size, '--trail-angle': star.z >= 0 ? '90deg' : '-90deg', '--trail-length': `${12 + Math.round(Math.abs(star.z) * 0.035)}px` } as CSSProperties} />)}</div>
-        <div ref={carrierRef} className="catalog-carrier"><GlassCube ref={cubeRef} faces={faces} /><div ref={orbRef} className="catalog-return-orb" /></div>
+        <div ref={carrierRef} className="catalog-carrier"><GlassCube ref={cubeRef} faces={faces} /><div ref={orbRef} className="catalog-return-orb">{returnBeadReady ? <Suspense fallback={<span className="catalog-return-orb__fallback" />}><ReturnBead3D /></Suspense> : <span className="catalog-return-orb__fallback" />}</div></div>
       </div></div>
       <div ref={headingRef} className="catalog-overlay__head"><p>uwbelieve / releases</p><h2>The catalog.</h2><span>One record at a time. A world of sound.</span></div>
       <div ref={trackRef} className="catalog-track" aria-hidden={Boolean(marquee)}><div className="catalog-track__inner" style={{ width: `calc(100vw + ${worldOffset}px)` }}>

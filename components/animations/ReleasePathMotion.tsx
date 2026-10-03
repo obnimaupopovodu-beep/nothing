@@ -12,6 +12,7 @@ export type PathGeometry = {
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value))
 const INITIAL_STRETCH = 0.55
+export const PATH_BEAD_DIAMETER = 20
 const restScale = (emissions: number) => 1 + INITIAL_STRETCH * (1 - emissions / 3)
 const ease = (value: number) => {
   const t = clamp(value)
@@ -90,8 +91,8 @@ export function beadPose(progress: number, index: number, geometry: PathGeometry
   const morph = ease((phase - 0.68) / 0.24)
   const birth = ease((phase - 0.14) / 0.08)
   const elongation = 1 + 0.3 * Math.sin(travel * Math.PI) * (1 - morph)
-  const beadWidth = (6 + 14 * birth) * elongation
-  const beadHeight = (6 + 14 * birth) / elongation
+  const beadWidth = (6 + (PATH_BEAD_DIAMETER - 6) * birth) * elongation
+  const beadHeight = (6 + (PATH_BEAD_DIAMETER - 6) * birth) / elongation
   const width = beadWidth + (card.width - beadWidth) * morph
   const height = beadHeight + (card.height - beadHeight) * morph
 
