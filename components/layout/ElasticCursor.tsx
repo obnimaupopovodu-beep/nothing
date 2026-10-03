@@ -13,6 +13,25 @@ export function ElasticCursor() {
     const cursor = cursorRef.current
     if (!cursor) return
 
+    // Native dialogs live in the browser's top layer. A manual popover lets
+    // the decorative cursor share that layer without changing dialog focus.
+    const raiseCursor = () => {
+      if (typeof cursor.showPopover !== 'function') return
+      if (cursor.matches(':popover-open')) cursor.hidePopover()
+      cursor.showPopover()
+    }
+    raiseCursor()
+    const dialogObserver = new MutationObserver(records => {
+      const dialogChanged = records.some(record =>
+        record.type === 'attributes' && record.target instanceof HTMLDialogElement ||
+        [...record.addedNodes, ...record.removedNodes].some(node =>
+          node instanceof Element && (node.matches('dialog') || node.querySelector('dialog'))
+        )
+      )
+      if (dialogChanged) raiseCursor()
+    })
+    dialogObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] })
+
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let visible = false
@@ -153,6 +172,8 @@ export function ElasticCursor() {
     reducedMotion.addEventListener('change', handlePreference)
     return () => {
       hide()
+      dialogObserver.disconnect()
+      if (typeof cursor.hidePopover === 'function' && cursor.matches(':popover-open')) cursor.hidePopover()
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerdown', handlePointerDown)
       window.removeEventListener('pointercancel', hide)
@@ -165,5 +186,5 @@ export function ElasticCursor() {
     }
   }, [])
 
-  return <div ref={cursorRef} className="elastic-cursor" aria-hidden="true" />
+  return <div ref={cursorRef} className="elastic-cursor" popover="manual" aria-hidden="true" />
 }

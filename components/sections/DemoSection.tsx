@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle, CircleNotch } from '@phosphor-icons/react/dist/ssr'
 import { useMagneticButton } from '@/hooks/useMagneticButton'
+import { RELEASE_PATH_EVENT, RELEASE_PATH_NOTES, applyReleasePathNote, type ReleasePath } from '@/lib/releasePathSelection'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
@@ -17,6 +18,18 @@ export function DemoSection() {
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError]   = useState('')
   const [isEditing, setIsEditing] = useState(false)
+
+  useEffect(() => {
+    const selectPath = (event: Event) => {
+      const path = (event as CustomEvent<ReleasePath>).detail
+      if (!Object.prototype.hasOwnProperty.call(RELEASE_PATH_NOTES, path)) return
+      setNote(current => applyReleasePathNote(current, path))
+      setStatus(current => current === 'loading' ? current : 'idle')
+      setError('')
+    }
+    window.addEventListener(RELEASE_PATH_EVENT, selectPath)
+    return () => window.removeEventListener(RELEASE_PATH_EVENT, selectPath)
+  }, [])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()

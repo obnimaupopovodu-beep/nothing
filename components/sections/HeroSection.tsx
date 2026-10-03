@@ -5,6 +5,7 @@ import { createPortal, flushSync } from 'react-dom'
 import gsap from 'gsap'
 import { motion, useReducedMotion } from 'framer-motion'
 import { GlassCube } from '@/components/3d/GlassCube'
+import { heroCubePose } from '@/components/3d/heroCubeDrift'
 import {
   CATALOG_MOTION, faceForRelease, initialCubeArtwork,
   landingPause, prepareHiddenIncomingFace, revealDuration,
@@ -175,12 +176,9 @@ export function HeroSection() {
       const targetSpeed = catalogHoverRef.current && window.matchMedia('(min-width: 1024px) and (hover: hover)').matches ? 2.5 : 1
       speed += (targetSpeed - speed) * (1 - Math.exp(-dt * 2.8))
       elapsed += dt * speed
-      const t = elapsed
-      // Incommensurate slow waves avoid a repeated turn or a directional snap.
-      const x = -7 + 12 * Math.sin(t * 0.23) + 4 * Math.sin(t * 0.37 + 1.1)
-      const y = 12 + 21 * Math.sin(t * 0.19 + 0.6) + 6 * Math.sin(t * 0.31)
-      const z = 3 * Math.sin(t * 0.14 + 2.2)
-      angles.current = { x, y, z }
+      const { x, y, z } = heroCubePose(elapsed)
+      // Keep the catalog handoff on the nearest equivalent turn.
+      angles.current = { x, y: ((y + 180) % 360 + 360) % 360 - 180, z }
       gsap.set(heroMeshRef.current, { rotationX: x, rotationY: y, rotationZ: z })
     }
     gsap.ticker.add(tick)

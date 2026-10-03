@@ -49,6 +49,12 @@ body {
 }
 
 .elastic-cursor {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  right: auto;
+  bottom: auto;
   position: fixed;
   top: 0;
   left: 0;

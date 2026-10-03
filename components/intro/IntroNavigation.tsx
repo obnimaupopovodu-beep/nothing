@@ -122,8 +122,10 @@ export function IntroNavigation() {
     [reducedMotion, finishIntro]
   )
 
+  const scrollLocked = state !== 'closed'
+
   useEffect(() => {
-    if (state === 'closed') return
+    if (!scrollLocked) return
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -131,16 +133,18 @@ export function IntroNavigation() {
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [state])
+  }, [scrollLocked])
 
   useEffect(() => {
-    if (state !== 'menu') return
+    if (state === 'closed') return
 
     wheelProgress.current = 0
 
     function handleWheel(event: WheelEvent) {
       event.preventDefault()
-      if (event.deltaY <= 0) return
+      // Capture before Lenis receives the gesture, including the curtain exit.
+      event.stopPropagation()
+      if (state !== 'menu' || event.deltaY <= 0) return
 
       wheelProgress.current += event.deltaY
       if (wheelProgress.current >= WHEEL_THRESHOLD) {
@@ -156,17 +160,35 @@ export function IntroNavigation() {
       const endY = event.changedTouches[0]?.clientY ?? touchStartY.current
       const verticalDistance = touchStartY.current - endY
 
-      if (verticalDistance >= SWIPE_THRESHOLD) {
+      if (state === 'menu' && verticalDistance >= SWIPE_THRESHOLD) {
         selectRoute(null)
       }
     }
 
-    window.addEventListener('wheel', handleWheel, { passive: false })
+    function blockTouchMove(event: TouchEvent) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) return
+      // Space on an intro button retains its normal activation behavior.
+      if (event.key === ' ' && event.target instanceof HTMLButtonElement) return
+      event.preventDefault()
+      event.stopPropagation()
+      if (state === 'menu' && ['ArrowDown', 'PageDown', ' '].includes(event.key)) selectRoute(null)
+    }
+
+    window.addEventListener('wheel', handleWheel, { passive: false, capture: true })
+    window.addEventListener('touchmove', blockTouchMove, { passive: false, capture: true })
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
     window.addEventListener('touchstart', handleTouchStart, { passive: true })
     window.addEventListener('touchend', handleTouchEnd, { passive: true })
 
     return () => {
-      window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('wheel', handleWheel, true)
+      window.removeEventListener('touchmove', blockTouchMove, true)
+      window.removeEventListener('keydown', handleKeyDown, true)
       window.removeEventListener('touchstart', handleTouchStart)
       window.removeEventListener('touchend', handleTouchEnd)
     }
