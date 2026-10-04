@@ -14,6 +14,8 @@ export const getActor = cache(async () => {
   if (error || !user || user.is_anonymous) return null
   const { error: profileError } = await client.rpc('label_ensure_profile')
   if (profileError) throw new Error('The platform database is not ready. Please contact the label.')
+  const { error: claimError } = await client.rpc('label_claim_demo_submissions')
+  if (claimError) throw new Error('Unable to reconnect your demo submissions. Please contact the label.')
   const [{ data: profile }, { data: roles, error: rolesError }] = await Promise.all([
     client.from('label_profiles').select('*').eq('id', user.id).single(),
     client.from('label_roles').select('role').eq('user_id', user.id),

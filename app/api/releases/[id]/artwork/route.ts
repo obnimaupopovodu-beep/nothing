@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const actor = await apiActor()
     const { data: release, error } = await actor.client
       .from('label_releases')
-      .select('owner_id,status,revision')
+      .select('owner_id,status,revision,creation_source')
       .eq('id', id)
       .maybeSingle()
     dbError(error)
@@ -31,7 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           .eq('owner_id', release.owner_id).eq('member_id', actor.user.id).maybeSingle()
     dbError(membershipError)
     if (
-      (release.owner_id !== actor.user.id && membership?.role !== 'editor') ||
+      (release.owner_id !== actor.user.id && membership?.role !== 'editor' && !(actor.staff && release.creation_source === 'label')) ||
       !['draft', 'changes_requested'].includes(release.status)
     )
       throw new HttpError(403, 'Artwork cannot be changed for this release.')

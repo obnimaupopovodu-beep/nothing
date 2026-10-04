@@ -16,6 +16,7 @@ export type ReleaseRow = {
   status: ReleaseStatus
   revision: number
   artwork_path: string | null
+  creation_source?: 'artist' | 'label'
   demo_submission_id: string | null
   created_at: string
   updated_at: string
@@ -31,7 +32,7 @@ export async function listReleases(actor: Actor, team = false) {
     .select('*')
     .order('updated_at', { ascending: false })
     .limit(200)
-  query = team ? query.neq('status', 'draft') : query.in('owner_id', ownerIds)
+  query = team ? query.or('status.neq.draft,creation_source.eq.label') : query.in('owner_id', ownerIds)
   const { data, error } = await query
   if (error) throw new Error('Unable to load releases.')
   return data as ReleaseRow[]

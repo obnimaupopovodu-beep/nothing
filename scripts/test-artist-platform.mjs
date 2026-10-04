@@ -268,5 +268,83 @@ await actor(other)
 const privateDemo = await db.query('select id from public.demo_submissions where id=$1', [audioDemo])
 assert.equal(privateDemo.rows.length, 0)
 checks++
+// Unified public demos and staff-created releases, against real Postgres RLS.
+await actor(null,'anon')
+const legacyPublic = '20000000-0000-4000-8000-000000000003'
+await db.query("insert into public.demo_submissions(id,alias,email,sc_link) values($1,'Legacy demo','OTHER@EXAMPLE.COM','https://soundcloud.com/a/legacy')",[legacyPublic])
+await actor(staff)
+await db.query("update public.demo_submissions set status='approved' where id=$1",[legacyPublic])
+await actor(null, 'service_role')
+const workflowMigration = (await readdir('supabase/migrations')).find(f => f.endsWith('_unified_demo_and_manual_releases.sql'))
+await db.exec('reset role')
+await db.exec(await readFile(`supabase/migrations/${workflowMigration}`, 'utf8'))
+await actor(other)
+const legacyOwned = await db.query('select id,status from public.demo_submissions where id=$1',[legacyPublic])
+assert.equal(legacyOwned.rows.length,1); assert.equal(legacyOwned.rows[0].status,'approved'); checks+=2
+await actor(null, 'anon')
+await denies('select public.label_claim_demo_submissions()')
+await denies('select * from public.label_artist_accounts()')
+const publicId = '20000000-0000-4000-8000-000000000001'
+await db.query("insert into public.demo_submissions(id,alias,email,sc_link) values($1,'Different display name','OTHER@EXAMPLE.COM','https://soundcloud.com/a/b')", [publicId])
+await actor(other)
+let owned = await db.query('select id from public.demo_submissions where id=$1', [publicId])
+assert.equal(owned.rows.length,1); checks++
+await actor(staff)
+owned = await db.query('select artist_user_id from public.demo_submissions where id=$1',[publicId])
+assert.equal(owned.rows[0].artist_user_id,other); checks++
+await actor(null,'anon')
+const beforeSignup = '20000000-0000-4000-8000-000000000002'
+await db.query("insert into public.demo_submissions(id,alias,email,sc_link) values($1,'Later artist','later@example.com','https://soundcloud.com/a/c')",[beforeSignup])
+await db.exec('reset role')
+const later = '10000000-0000-4000-8000-000000000004'
+await db.query("insert into auth.users(id,email) values($1,'later@example.com')",[later])
+await actor(later)
+await db.query('select public.label_ensure_profile()')
+await db.query('select public.label_claim_demo_submissions()')
+owned = await db.query('select id from public.demo_submissions where id=$1',[beforeSignup])
+assert.equal(owned.rows.length,0); checks++
+await db.exec('reset role')
+await db.query('update auth.users set email_confirmed_at=now() where id=$1',[later])
+await actor(later)
+await db.query('select public.label_claim_demo_submissions()')
+await db.query('select public.label_claim_demo_submissions()')
+owned = await db.query('select id from public.demo_submissions where id=$1',[beforeSignup])
+assert.equal(owned.rows.length,1); checks++
+await actor(other)
+await denies('select public.label_save_release(null,0,$1)',[{...payload,owner_id:later}])
+await denies('select * from public.label_artist_accounts()')
+await actor(staff)
+const hiddenArtistDraft = await db.query('select id from public.label_releases where id=$1',[audioDraft.rows[0].result.id])
+assert.equal(hiddenArtistDraft.rows.length,0); checks++
+const accounts = await db.query('select * from public.label_artist_accounts()')
+assert(accounts.rows.some(row => row.id === later)); checks++
+const manual = await db.query('select public.label_save_release(null,0,$1) as result',[{...payload,owner_id:later,release_date:'2020-01-01'}])
+const manualId = manual.rows[0].result.id
+owned = await db.query('select owner_id,creation_source from public.label_releases where id=$1',[manualId])
+assert.equal(owned.rows[0].owner_id,later); assert.equal(owned.rows[0].creation_source,'label'); checks+=2
+await db.query('select public.label_save_release($1,1,$2)',[manualId,payload])
+const upload = await db.query("select public.label_begin_artwork($1,2,'image/png') as path",[manualId]); checks++
+await actor(null,'service_role')
+await db.query("insert into storage.objects(bucket_id,name) values('label-artwork',$1)",[upload.rows[0].path])
+await db.query("select public.label_attach_artwork($1,2,$2,$3,$4)",[manualId,staff,upload.rows[0].path,'a'.repeat(64)]); checks++
+await actor(staff)
+await actor(other)
+owned = await db.query('select id from public.label_releases where id=$1',[manualId])
+assert.equal(owned.rows.length,0); checks++
+await denies('select public.label_save_release($1,2,$2)',[manualId,payload])
+await actor(later)
+owned = await db.query('select id from public.label_releases where id=$1',[manualId])
+assert.equal(owned.rows.length,1); checks++
+await db.query('select public.label_save_release($1,3,$2)',[manualId,payload]); checks++
+await actor(staff)
+await db.query('select public.label_save_release($1,4,$2)',[manualId,{...payload,release_date:'2020-01-01'}])
+await db.query("select public.label_transition_release($1,5,'submitted','')",[manualId])
+await db.query("select public.label_transition_release($1,6,'under_review','')",[manualId])
+await db.query("select public.label_transition_release($1,7,'approved','')",[manualId])
+await db.query("select public.label_transition_release($1,8,'delivered','')",[manualId]); checks+=4
+// Existing unlinked submissions were backfilled when the migration ran.
+await actor(staff)
+const backfilled = await db.query("select count(*)::int as n from public.demo_submissions where lower(trim(email))='owner@example.com' and artist_user_id is null")
+assert.equal(backfilled.rows[0].n,0); checks++
 await db.close()
 console.log(`Artist platform: ${checks} database security and workflow checks passed.`)

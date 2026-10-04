@@ -85,12 +85,13 @@ export const emptyRelease: ReleaseInput = {
 }
 export function submissionIssues(
   value: ReleaseInput,
-  today = new Date().toISOString().slice(0, 10)
+  today = new Date().toISOString().slice(0, 10),
+  allowPastDate = false
 ) {
   const issues: string[] = []
   if (!value.title) issues.push('Add a release title.')
-  if (!value.release_date || value.release_date <= today)
-    issues.push('Choose a future release date.')
+  if (!value.release_date || (!allowPastDate && value.release_date <= today))
+    issues.push(allowPastDate ? 'Choose a release date.' : 'Choose a future release date.')
   if (!value.genre) issues.push('Choose a genre.')
   if (!value.artists.some((a) => a.role === 'primary' && a.name))
     issues.push('Add at least one primary artist.')

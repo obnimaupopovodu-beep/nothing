@@ -26,6 +26,8 @@ export function ReleaseEditor({
   initialArtwork = null,
   submissionId,
   preview = false,
+  ownerId,
+  workspace = 'artists',
 }: {
   initial: ReleaseInput
   id?: string
@@ -33,6 +35,8 @@ export function ReleaseEditor({
   initialArtwork?: string | null
   submissionId?: string
   preview?: boolean
+  ownerId?: string
+  workspace?: 'artists' | 'admin'
 }) {
   const router = useRouter()
   const [data, setData] = useState(initial)
@@ -74,11 +78,13 @@ export function ReleaseEditor({
     let currentId = releaseId
     let currentRevision = revision
     if (!currentId) {
-      const result = await send('/api/releases', 'POST', { release: parsed.data, submissionId })
+      const result = ownerId
+        ? await send('/api/admin/releases', 'POST', { release: parsed.data, ownerId })
+        : await send('/api/releases', 'POST', { release: parsed.data, submissionId })
       currentId = result.id
       currentRevision = 1
       setReleaseId(currentId)
-      window.history.replaceState(null, '', `/artists/releases/${currentId}`)
+      window.history.replaceState(null, '', `/${workspace}/releases/${currentId}`)
     } else {
       const result = await send(`/api/releases/${currentId}`, 'PUT', {
         revision: currentRevision,
@@ -104,7 +110,7 @@ export function ReleaseEditor({
   }
   async function submit() {
     setError('')
-    const issues = submissionIssues(data)
+    const issues = submissionIssues(data, undefined, workspace === 'admin')
     if (issues.length) {
       setError(issues.join(' '))
       return
@@ -120,7 +126,7 @@ export function ReleaseEditor({
         revision: saved.revision,
         target: 'submitted',
       })
-      router.replace(`/artists/releases/${saved.id}`)
+      router.replace(`/${workspace}/releases/${saved.id}`)
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to submit.')
@@ -648,11 +654,11 @@ export function ReleaseEditor({
                 delivery.
               </p>
               <ReleaseReview input={data} artworkUrl={artwork} />
-              {submissionIssues(data).length > 0 && (
+              {submissionIssues(data, undefined, workspace === 'admin').length > 0 && (
                 <div className="portal-alert">
                   <strong>Before you send it</strong>
                   <ul>
-                    {submissionIssues(data).map((issue) => (
+                    {submissionIssues(data, undefined, workspace === 'admin').map((issue) => (
                       <li key={issue}>{issue}</li>
                     ))}
                   </ul>
@@ -712,7 +718,7 @@ export function ReleaseEditor({
               <button
                 type="button"
                 className="portal-button"
-                disabled={preview || busy || !confirmed || submissionIssues(data).length > 0}
+                disabled={preview || busy || !confirmed || submissionIssues(data, undefined, workspace === 'admin').length > 0}
                 onClick={submit}
               >
                 Submit to label ↗

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { PortalShell, PortalHeading } from '@/components/portal/PortalShell'
 import { requireActor } from '@/lib/portal/auth'
 export default async function ArtistsPage() {
@@ -28,6 +29,7 @@ export default async function ArtistsPage() {
             </div>
             <span className="portal-muted">
               Joined {new Date(profile.created_at).toISOString().slice(0, 10)}
+              <Link className="portal-text-button" href={`/admin/releases/new?artist=${profile.id}`}>Add release</Link>
             </span>
           </article>
         ))}
