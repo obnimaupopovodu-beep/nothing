@@ -28,6 +28,8 @@ export async function middleware(request: NextRequest) {
     url.pathname === request.nextUrl.pathname
       ? NextResponse.next({ request })
       : NextResponse.rewrite(url, { request })
+  const noIndex = Boolean(prefix) || /^\/(artists|admin|login|preview|auth|api)(\/|$)/.test(url.pathname) || process.env.VERCEL_ENV === 'preview'
+  if (noIndex) response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   if (url.pathname === '/' && !prefix) return response
   const config = supabaseConfig()
   if (!config) return response
@@ -57,8 +59,12 @@ export async function middleware(request: NextRequest) {
     login.searchParams.set('workspace', url.pathname.startsWith('/admin') ? 'admin' : 'artists')
     login.searchParams.set('next', url.pathname)
     const redirect = NextResponse.redirect(login)
+    redirect.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
     response.cookies.getAll().forEach((c) => redirect.cookies.set(c))
     return redirect
+  }
+  if (noIndex) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
   response.headers.set('Cache-Control', 'private, no-store')
   return response
@@ -68,6 +74,7 @@ export const config = {
     '/artists/:path*',
     '/admin/:path*',
     '/login',
+    '/preview',
     '/auth/:path*',
     '/api/auth/:path*',
     '/api/releases/:path*',

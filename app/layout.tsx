@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next'
+import { SITE_URL } from '@/lib/site'
 import './globals.css'
 import './workspace.css'
 import { SiteExperience } from '@/components/layout/SiteExperience'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'uwbelieve',
   description:
     'Premium electronic music label with transparent distribution, promo support, and direct artist feedback.',
