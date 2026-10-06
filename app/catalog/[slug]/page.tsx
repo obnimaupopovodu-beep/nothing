@@ -1,3 +1,4 @@
+import { ReleasePlayer } from '@/components/catalog/ReleasePlayer'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { catalogReleases } from '@/components/data/catalog'
@@ -19,16 +20,6 @@ export default async function CatalogReleasePage({ params }: { params: Promise<{
   if (!release) notFound()
   return <main className="catalog-detail">
     <header className="catalog-detail__nav"><a href="/">uwbelieve<span>.</span></a><a href="/?catalog=1">← Back to catalog</a></header>
-    <div className="catalog-detail__content">
-      <div className="catalog-detail__art"><img src={release.artwork} alt={`${release.title} cover`} /></div>
-      <div className="catalog-detail__info">
-        <p>uwbelieve / release concept</p>
-        <h1>{release.title}</h1>
-        <h2>{release.artist}</h2>
-        <span>{release.year}</span>
-        <p className="catalog-detail__note">{release.description}</p>
-        <a href="/?catalog=1" className="btn btn-ghost">Back to catalog</a>
-      </div>
-    </div>
+    <ReleasePlayer key={release.slug} release={release} />
   </main>
 }
