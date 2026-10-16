@@ -16,6 +16,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await readJson(request, 16384)
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 })
+    }
     const alias = String(body.alias ?? '').trim()
     const email = String(body.email ?? '').trim()
     const scLink = String(body.scLink ?? '').trim()

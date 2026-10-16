@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ArrowUpRight } from '@phosphor-icons/react'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { PlaylistContours } from '@/components/animations/PlaylistContours'
@@ -335,9 +335,9 @@ export function PlaylistsSection() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h2 style={{ margin: 0, fontSize: 'clamp(40px, 11vw, 64px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff' }}>
+              <h1 style={{ margin: 0, fontSize: 'clamp(40px, 11vw, 64px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff' }}>
                 Our Playlists.
-              </h2>
+              </h1>
               <p style={{ marginTop: 18, marginBottom: 0, maxWidth: '34ch', fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.52)' }}>
                 Handpicked collections shaped as living listening routes, not static lists.
               </p>
@@ -409,9 +409,9 @@ export function PlaylistsSection() {
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <h2 style={{ margin: 0, fontSize: 'clamp(40px, 8vw, 92px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff', maxWidth: '8ch' }}>
+                <h1 style={{ margin: 0, fontSize: 'clamp(40px, 8vw, 92px)', lineHeight: 0.92, letterSpacing: '-0.07em', color: '#fff', maxWidth: '8ch' }}>
                   Our<br />Playlists.
-                </h2>
+                </h1>
                 <p style={{ marginTop: 24, marginBottom: 0, maxWidth: '28ch', fontSize: 16, lineHeight: 1.65, color: 'rgba(255,255,255,0.58)' }}>
                   Handpicked collections from the uwbelieve team, shaped as living listening routes, not static lists.
                 </p>

@@ -193,11 +193,13 @@ export function HeroSection() {
   useEffect(() => {
     if (!isOpen) return
     const previousOverflow = document.body.style.overflow
+    const scrollController = lenis?.current
+    const returnButton = hearButtonRef.current
     const page = document.querySelector('main')
     const wasInert = page?.inert ?? false
     document.body.style.overflow = 'hidden'
     if (page) page.inert = true
-    lenis?.current?.stop()
+    scrollController?.stop()
     overlayRef.current?.focus()
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && phaseRef.current === 'catalog') document.getElementById('catalog-restore')?.click()
@@ -206,9 +208,9 @@ export function HeroSection() {
     return () => {
       document.body.style.overflow = previousOverflow
       if (page) page.inert = wasInert
-      lenis?.current?.start()
+      scrollController?.start()
       window.removeEventListener('keydown', onKeyDown)
-      requestAnimationFrame(() => hearButtonRef.current?.focus())
+      requestAnimationFrame(() => { if (returnButton?.isConnected) returnButton.focus() })
     }
   }, [isOpen, lenis])
 

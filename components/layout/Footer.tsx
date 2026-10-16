@@ -3,7 +3,6 @@
 const LINKS = [
   { label: 'How we work',  href: '#releases'  },
   { label: 'Platforms', href: '#platforms' },
-  { label: 'Playlists', href: '#playlists' },
   { label: 'Socials',   href: '#social'    },
   { label: 'FAQ',       href: '#faq'       },
 ]

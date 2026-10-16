@@ -8,7 +8,6 @@ import { catalogReturnRequested } from '@/lib/catalogReturn'
 type IntroState = 'boot' | 'opening' | 'menu' | 'navigating' | 'revealing' | 'closed'
 
 const ROUTES: { label: string; target: string | null }[] = [
-  { label: 'Playlists', target: '#playlists' },
   { label: 'Socials', target: '#social' },
   { label: 'About', target: '#about' },
   { label: 'Submit a song', target: '#demo' },

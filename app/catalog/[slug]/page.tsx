@@ -1,6 +1,7 @@
 import { ReleasePlayer } from '@/components/catalog/ReleasePlayer'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { catalogReleases } from '@/components/data/catalog'
 import '../../catalog-detail.css'
 
@@ -19,7 +20,7 @@ export default async function CatalogReleasePage({ params }: { params: Promise<{
   const release = catalogReleases.find((item) => item.slug === slug)
   if (!release) notFound()
   return <main className="catalog-detail">
-    <header className="catalog-detail__nav"><a href="/">uwbelieve<span>.</span></a><a href="/?catalog=1">← Back to catalog</a></header>
+    <header className="catalog-detail__nav"><Link href="/" prefetch={false}>uwbelieve<span>.</span></Link><Link href="/?catalog=1" prefetch={false}>← Back to catalog</Link></header>
     <ReleasePlayer key={release.slug} release={release} />
   </main>
 }

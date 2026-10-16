@@ -5,7 +5,7 @@ import { ElasticCursor } from './ElasticCursor'
 import { StarField } from '@/components/animations/StarField'
 export function SiteExperience({ children }: { children: React.ReactNode }) {
   const path = usePathname()
-  if (path !== '/') return <>{children}</>
+  if (path !== '/' && path !== '/playlists') return <>{children}</>
   return (
     <>
       <div className="aura aura-a" aria-hidden="true" />

@@ -8,7 +8,6 @@ import { MarqueeBand }         from '@/components/sections/MarqueeBand'
 import { AboutSection }        from '@/components/sections/AboutSection'
 import { ReleasePathsSection } from '@/components/sections/ReleasePathsSection'
 import { PlatformsSection }    from '@/components/sections/PlatformsSection'
-import { PlaylistsSection }    from '@/components/sections/PlaylistsSection'
 import { SocialSection }       from '@/components/sections/SocialSection'
 import { FaqSection }          from '@/components/sections/FaqSection'
 import { DemoSection }         from '@/components/sections/DemoSection'
@@ -61,7 +60,6 @@ export default function Home() {
           <ReleasePathsSection />
           {/* untouched by design: the everywhere reveal animation */}
           <PlatformsSection />
-          <PlaylistsSection />
           <SocialSection />
           <FaqSection />
           <DemoSection />
