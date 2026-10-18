@@ -14,6 +14,7 @@ import {
 import { catalogReleases } from '@/components/data/catalog'
 import { useMagneticButton } from '@/hooks/useMagneticButton'
 import { useSmoothScroll } from '@/components/layout/SmoothScroll'
+import { catalogReleasePath } from '@/lib/catalogLinks'
 import { catalogReturnRequested, consumeCatalogReturn, rememberCatalogReturn } from '@/lib/catalogReturn'
 import './HeroSection.css'
 
@@ -529,7 +530,7 @@ export function HeroSection() {
       </div></div>
       <div ref={headingRef} className="catalog-overlay__head"><p>uwbelieve / releases</p><h2>The catalog.</h2><span>One record at a time. A world of sound.</span></div>
       <div ref={trackRef} className="catalog-track" aria-hidden={Boolean(marquee)}><div className="catalog-track__inner" style={{ width: `calc(100vw + ${worldOffset}px)` }}>
-        {stamped.map(({ index, left, top, size }) => { const release = catalogReleases[index]; return <a key={release.slug} data-release-index={index} href={release.href} onClick={rememberCatalogReturn} className="catalog-slot catalog-slot--visible" style={{ left: worldOffset + left, top, width: size, opacity: reduceMotion ? 1 : undefined }} tabIndex={phase === 'catalog' && !marquee ? 0 : -1}>
+        {stamped.map(({ index, left, top, size }) => { const release = catalogReleases[index]; return <a key={release.slug} data-release-index={index} href={`${catalogReleasePath(release.slug)}?from=artists`} onClick={rememberCatalogReturn} className="catalog-slot catalog-slot--visible" style={{ left: worldOffset + left, top, width: size, opacity: reduceMotion ? 1 : undefined }} tabIndex={phase === 'catalog' && !marquee ? 0 : -1}>
           <div className="catalog-slot__art" style={{ width: size, height: size }}><img src={release.artwork} alt={`${release.title} cover`} draggable={false} /></div>
           <span className="catalog-slot__index">{String(index + 1).padStart(2, '0')}</span><strong>{release.title}</strong><span className="catalog-slot__artist">{release.artist} · {release.year}</span>
         </a> })}
@@ -537,7 +538,7 @@ export function HeroSection() {
       {marquee && <div ref={marqueeRef} className="catalog-marquee" data-moving={marqueeMoving} style={{ '--marquee-travel': `-${marquee.batchWidth}px`, '--marquee-duration': `${CATALOG_MOTION.marqueeSecondsPerBatch}s` } as CSSProperties}>
         <div className="catalog-marquee__inner" style={{ left: marquee.left - marquee.anchor * marquee.batchWidth, top: marquee.top }}>
           {Array.from({ length: marquee.copies }, (_, batch) => <div className="catalog-marquee__batch" key={batch} aria-hidden={batch !== marquee.anchor}>
-            {[...catalogReleases].reverse().map((release, reverseIndex) => { const index = catalogReleases.length - 1 - reverseIndex; return <a key={`${batch}-${release.slug}`} href={release.href} onClick={rememberCatalogReturn} className="catalog-marquee__item" style={{ width: marquee.size, marginRight: marquee.gap }} tabIndex={phase === 'catalog' && batch === marquee.anchor ? 0 : -1}>
+            {[...catalogReleases].reverse().map((release, reverseIndex) => { const index = catalogReleases.length - 1 - reverseIndex; return <a key={`${batch}-${release.slug}`} href={`${catalogReleasePath(release.slug)}?from=artists`} onClick={rememberCatalogReturn} className="catalog-marquee__item" style={{ width: marquee.size, marginRight: marquee.gap }} tabIndex={phase === 'catalog' && batch === marquee.anchor ? 0 : -1}>
               <div className="catalog-slot__art" style={{ width: marquee.size, height: marquee.size }}><img src={release.artwork} alt={batch === marquee.anchor ? `${release.title} cover` : ''} draggable={false} /></div>
               <span className="catalog-slot__index">{String(index + 1).padStart(2, '0')}</span><strong>{release.title}</strong><span className="catalog-slot__artist">{release.artist} · {release.year}</span>
             </a> })}

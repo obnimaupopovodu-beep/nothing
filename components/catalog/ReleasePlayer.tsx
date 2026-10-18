@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { SpeakerHigh, SpeakerSlash, Play, Pause } from '@phosphor-icons/react/dist/ssr'
+import { SpeakerHigh, SpeakerSlash, Play, Pause, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
 import type { CatalogRelease } from '@/components/data/catalog'
 
 export const VINYL_CONFIG = { rpm: 16, secondsPerTurn: 10, wheelSecondsPerPixel: .025, fadeSeconds: .65, volume: .7 }
@@ -274,6 +274,10 @@ export function ReleasePlayer({ release }: { release: CatalogRelease }) {
           <p className="release-player__hint" aria-live="polite">{error || (!available ? 'Audio coming soon.' : phase === 'loading' ? 'Loading the record…' : phase === 'stopping' ? 'Fading out…' : phase === 'paused' ? 'Paused. Press Space to resume.' : phase === 'playing' ? 'Turn the record to seek. Space to pause.' : 'Press the cover to listen.')}</p>
         </div>
         <p className="catalog-detail__note">{release.description}</p>
+        {release.streamingUrl && /^https?:\/\//i.test(release.streamingUrl) && <a className="release-player__streaming" href={release.streamingUrl} target="_blank" rel="noopener noreferrer">
+          Listen on streaming platforms <ArrowUpRight aria-hidden="true" />
+          <span className="sr-only"> — opens in a new tab</span>
+        </a>}
       </div>
     </div>
     {available && <audio ref={audioRef} src={release.audioUrl} crossOrigin="anonymous" preload="none"

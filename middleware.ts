@@ -5,9 +5,9 @@ import { sessionCookieOptions, supabaseConfig } from '@/lib/supabase/config'
 export async function middleware(request: NextRequest) {
   const host = (request.headers.get('host') || request.nextUrl.hostname).split(':')[0].toLowerCase()
   const prefix =
-    host === process.env.ARTIST_HOSTNAME
+    (host === process.env.ARTIST_HOSTNAME || host === 'artists.uwbelieve.com')
       ? '/artists'
-      : host === process.env.ADMIN_HOSTNAME
+      : (host === process.env.ADMIN_HOSTNAME || host === 'admin.uwbelieve.com' || host === 'label.uwbelieve.com')
         ? '/admin'
         : ''
   if (prefix && request.nextUrl.pathname === '/login' && !request.nextUrl.searchParams.has('workspace')) {

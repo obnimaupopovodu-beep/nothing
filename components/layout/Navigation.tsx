@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -52,6 +53,7 @@ export function Navigation() {
         </a>
 
         <nav className="nav-links hide-mobile" aria-label="Primary">
+          <Link href="/" style={{ fontSize: 12, color: 'var(--ink-2)', textDecoration: 'none' }}>For listeners ↗</Link>
           {navLinks.map((l) => (
             <button key={l.label} type="button" onClick={() => go(l.href)}>
               {l.label}
@@ -85,6 +87,7 @@ export function Navigation() {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="shell">
+              <Link href="/" className="drawer-link">For listeners ↗</Link>
               {navLinks.map((l) => (
                 <button key={l.label} type="button" className="drawer-link" onClick={() => go(l.href)}>
                   {l.label}
@@ -190,7 +193,7 @@ export function Navigation() {
           cursor: pointer;
         }
         .drawer-link:hover { color: var(--ink); }
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
           .nav-links { display: none; }
           .burger { display: flex; }
         }
