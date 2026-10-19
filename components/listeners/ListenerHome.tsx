@@ -21,6 +21,9 @@ const artists = [
   { name: 'Hiderest', sound: 'trap, Hardtekk, memphis', cover: 'Naivety' },
   { name: 'FXRNVN', sound: 'Best of EDM, bass house and other bass music', cover: 'HESITATE' },
   { name: 'LaughingSkxll', sound: 'Heaviest metal beats with real guitar layers', cover: 'Step-Back' },
+  { name: 's._a._t._e._n', sound: 'heavy sceam vocals mixed with everything electronic', cover: 'Step-Back' },
+  { name: 'DJ NXW', sound: 'Br funk stuff', cover: 'NAO-BANGER' },
+  { name: 'Malik Amer', sound: 'Impressive pop songs with live instrumentation', cover: 'Hit-and-Run' },
 ]
 const releaseLink = (release: CatalogRelease) => catalogReleasePath(release.slug)
 
