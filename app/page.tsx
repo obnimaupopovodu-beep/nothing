@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { ListenerHome } from '@/components/listeners/ListenerHome'
 import { SITE_URL, HOME_TITLE_LISTENERS, LISTENER_DESCRIPTION } from '@/lib/site'
+import { IntroNavigation } from '@/components/intro/IntroNavigation'
+import { SiteReveal } from '@/components/intro/SiteReveal'
 import './listeners.css'
 
 export const metadata: Metadata = {
@@ -26,5 +28,10 @@ const structuredData = {
   ],
 }
 export default function Home() {
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} /><ListenerHome /></>
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} /><IntroNavigation skipOnHash routes={[
+    { label: 'Discover artists', target: '#discover' },
+    { label: 'Hear the catalog', target: '#catalog' },
+    { label: 'Your sound', target: '#your-sound' },
+    { label: 'Join the community', target: '#community' },
+  ]} /><SiteReveal skipOnHash><ListenerHome /></SiteReveal></>
 }

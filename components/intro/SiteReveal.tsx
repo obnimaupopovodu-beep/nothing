@@ -9,18 +9,18 @@ import { catalogReturnRequested } from '@/lib/catalogReturn'
  * intro curtain starts revealing it, instead of appearing as a static,
  * already-rendered block the instant the white mask slides away.
  */
-export function SiteReveal({ children }: { children: React.ReactNode }) {
+export function SiteReveal({ children, skipOnHash = false }: { children: React.ReactNode; skipOnHash?: boolean }) {
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
-    if (catalogReturnRequested()) setRevealed(true)
+    if (catalogReturnRequested() || (skipOnHash && window.location.hash)) setRevealed(true)
     function handleReveal() {
       setRevealed(true)
     }
 
     window.addEventListener(INTRO_REVEAL_EVENT, handleReveal)
     return () => window.removeEventListener(INTRO_REVEAL_EVENT, handleReveal)
-  }, [])
+  }, [skipOnHash])
 
   return (
     <div className={revealed ? 'site-reveal site-reveal--visible' : 'site-reveal'}>

@@ -239,3 +239,15 @@
 }
 .listener-page .listener-title > .listener-title__mask > .listener-title__line { color: var(--ink); }
 .listener-page .listener-title > .listener-title__mask:last-child > .listener-title__line { color: #a8a8b0; }
+
+/* Keep the fixed player outside transformed page-reveal ancestors. */
+.listener-page.listener-player-layer { position: fixed; inset: 0; z-index: 100; pointer-events: none; overflow: visible; background: transparent; }
+.listener-player-layer .listener-now { pointer-events: auto; bottom: max(18px, env(safe-area-inset-bottom)); }
+
+.listener-now > .listener-now-sphere { position: absolute; top: 50%; left: -88px; width: 80px; height: 80px; transform: translateY(-50%); pointer-events: none; display: block; flex: none; }
+.particle-sphere { display: block; width: 100%; height: 100%; pointer-events: none; }
+@media (max-width: 760px) {
+  .listener-now > .listener-now-sphere { position: relative; top: auto; left: auto; transform: none; width: 44px; height: 44px; flex: 0 0 44px; }
+  .listener-now > img { display: none; }
+}
+

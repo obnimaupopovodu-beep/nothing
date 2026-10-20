@@ -58,3 +58,8 @@
 .release-player__streaming:active { transform: scale(.98); }
 @media (max-width: 720px) { .release-player__streaming { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .release-player__streaming { transition: none; } .release-player__streaming:hover, .release-player__streaming:active { transform: none; } }
+
+.release-player__sculpture { width: clamp(160px, 19vw, 250px); height: clamp(160px, 19vw, 250px); margin: 16px 0 -18px -24px; pointer-events: none; }
+.release-player__sculpture .particle-sphere { display: block; width: 100%; height: 100%; }
+.release-player__sculpture + .release-player__controls { margin-top: 18px; }
+@media (max-width: 720px) { .release-player__sculpture { width: 170px; height: 170px; margin-block: 0 -20px; } }

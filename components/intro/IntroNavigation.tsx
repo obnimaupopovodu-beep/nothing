@@ -7,7 +7,9 @@ import { catalogReturnRequested } from '@/lib/catalogReturn'
 
 type IntroState = 'boot' | 'opening' | 'menu' | 'navigating' | 'revealing' | 'closed'
 
-const ROUTES: { label: string; target: string | null }[] = [
+type IntroRoute = { label: string; target: string | null }
+
+const ROUTES: IntroRoute[] = [
   { label: 'Socials', target: '#social' },
   { label: 'About', target: '#about' },
   { label: 'Submit a song', target: '#demo' },
@@ -30,7 +32,7 @@ function moveToTarget(target: string | null) {
   document.querySelector(target)?.scrollIntoView({ behavior: 'auto', block: 'start' })
 }
 
-export function IntroNavigation() {
+export function IntroNavigation({ routes = ROUTES, skipOnHash = false }: { routes?: IntroRoute[]; skipOnHash?: boolean }) {
   const [state, setState] = useState<IntroState>('boot')
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(4)
@@ -41,7 +43,7 @@ export function IntroNavigation() {
   const finishedRef = useRef(false)
 
   useEffect(() => {
-    if (catalogReturnRequested()) {
+    if (catalogReturnRequested() || (skipOnHash && window.location.hash)) {
       setState('closed')
       requestAnimationFrame(() => window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT)))
       return
@@ -87,7 +89,7 @@ export function IntroNavigation() {
       })
     })()
     return () => { cancelled = true }
-  }, [reducedMotion])
+  }, [reducedMotion, skipOnHash])
 
   const finishIntro = useCallback(() => {
     if (finishedRef.current) return
@@ -237,7 +239,7 @@ export function IntroNavigation() {
       >
         <div className="intro-menu">
           <div className="intro-menu-list">
-            {ROUTES.map((route, index) => {
+            {routes.map((route, index) => {
               const dimmed = state === 'navigating' && selectedTarget !== route.target
 
               return (

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { SpeakerHigh, SpeakerSlash, Play, Pause, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
+import { ParticleSphere } from '@/components/animations/ParticleSphere'
 import type { CatalogRelease } from '@/components/data/catalog'
 
 export const VINYL_CONFIG = { rpm: 16, secondsPerTurn: 10, wheelSecondsPerPixel: .025, fadeSeconds: .65, volume: .7 }
@@ -17,6 +18,7 @@ export function ReleasePlayer({ release }: { release: CatalogRelease }) {
   const seekRef = useRef<(delta: number) => void>(() => {})
   const timelineTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
   const gainRef = useRef<GainNode | null>(null)
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const intent = useRef(0)
@@ -79,7 +81,10 @@ export function ReleasePlayer({ release }: { release: CatalogRelease }) {
     try {
       if (!contextRef.current) {
         const context = new AudioContext(), gain = context.createGain()
-        context.createMediaElementSource(audio).connect(gain); gain.connect(context.destination)
+        context.createMediaElementSource(audio).connect(gain)
+        const analyser = context.createAnalyser()
+        analyser.fftSize = 2048; analyser.smoothingTimeConstant = .12
+        gain.connect(analyser); analyser.connect(context.destination); analyserRef.current = analyser
         contextRef.current = context; gainRef.current = gain
       }
       fade(0, 0)
@@ -264,6 +269,7 @@ export function ReleasePlayer({ release }: { release: CatalogRelease }) {
       </div>
       <div className="catalog-detail__info">
         <h1>{release.title}</h1><h2>{release.artist}</h2><span>{release.year}</span>
+        <div className="release-player__sculpture"><ParticleSphere analyser={analyserRef} /></div>
         <div className="release-player__controls">
           <div className="release-player__volume">
             <button type="button" aria-label={volume ? 'Mute' : 'Unmute'} disabled={!available} onClick={() => changeVolume(volume ? 0 : lastVolume.current)}>{volume ? <SpeakerHigh /> : <SpeakerSlash />}</button>

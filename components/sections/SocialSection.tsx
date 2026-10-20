@@ -33,15 +33,9 @@ const SOCIALS: Social[] = [
     Icon: TiktokLogo,
   },
   {
-    name: 'TikTok',
-    handle: '@nothing.bass',
-    href: 'https://tiktok.com/@nothing.bass',
-    Icon: TiktokLogo,
-  },
-  {
     name: 'Telegram',
-    handle: 't.me/nothing_records',
-    href: 'https://t.me/nothing_records',
+    handle: 't.me/uwbelieve',
+    href: 'https://t.me/uwbelieve',
     Icon: TelegramLogo,
   },
   {

@@ -2,6 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { ParticleSphere } from '@/components/animations/ParticleSphere'
+import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ArrowUpRight, ArrowRight, Play, Pause, X, InstagramLogo, TelegramLogo, TiktokLogo, DiscordLogo } from '@phosphor-icons/react/dist/ssr'
@@ -105,6 +107,7 @@ function SoundRequest() {
 
 export function ListenerHome() {
   const reduced = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
   const [mood, setMood] = useState(0)
   const [artist, setArtist] = useState<string | null>(null)
   const [current, setCurrent] = useState<CatalogRelease | null>(null)
@@ -112,18 +115,22 @@ export function ListenerHome() {
   const [audioError, setAudioError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const audio = useRef<HTMLAudioElement>(null)
+  const audioContext = useRef<AudioContext | null>(null)
+  const analyser = useRef<AnalyserNode | null>(null)
   const playRequest = useRef(0)
   const heroTrack = catalogReleases.find(item => item.slug === 'SUPERSTAR') || catalogReleases[0]
   const filtered = catalogReleases.filter(item => artist ? item.artist.split(',').map(name => name.trim()).includes(artist) : !mood || moods[mood].slugs.includes(item.slug))
 
   useEffect(() => {
+    setMounted(true)
     if (catalogReturnRequested()) {
       consumeCatalogReturn()
       requestAnimationFrame(() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'instant' }))
     }
     const element = audio.current
     const requestTracker = playRequest
-    return () => { requestTracker.current++; element?.pause() }
+    const context = audioContext
+    return () => { requestTracker.current++; element?.pause(); if (context.current) void context.current.close() }
   }, [])
 
   async function preview(release: CatalogRelease) {
@@ -135,7 +142,16 @@ export function ListenerHome() {
     const request = ++playRequest.current
     setAudioError(''); setCurrent(release)
     if (current?.slug !== release.slug) { element.src = release.audioUrl; element.volume = .7 }
-    try { await element.play(); if (playRequest.current === request) setPlaying(true) }
+    try {
+      if (!audioContext.current) {
+        const context = new AudioContext(), node = context.createAnalyser()
+        node.fftSize = 2048; node.smoothingTimeConstant = .12
+        const source = context.createMediaElementSource(element)
+        source.connect(node); node.connect(context.destination)
+        audioContext.current = context; analyser.current = node
+      }
+      await audioContext.current.resume()
+      await element.play(); if (playRequest.current === request) setPlaying(true) }
     catch { if (playRequest.current === request) { setPlaying(false); setAudioError('Audio is unavailable right now. Open the release to try again.') } }
   }
   const closePlayer = () => { playRequest.current++; audio.current?.pause(); audio.current?.removeAttribute('src'); audio.current?.load(); setCurrent(null); setPlaying(false) }
@@ -217,7 +233,7 @@ export function ListenerHome() {
       </div>
     </section>
     <footer className="listener-footer l-shell"><Link className="l-brand" href="/">uwbelieve<span>.</span></Link><p>Independent music. Open ears.</p><nav aria-label="Footer"><a href="/for-artists">For artists</a><a href="https://artists.uwbelieve.com">Artist login</a><a href="mailto:info@uwbelieve.com">Say hello</a></nav><small>© {new Date().getFullYear()} uwbelieve</small></footer>
-    <audio ref={audio} preload="none" onEnded={()=>setPlaying(false)} onError={()=>{setPlaying(false);setAudioError('Unable to load the audio. Open the release to try again.')}} />
-    {current && <aside className="listener-now" aria-label="Now playing"><Image unoptimized src={current.artwork} alt="" width={44} height={44} /><div><strong>{current.title}</strong><span>{audioError || current.artist}</span></div><button type="button" onClick={()=>void preview(current)} aria-label={playing ? 'Pause preview' : 'Resume preview'}>{playing ? <Pause weight="fill" /> : <Play weight="fill" />}</button><Link href={releaseLink(current)} prefetch={false} aria-label="Open full record"><ArrowUpRight /></Link><button type="button" aria-label="Close audio player" onClick={closePlayer}><X /></button></aside>}
+    <audio ref={audio} crossOrigin="anonymous" preload="none" onEnded={()=>setPlaying(false)} onError={()=>{setPlaying(false);setAudioError('Unable to load the audio. Open the release to try again.')}} />
+    {mounted && current && createPortal(<div className="listener-page listener-player-layer"><aside className="listener-now" aria-label="Now playing"><div className="listener-now-sphere"><ParticleSphere analyser={analyser} compact /></div><Image unoptimized src={current.artwork} alt="" width={44} height={44} /><div><strong>{current.title}</strong><span>{audioError || current.artist}</span></div><button type="button" onClick={()=>void preview(current)} aria-label={playing ? 'Pause preview' : 'Resume preview'}>{playing ? <Pause weight="fill" /> : <Play weight="fill" />}</button><Link href={releaseLink(current)} prefetch={false} aria-label="Open full record"><ArrowUpRight /></Link><button type="button" aria-label="Close audio player" onClick={closePlayer}><X /></button></aside></div>, document.body)}
   </main>
 }
