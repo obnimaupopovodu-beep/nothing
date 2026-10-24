@@ -1,17 +1,20 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from 'framer-motion'
+import { motion, useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { VinylRecord, ChartLine, SpeakerHigh, ChatCircle } from '@phosphor-icons/react/dist/ssr'
 import { useSmoothScroll } from '@/components/layout/SmoothScroll'
 
-const DESCRIPTION = 'It works each record properly: clean distribution, honest reporting, and promo only when the track can carry it. No inflated promises, no silence after you send a demo.'
-
-const PHRASES = [
-  'It works each record properly:',
-  'clean distribution, honest reporting,',
-  'and promo only when the track can carry it.',
-  'No inflated promises, no silence after you send a demo.',
+const PRINCIPLES = [
+  { title: 'Clean distribution.', copy: 'Every record handled properly, from the first step to release day.', icon: VinylRecord },
+  { title: 'Honest reporting.', copy: 'Clear numbers. No inflated promises.', icon: ChartLine },
+  { title: 'Promotion with purpose.', copy: 'Promo only when the track can carry it.', icon: SpeakerHigh },
+  { title: 'A real conversation.', copy: 'No silence after you send a demo.', icon: ChatCircle },
 ]
+
+const CONTENT_REVEAL_START = .70
+const CONTENT_REVEAL_STAGGER = .035
+const CONTENT_REVEAL_DURATION = .16
 
 const FLASH_POINTS = [0.33, 0.38]
 const PRESENTATION_DURATION = 2500
@@ -27,37 +30,28 @@ const sharpEaseInOut = (value: number) => {
   return rise / (rise + fall)
 }
 
-function RevealPhrase({
-  text,
-  index,
-  progress,
-  reduced,
-}: {
-  text: string
-  index: number
-  progress: MotionValue<number>
-  reduced: boolean
-}) {
-  const opacity = useTransform(progress, (value) => sharpEaseInOut((value - 0.36 - index * 0.1) / 0.16))
-  const y = useTransform(opacity, (value) => (1 - value) * 16)
-
-  return (
-    <motion.span
-      className="about-phrase"
-      style={{ opacity: reduced ? 1 : opacity, y: reduced ? 0 : y }}
-    >
-      {text}
-    </motion.span>
-  )
+function PrincipleCard({ index, progress, reduced }: { index: number; progress: MotionValue<number>; reduced: boolean }) {
+  const item = PRINCIPLES[index]
+  const Icon = item.icon
+  const opacity = useTransform(progress, value => sharpEaseInOut((value - CONTENT_REVEAL_START - index * CONTENT_REVEAL_STAGGER) / CONTENT_REVEAL_DURATION))
+  const y = useTransform(opacity, value => (1 - value) * 16)
+  return <motion.article className="about-principle" style={{ opacity: reduced ? 1 : opacity, y: reduced ? 0 : y }}>
+    <Icon className="about-principle__icon" size={30} weight="light" aria-hidden="true" />
+    <h3>{item.title}</h3><p>{item.copy}</p>
+  </motion.article>
 }
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
+  const railRef = useRef<HTMLDivElement>(null)
   const progress = useMotionValue(0)
+  const railStart = useMotionValue(-140)
+  const railTravel = useMotionValue(1000)
+  const { scrollYProgress: cardsProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
+  const railY = useTransform([cardsProgress, railStart, railTravel], ([position, start, travel]) => Number(start) - Number(position) * Number(travel))
   const reduced = Boolean(useReducedMotion())
   const scrollController = useSmoothScroll()
   const autoplayConsumed = useRef(false)
-  const holdFinalFrame = useRef(false)
 
   const inversion = useTransform(progress, (value) => Math.max(0, ...FLASH_POINTS.map((point) => {
     const phase = (value - point) / INVERSION_SPAN
@@ -71,6 +65,27 @@ export function AboutSection() {
   const desktopLeft = useTransform(shift, (value) => `${50 * (1 - value)}%`)
   const desktopX = useTransform(shift, (value) => `${-50 * (1 - value)}%`)
   const mobileY = useTransform(shift, (value) => `${-30 * value}svh`)
+  const introOpacity = useTransform(progress, value => sharpEaseInOut((value - CONTENT_REVEAL_START) / CONTENT_REVEAL_DURATION))
+  const introY = useTransform(introOpacity, value => (1 - value) * 16)
+
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return
+    const measure = () => {
+      const cards = rail.querySelectorAll<HTMLElement>('.about-principle')
+      const first = cards[0], last = cards[cards.length - 1]
+      if (!first || !last) return
+      const firstCenter = first.offsetTop + first.offsetHeight / 2
+      const lastCenter = last.offsetTop + last.offsetHeight / 2
+      railStart.set(-firstCenter)
+      railTravel.set(Math.max(0, lastCenter - firstCenter))
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(rail)
+    rail.querySelectorAll('.about-principle').forEach(card => observer.observe(card))
+    measure()
+    return () => observer.disconnect()
+  }, [railStart, railTravel])
 
   useEffect(() => {
     if (reduced) return
@@ -89,7 +104,6 @@ export function AboutSection() {
 
     const finish = (showFinalFrame = true) => {
       active = false
-      holdFinalFrame.current = showFinalFrame
       if (showFinalFrame) progress.set(1)
       releaseMobileScroll?.()
       releaseMobileScroll = null
@@ -160,11 +174,11 @@ export function AboutSection() {
             }
           }
         } else {
-          // Returning from below always uses scroll control, even on the first visit.
+          // The introduction is a one-time presentation, independent of the
+          // reversible card rail. Returning through the section must not undo
+          // card visibility or move the wordmark back towards the center.
           if (scrollDelta < 0 && rect.top <= 1) autoplayConsumed.current = true
-          const travel = Math.max(1, rect.height - window.innerHeight)
-          if (scrollDelta < -0.5 || rect.bottom <= window.innerHeight) holdFinalFrame.current = false
-          const target = holdFinalFrame.current ? 1 : clamp01(-rect.top / travel)
+          const target = autoplayConsumed.current ? 1 : 0
           const current = progress.get()
           const next = current + (target - current) * (1 - Math.exp(-delta * 18))
           progress.set(Math.abs(next - target) < 0.001 ? target : next)
@@ -228,18 +242,10 @@ export function AboutSection() {
           </div>
 
           <div className="about-description">
-            <p className="sr-only">{DESCRIPTION}</p>
-            <p className="about-copy" aria-hidden="true">
-              {PHRASES.map((phrase, index) => (
-                <RevealPhrase
-                  key={phrase}
-                  text={phrase}
-                  index={index}
-                  progress={progress}
-                  reduced={reduced}
-                />
-              ))}
-            </p>
+            <motion.div ref={railRef} className="about-principles" style={{ y: reduced ? 0 : railY }}>
+              <motion.p className="about-principles__intro" style={{ opacity: reduced ? 1 : introOpacity, y: reduced ? 0 : introY }}>It works each record properly:</motion.p>
+              {PRINCIPLES.map((item, index) => <PrincipleCard key={item.title} index={index} progress={progress} reduced={reduced} />)}
+            </motion.div>
           </div>
         </div>
       </motion.div>
@@ -247,7 +253,7 @@ export function AboutSection() {
       <style jsx>{`
         .about-section {
           position: relative;
-          height: 125svh;
+          height: 340svh;
           scroll-margin-top: 0;
           background: var(--bg);
         }
@@ -292,22 +298,23 @@ export function AboutSection() {
           position: absolute;
           left: 55%;
           right: var(--pad);
-          top: 50%;
-          transform: translateY(-50%);
+          top: 0;
+          height: 100%;
+          pointer-events: none;
+          mask-image: linear-gradient(transparent, #000 17%, #000 83%, transparent);
         }
-        .about-copy {
-          margin: 0;
-          font-size: clamp(18px, 1.65vw, 25px);
-          font-weight: 500;
-          line-height: 1.48;
-          letter-spacing: -0.025em;
-          color: inherit;
+        :global(.about-principles) { position: absolute; top: 50%; width: 100%; display: grid; gap: clamp(28px, 5vh, 64px); }
+        :global(.about-principles__intro) { margin: 0 0 -8px; color: var(--ink-2); font-size: clamp(15px, 1.2vw, 18px); letter-spacing: -.02em; }
+        :global(.about-principle) {
+          position: relative; padding: clamp(26px, 3vw, 44px); min-height: 260px;
+          display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+          border: 1px solid rgba(255,255,255,.14); border-radius: var(--r);
+          background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+          color: var(--ink); pointer-events: auto;
         }
-        :global(.about-phrase) {
-          display: block;
-          margin-bottom: 0.35em;
-          color: inherit;
-        }
+        :global(.about-principle__icon) { color: #adb8da; margin-bottom: 30px; }
+        :global(.about-principle h3) { margin: 0; font-size: clamp(26px, 2.8vw, 42px); font-weight: 800; letter-spacing: -.045em; line-height: 1.08; }
+        :global(.about-principle p) { margin: 20px 0 0; max-width: 34ch; color: var(--ink-2); font-size: clamp(14px, 1.25vw, 17px); line-height: 1.6; }
         @media (max-width: 700px) {
           .desktop-title-track { display: none; }
           .mobile-title-track {
@@ -320,16 +327,11 @@ export function AboutSection() {
             max-width: none;
             font-size: clamp(46px, 12vw, 68px);
           }
-          .about-description {
-            left: var(--pad);
-            right: var(--pad);
-            top: 52%;
-            transform: none;
-          }
-          .about-copy {
-            font-size: clamp(16px, 4.3vw, 19px);
-            line-height: 1.46;
-          }
+          .about-description { left: var(--pad); right: var(--pad); top: 35%; height: 65%; }
+          :global(.about-principle) { min-height: 220px; padding: 26px; }
+          :global(.about-principle h3) { font-size: clamp(26px, 7vw, 36px); }
+          :global(.about-principle__icon) { margin-bottom: 24px; }
+          :global(.about-principles__intro) { font-size: 14px; }
         }
         @media (prefers-reduced-motion: reduce) {
           .about-section { height: auto; min-height: 100svh; }
@@ -343,6 +345,9 @@ export function AboutSection() {
             padding-block: 96px;
           }
           .desktop-title-track, .about-description { position: static; transform: none; }
+          .about-description { height: auto; mask-image: none; }
+          :global(.about-principles) { position: relative; top: auto; }
+          :global(.about-principle) { min-height: 0; }
           :global(.about-title) { max-width: none; }
         }
         @media (prefers-reduced-motion: reduce) and (max-width: 700px) {

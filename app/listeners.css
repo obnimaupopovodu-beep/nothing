@@ -251,3 +251,28 @@
   .listener-now > img { display: none; }
 }
 
+
+/* Centered, font-sampled particle hero. The HTML heading is the GPU fallback. */
+.listener-hero { justify-content: center; padding-block: 40px 130px; }
+.listener-hero__copy { width: 100%; max-width: 1120px; text-align: center; }
+.listener-hero__copy > p { margin-inline: auto; }
+.listener-hero__image { inset: 0; opacity: .16; mask-image: linear-gradient(180deg, transparent, #000 25%, #000 60%, transparent); }
+.listener-hero__image img { object-position: center; }
+.listener-hero h1.particle-headline { position: relative; width: 100%; height: clamp(150px, 23vw, 300px); font-size: clamp(36px, 11vw, 156px); margin: 0; line-height: 1.02; letter-spacing: -.035em; }
+.listener-hero h1 .particle-headline__fallback { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; color: var(--ink); transition: opacity .45s; }
+.listener-hero h1 .particle-headline__fallback > span:first-child { color: var(--ink); }
+.listener-hero h1 .particle-headline__fallback > span:last-child { color: #b0b8cc; }
+.listener-hero h1.particle-headline[data-ready="true"] .particle-headline__fallback { opacity: 0; }
+@media (max-width: 767px) {
+  .listener-hero { padding-block: 48px 185px; }
+  .listener-hero__image { inset: 0; opacity: .12; }
+  .listener-hero__copy > p { font-size: 14px; }
+  .listener-hero__pick { left: 20px; right: 20px; width: auto; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { .particle-headline__canvas, .listener-hero h1 .particle-headline__fallback { transition: none; } }
+
+/* The render surface belongs to the full hero, independent of the h1's box. */
+.particle-headline__canvas { position: absolute; top: -180px; left: 50%; transform: translateX(-50%); width: 100vw; max-width: none; height: calc(100% + 360px); display: block; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .45s; }
+.particle-headline__canvas.is-ready { opacity: 1; }
+.listener-hero__copy { position: relative; z-index: 1; }
+.listener-hero__pick { z-index: 2; }

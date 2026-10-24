@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { ParticleHeadline } from '@/components/listeners/ParticleHeadline'
 import { ParticleSphere } from '@/components/animations/ParticleSphere'
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
@@ -171,9 +172,8 @@ export function ListenerHome() {
     </header>
 
     <section className="listener-hero l-shell" aria-labelledby="listener-hero-title">
-      <div className="listener-hero__image"><Image src="/images/listener-speaker.webp" alt="" fill priority sizes="100vw" /></div>
       <motion.div className="listener-hero__copy" initial={reduced ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: EASE }}>
-        <ScrollTitle hero id="listener-hero-title" lines={["You won’t", "believe."]} />
+        <ParticleHeadline />
         <p>New artists. Unexpected sounds.<br />Your next favourite record is in here.</p>
         <a className="l-button l-button--light" href="#catalog">Find your next track <ArrowUpRight /></a>
       </motion.div>
