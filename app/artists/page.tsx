@@ -5,20 +5,22 @@ import { requireActor } from '@/lib/portal/auth'
 import { listReleases } from '@/lib/portal/releases'
 import { listArtistDemoSubmissions } from '@/lib/demoSubmissions'
 import { ArtistSubmissions } from '@/components/portal/ArtistSubmissions'
+import { getArtistReleaseMode } from '@/lib/portal/releasePermissions'
 export default async function ArtistDashboard() {
   const actor = await requireActor()
-  const [releases, submissions] = await Promise.all([
-    listReleases(actor), listArtistDemoSubmissions(actor.client, actor.user.id),
+  const [releases, submissions, mode] = await Promise.all([
+    listReleases(actor), listArtistDemoSubmissions(actor.client, actor.user.id), getArtistReleaseMode(actor),
   ])
+  const direct = mode !== 'submission_required'
   return (
     <>
       <PortalHeading
         kicker="Your next chapter"
         title={`Welcome${actor.profile?.display_name ? ', ' + actor.profile.display_name : ' back'}`}
-        description="Send a first listen, follow the label's response, then build your release."
+        description={mode === 'once' ? 'The label enabled one new release without a demo. Start your release directly or send a first listen.' : mode === 'unlimited' ? 'Direct releases are enabled. Build your next record or send a first listen to the label.' : "Send a first listen, follow the label's response, then build your release."}
         action={
-          <Link className="portal-button" href="/artists/submissions">
-            Submit a demo <span>↗</span>
+          <Link className="portal-button" href={direct ? '/artists/releases/new' : '/artists/submissions'}>
+            {direct ? 'New release' : 'Submit a demo'} <span>↗</span>
           </Link>
         }
       />
@@ -51,10 +53,10 @@ export default async function ArtistDashboard() {
       ) : (
         <EmptyState
           title="The next one is yours."
-          detail="When your demo is approved, add the credits, artwork and delivery links here."
+          detail={direct ? 'Create a release directly, then add the credits, artwork and delivery links.' : 'When your demo is approved, add the credits, artwork and delivery links here.'}
           action={
-            <Link className="portal-button" href="/artists/submissions">
-              Submit a demo ↗
+            <Link className="portal-button" href={direct ? '/artists/releases/new' : '/artists/submissions'}>
+              {direct ? 'New release ↗' : 'Submit a demo ↗'}
             </Link>
           }
         />
@@ -63,8 +65,8 @@ export default async function ArtistDashboard() {
         <span className="portal-eyebrow">From idea to release</span>
         <div>
           {[
-            ['01', 'Send a first listen', 'Share a SoundCloud link with the label.'],
-            ['02', 'Build the release', 'After approval, add artists, credits and audio links.'],
+            ['01', direct ? 'Start your release' : 'Send a first listen', direct ? 'Create a new record without a demo submission.' : 'Share a SoundCloud link with the label.'],
+            ['02', 'Build the release', direct ? 'Add artists, credits, artwork and audio links.' : 'After approval, add artists, credits and audio links.'],
             ['03', 'Keep it moving', 'Follow feedback and release progress here.'],
           ].map(([num, title, desc]) => (
             <article key={num}>

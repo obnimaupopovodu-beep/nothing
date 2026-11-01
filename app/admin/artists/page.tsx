@@ -1,6 +1,7 @@
-import Link from 'next/link'
 import { PortalShell, PortalHeading } from '@/components/portal/PortalShell'
 import { requireActor } from '@/lib/portal/auth'
+import { ArtistDirectory } from '@/components/portal/ArtistDirectory'
+import { artistReleaseModes, type ArtistReleaseMode } from '@/lib/portal/validation'
 export default async function ArtistsPage() {
   const actor = await requireActor('admin')
   const { data, error } = await actor.client
@@ -9,34 +10,23 @@ export default async function ArtistsPage() {
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) throw new Error('Unable to load artists.')
+  const profiles = data ?? []
+  const { data: permissions, error: permissionsError } = profiles.length
+    ? await actor.client.from('label_artist_release_permissions').select('artist_id,direct_release_mode').in('artist_id', profiles.map((profile) => profile.id))
+    : { data: [], error: null }
+  if (permissionsError) throw new Error('Unable to load artist release permissions.')
+  const modes = new Map<string, ArtistReleaseMode>((permissions ?? []).map((permission) => {
+    if (!artistReleaseModes.includes(permission.direct_release_mode)) throw new Error('Invalid artist release permissions.')
+    return [permission.artist_id, permission.direct_release_mode]
+  }))
   return (
     <PortalShell actor={actor} workspace="admin">
       <PortalHeading
         kicker="Label / People"
         title="Artists"
-        description="Artist profiles connected to the same release platform."
+        description="Artist profiles and release permissions. Use the settings icon to enable direct releases for an artist."
       />
-      <section className="portal-panel portal-padding">
-        {data?.map((profile) => (
-          <article key={profile.id} className="portal-artist-row">
-            <span className="portal-avatar">{(profile.display_name || 'A')[0]}</span>
-            <div>
-              <h3>{profile.display_name || 'Profile not completed'}</h3>
-              <p className="portal-muted">
-                Spotify: {profile.spotify_id || 'Not added'} · Apple Music:{' '}
-                {profile.apple_music_id || 'Not added'}
-              </p>
-            </div>
-            <span className="portal-muted">
-              Joined {new Date(profile.created_at).toISOString().slice(0, 10)}
-              <Link className="portal-text-button" href={`/admin/releases/new?artist=${profile.id}`}>Add release</Link>
-            </span>
-          </article>
-        ))}
-        {!data?.length && (
-          <p className="portal-muted">Artists will appear here after their first sign-in.</p>
-        )}
-      </section>
+      <ArtistDirectory profiles={profiles.map((profile) => ({ ...profile, releaseMode: modes.get(profile.id) ?? 'submission_required' }))} />
     </PortalShell>
   )
 }

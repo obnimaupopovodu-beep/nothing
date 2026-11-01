@@ -346,5 +346,112 @@ await db.query("select public.label_transition_release($1,8,'delivered','')",[ma
 await actor(staff)
 const backfilled = await db.query("select count(*)::int as n from public.demo_submissions where lower(trim(email))='owner@example.com' and artist_user_id is null")
 assert.equal(backfilled.rows[0].n,0); checks++
+
+// Artist-specific direct releases: staff-only grants, isolated reads and
+// transactional single-use consumption. This database is entirely in memory.
+await db.exec('reset role')
+const permissionsMigration = (await readdir('supabase/migrations')).find(f => f.endsWith('_artist_direct_release_permissions.sql'))
+await db.exec(await readFile(`supabase/migrations/${permissionsMigration}`, 'utf8'))
+await db.exec('delete from label_private.rate_limits')
+// Earlier staff-management checks promoted this fixture; exercise artist-only
+// permissions below with its ordinary artist role restored.
+await db.query("delete from public.label_roles where user_id=$1 and role='admin'", [owner])
+async function releaseMode(userId, expected) {
+  const result = await db.query('select direct_release_mode from public.label_artist_release_permissions where artist_id=$1', [userId])
+  assert.equal(result.rows[0]?.direct_release_mode ?? 'submission_required', expected)
+  checks++
+}
+async function setReleaseMode(userId, mode) {
+  await db.query('select public.label_set_artist_release_mode($1,$2)', [userId, mode])
+  checks++
+}
+await actor(null, 'anon')
+await denies('select * from public.label_artist_release_permissions')
+await denies("select public.label_set_artist_release_mode($1,'unlimited')", [owner])
+await actor(owner)
+await denies("select public.label_set_artist_release_mode($1,'unlimited')", [owner])
+await denies('select public.label_save_release(null,0,$1)', [payload])
+await actor(staff)
+await denies("select public.label_set_artist_release_mode($1,'invalid')", [owner], '22023')
+await denies("select public.label_set_artist_release_mode($1,'once')", ['99999999-0000-4000-8000-000000000001'], 'P0002')
+await setReleaseMode(owner, 'once')
+await setReleaseMode(other, 'unlimited')
+await actor(owner)
+await releaseMode(owner, 'once')
+const hiddenPermission = await db.query('select * from public.label_artist_release_permissions where artist_id=$1', [other])
+assert.equal(hiddenPermission.rows.length, 0); checks++
+await denies("update public.label_artist_release_permissions set direct_release_mode='unlimited' where artist_id=$1", [owner])
+await denies("insert into public.label_artist_release_permissions(artist_id,direct_release_mode) values($1,'unlimited')", [owner])
+await denies('select public.label_save_release(null,0,$1)', [{ ...payload, owner_id: other }])
+await denies('select public.label_save_release(null,0,$1)', [{ ...payload, demo_submission_id: legacyPublic }])
+await releaseMode(owner, 'once')
+
+// An approved demo uses the established flow and preserves a direct-release pass.
+const approvedWithPass = await approvedDemo()
+await db.query('select public.label_save_release(null,0,$1)', [{ ...payload, demo_submission_id: approvedWithPass }]); checks++
+await releaseMode(owner, 'once')
+const invalidDirect = { ...payload, tracks: [{ ...payload.tracks[0], credits: [{ ...payload.tracks[0].credits[0], role: 'invalid' }] }] }
+await denies('select public.label_save_release(null,0,$1)', [invalidDirect], '23514')
+await releaseMode(owner, 'once')
+
+const direct = await db.query('select public.label_save_release(null,0,$1) as result', [payload])
+const directId = direct.rows[0].result.id
+assert.equal(direct.rows[0].result.revision, 1); checks++
+const directRow = await db.query('select owner_id,demo_submission_id,creation_source,status from public.label_releases where id=$1', [directId])
+assert.deepEqual(directRow.rows[0], { owner_id: owner, demo_submission_id: null, creation_source: 'artist', status: 'draft' }); checks++
+await releaseMode(owner, 'submission_required')
+await denies('select public.label_save_release(null,0,$1)', [payload])
+await db.query('select public.label_save_release($1,1,$2)', [directId, payload]); checks++
+await db.query("select public.label_transition_release($1,2,'submitted','')", [directId]); checks++
+await actor(staff)
+await db.query("select public.label_transition_release($1,3,'under_review','')", [directId])
+await db.query("select public.label_transition_release($1,4,'changes_requested','Update the credits')", [directId]); checks+=2
+await actor(owner)
+await db.query('select public.label_save_release($1,5,$2)', [directId, payload])
+await db.query("select public.label_transition_release($1,6,'submitted','')", [directId]); checks+=2
+await releaseMode(owner, 'submission_required')
+
+await actor(staff)
+await setReleaseMode(owner, 'unlimited')
+await actor(owner)
+const unlimitedDraft = await db.query('select public.label_save_release(null,0,$1) as result', [payload])
+await db.query('select public.label_save_release(null,0,$1)', [payload]); checks+=2
+await releaseMode(owner, 'unlimited')
+await actor(staff)
+await setReleaseMode(owner, 'submission_required')
+await actor(owner)
+await denies('select public.label_save_release(null,0,$1)', [payload])
+await db.query('select public.label_save_release($1,1,$2)', [unlimitedDraft.rows[0].result.id, payload]); checks++
+
+// Two outstanding create requests cannot spend the same one-release grant twice.
+await actor(staff)
+await setReleaseMode(owner, 'once')
+await actor(owner)
+const competingCreates = await Promise.allSettled([
+  db.query('select public.label_save_release(null,0,$1)', [payload]),
+  db.query('select public.label_save_release(null,0,$1)', [payload]),
+])
+assert.equal(competingCreates.filter(result => result.status === 'fulfilled').length, 1)
+assert.equal(competingCreates.find(result => result.status === 'rejected').reason.code, '42501'); checks+=2
+await releaseMode(owner, 'submission_required')
+await actor(staff)
+await setReleaseMode(owner, 'once')
+await db.query('select public.label_save_release(null,0,$1)', [{ ...payload, owner_id: owner }]); checks++
+await releaseMode(owner, 'once')
+await denies("update public.label_artist_release_permissions set direct_release_mode='unlimited' where artist_id=$1", [owner])
+
+const unverified = '10000000-0000-4000-8000-000000000005'
+await db.exec('reset role')
+await db.query("insert into auth.users(id,email) values($1,'unverified@example.com')", [unverified])
+await actor(unverified)
+await db.query('select public.label_ensure_profile()')
+await actor(staff)
+await denies("select public.label_set_artist_release_mode($1,'unlimited')", [unverified], '22023')
+await actor(null, 'authenticated')
+await denies("select public.label_set_artist_release_mode($1,'unlimited')", [owner])
+await actor(staff)
+await db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify({ sub: staff, role: 'authenticated', is_anonymous: true })])
+await denies("select public.label_set_artist_release_mode($1,'unlimited')", [owner])
+
 await db.close()
 console.log(`Artist platform: ${checks} database security and workflow checks passed.`)

@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+export const artistReleaseModes = ['submission_required', 'once', 'unlimited'] as const
+export type ArtistReleaseMode = (typeof artistReleaseModes)[number]
+
 export const statuses = [
   'draft',
   'submitted',

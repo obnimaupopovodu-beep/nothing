@@ -9,6 +9,7 @@ import { AdminSubmissionsList } from '@/app/admin/AdminSubmissionsList'
 import { FeedbackCarousel } from '@/components/portal/FeedbackCarousel'
 import { ReleaseEditor } from '@/components/portal/ReleaseEditor'
 import { ArtistSubmissions } from '@/components/portal/ArtistSubmissions'
+import { ArtistDirectory } from '@/components/portal/ArtistDirectory'
 import { ReleaseHistory, ReleaseReview, ReviewActions } from '@/components/portal/ReleaseReview'
 import type { ReleaseRow } from '@/lib/portal/releases'
 import { emptyRelease, type ReleaseInput } from '@/lib/portal/validation'
@@ -204,17 +205,13 @@ export default async function LocalPreview({
           <PortalHeading
             kicker="Label / People"
             title="Artists"
-            description="Profiles connected to the same release platform."
+            description="Explore artist release permissions. Changes here are temporary and do not affect real accounts."
           />
-          <section className="portal-panel portal-padding">
-            <article className="portal-artist-row">
-              <span className="portal-avatar">N</span>
-              <div>
-                <h3>Naivity</h3>
-                <p className="portal-muted">Sample artist profile · Electronic music</p>
-              </div>
-            </article>
-          </section>
+          <ArtistDirectory preview profiles={[
+            { ...profile, created_at: '2026-10-01', releaseMode: 'submission_required' },
+            { ...profile, id: 'preview-once', display_name: 'Low Frequency', created_at: '2026-10-02', releaseMode: 'once' },
+            { ...profile, id: 'preview-unlimited', display_name: 'Night Signal', created_at: '2026-10-03', releaseMode: 'unlimited' },
+          ]} />
         </>
       ) : view === 'demos' ? (
         <>
