@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { SITE_URL } from '@/lib/site'
 import './globals.css'
+import './audience.css'
 import './workspace.css'
 import { SiteExperience } from '@/components/layout/SiteExperience'
 

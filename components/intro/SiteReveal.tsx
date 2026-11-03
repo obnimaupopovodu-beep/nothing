@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { audienceIntroSeen } from '@/lib/audienceNavigation'
+import { useAudienceExperience } from '@/components/layout/AudienceExperience'
 import { INTRO_REVEAL_EVENT } from './IntroNavigation'
 import { catalogReturnRequested } from '@/lib/catalogReturn'
 
@@ -10,20 +12,21 @@ import { catalogReturnRequested } from '@/lib/catalogReturn'
  * already-rendered block the instant the white mask slides away.
  */
 export function SiteReveal({ children, skipOnHash = false }: { children: React.ReactNode; skipOnHash?: boolean }) {
+  const skipIntro = Boolean(useAudienceExperience()?.skipIntro)
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
-    if (catalogReturnRequested() || (skipOnHash && window.location.hash)) setRevealed(true)
+    if (skipIntro || audienceIntroSeen() || catalogReturnRequested() || (skipOnHash && window.location.hash)) setRevealed(true)
     function handleReveal() {
       setRevealed(true)
     }
 
     window.addEventListener(INTRO_REVEAL_EVENT, handleReveal)
     return () => window.removeEventListener(INTRO_REVEAL_EVENT, handleReveal)
-  }, [skipOnHash])
+  }, [skipOnHash, skipIntro])
 
   return (
-    <div className={revealed ? 'site-reveal site-reveal--visible' : 'site-reveal'}>
+    <div className={revealed || skipIntro ? 'site-reveal site-reveal--visible' : 'site-reveal'}>
       {children}
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { AudienceSwitch } from './AudienceExperience'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -52,14 +52,15 @@ export function Navigation() {
           uwbelieve<span>.</span>
         </a>
 
+        <AudienceSwitch onNavigate={() => setMenuOpen(false)} />
+
+        <div className="nav-actions">
         <nav className="nav-links hide-mobile" aria-label="Primary">
-          <Link href="/" style={{ fontSize: 12, color: 'var(--ink-2)', textDecoration: 'none' }}>For listeners ↗</Link>
-          {navLinks.map((l) => (
+          {navLinks.slice(0, 1).map((l) => (
             <button key={l.label} type="button" onClick={() => go(l.href)}>
               {l.label}
             </button>
           ))}
-          <a href="/artists" style={{ fontSize: 12, color: "var(--ink-2)", textDecoration: "none" }}>Artist portal ↗</a>
           <button type="button" className="btn btn-ghost nav-cta" onClick={() => go('#demo')}>
             Submit a track
           </button>
@@ -75,6 +76,7 @@ export function Navigation() {
           <motion.span animate={menuOpen ? { rotate: 45, y: 5 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} />
           <motion.span animate={menuOpen ? { rotate: -45, y: -5 } : { rotate: 0, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }} />
         </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -87,7 +89,6 @@ export function Navigation() {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="shell">
-              <Link href="/" className="drawer-link">For listeners ↗</Link>
               {navLinks.map((l) => (
                 <button key={l.label} type="button" className="drawer-link" onClick={() => go(l.href)}>
                   {l.label}
@@ -117,6 +118,7 @@ export function Navigation() {
           justify-content: space-between;
           gap: 24px;
         }
+        .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 20px; }
         .brand {
           font-size: 20px;
           font-weight: 900;
@@ -151,7 +153,7 @@ export function Navigation() {
           letter-spacing: 0.06em;
         }
         .burger {
-          display: none;
+          display: flex;
           width: 44px;
           height: 44px;
           border: 1px solid var(--line);

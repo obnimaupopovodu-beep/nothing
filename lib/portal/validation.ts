@@ -62,6 +62,7 @@ export const releaseSchema = z
     release_date: z.union([z.literal(''), z.iso.date()]),
     genre: text(100),
     notes: text(4000),
+    artwork_requested: z.boolean().optional(),
     artists: z.array(artistSchema).max(20),
     tracks: z.array(trackSchema).min(1).max(40),
   })
@@ -74,6 +75,7 @@ export const emptyRelease: ReleaseInput = {
   release_date: '',
   genre: '',
   notes: '',
+  artwork_requested: false,
   artists: [{ name: '', role: 'primary', spotify_id: '', apple_music_id: '' }],
   tracks: [
     {
@@ -93,9 +95,8 @@ export function submissionIssues(
 ) {
   const issues: string[] = []
   if (!value.title) issues.push('Add a release title.')
-  if (!value.release_date || (!allowPastDate && value.release_date <= today))
-    issues.push(allowPastDate ? 'Choose a release date.' : 'Choose a future release date.')
-  if (!value.genre) issues.push('Choose a genre.')
+  if (value.release_date && !allowPastDate && value.release_date <= today)
+    issues.push('Choose a future release date, or leave it undecided.')
   if (!value.artists.some((a) => a.role === 'primary' && a.name))
     issues.push('Add at least one primary artist.')
   if (value.artists.some((a) => !a.name)) issues.push('Complete or remove empty artist entries.')

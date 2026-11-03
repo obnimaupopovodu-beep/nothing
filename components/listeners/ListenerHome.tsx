@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { AudienceSwitch } from '@/components/layout/AudienceExperience'
 import { ParticleHeadline } from '@/components/listeners/ParticleHeadline'
 import { ParticleSphere } from '@/components/animations/ParticleSphere'
 import { createPortal } from 'react-dom'
@@ -162,11 +163,11 @@ export function ListenerHome() {
     <a className="listener-skip" href="#catalog">Skip to the music</a>
     <header className="listener-nav l-shell">
       <Link className="l-brand" href="/">uwbelieve<span>.</span></Link>
+      <AudienceSwitch onNavigate={() => setMenuOpen(false)} />
       <nav id="listener-navigation" aria-label="Listener navigation" className={menuOpen ? 'listener-nav__links is-open' : 'listener-nav__links'}>
         <a href="#discover" onClick={() => setMenuOpen(false)}>The artists</a>
         <a href="#catalog" onClick={() => setMenuOpen(false)}>The music</a>
         <a href="#community" onClick={() => setMenuOpen(false)}>The community</a>
-        <Link href="/for-artists" className="listener-nav__artist">For artists <ArrowUpRight /></Link>
       </nav>
       <button className="listener-nav__toggle" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} aria-controls="listener-navigation" onClick={() => setMenuOpen(value => !value)}>{menuOpen ? <X /> : <span>Menu</span>}</button>
     </header>

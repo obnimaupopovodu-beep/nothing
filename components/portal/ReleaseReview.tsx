@@ -40,6 +40,7 @@ export function ReleaseReview({
         </div>
       </div>
       <div className="portal-review-details">
+        {input.artwork_requested && <><h3>Artwork</h3><p>The artist has asked the label to create the artwork.</p></>}
         <h3>Artists</h3>
         {input.artists.map((a, i) => (
           <div className="portal-review-line" key={i}>

@@ -15,6 +15,7 @@ export type ReleaseRow = {
   notes: string
   status: ReleaseStatus
   revision: number
+  artwork_requested: boolean
   artwork_path: string | null
   creation_source?: 'artist' | 'label'
   demo_submission_id: string | null
@@ -73,6 +74,7 @@ export async function loadRelease(actor: Actor, id: string) {
     release_date: release.release_date ?? '',
     genre: release.genre,
     notes: release.notes,
+    artwork_requested: release.artwork_requested ?? false,
     artists: artists.data ?? [],
     tracks: (tracks.data ?? []).map((t) => ({
       title: t.title,

@@ -453,5 +453,31 @@ await actor(staff)
 await db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify({ sub: staff, role: 'authenticated', is_anonymous: true })])
 await denies("select public.label_set_artist_release_mode($1,'unlimited')", [owner])
 
+// Optional metadata and artwork requests must survive save, submit and staff review.
+await db.exec('reset role')
+const optionalMigration = (await readdir('supabase/migrations')).find(f => f.endsWith('_optional_release_metadata_and_artwork_request.sql'))
+await db.exec(await readFile(`supabase/migrations/${optionalMigration}`, 'utf8'))
+await actor(staff)
+await setReleaseMode(owner, 'unlimited')
+await actor(owner)
+const optional = await db.query('select public.label_save_release(null,0,$1) as result', [{...payload, release_date:'', genre:'', artwork_requested:true}])
+const optionalId = optional.rows[0].result.id
+const optionalRow = await db.query('select release_date,genre,artwork_requested from public.label_releases where id=$1', [optionalId])
+assert.deepEqual(optionalRow.rows[0], {release_date:null,genre:'',artwork_requested:true}); checks++
+await db.query("select public.label_transition_release($1,1,'submitted','')", [optionalId]); checks++
+await actor(staff)
+const requestRow = await db.query('select artwork_requested from public.label_releases where id=$1', [optionalId])
+assert.equal(requestRow.rows[0].artwork_requested,true); checks++
+await db.query("select public.label_transition_release($1,2,'under_review','')", [optionalId]); checks++
+await actor(owner)
+const pastDate = await db.query('select public.label_save_release(null,0,$1) as result', [{...payload,release_date:'2020-01-01'}])
+await denies("select public.label_transition_release($1,1,'submitted','')", [pastDate.rows[0].result.id], '22023')
+const editable = await db.query('select public.label_save_release(null,0,$1) as result', [{...payload,artwork_requested:true}])
+await db.query('select public.label_save_release($1,1,$2)', [editable.rows[0].result.id,{...payload,artwork_requested:false}])
+const cleared = await db.query('select artwork_requested from public.label_releases where id=$1', [editable.rows[0].result.id])
+assert.equal(cleared.rows[0].artwork_requested,false); checks++
+await actor(other)
+await denies('select public.label_save_release($1,2,$2)', [editable.rows[0].result.id,{...payload,artwork_requested:true}])
+
 await db.close()
 console.log(`Artist platform: ${checks} database security and workflow checks passed.`)

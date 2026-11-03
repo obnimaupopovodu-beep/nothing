@@ -246,7 +246,7 @@ export function ReleaseEditor({
                   </select>
                 </label>
                 <label>
-                  Preferred release date
+                  Preferred release date <small>Optional</small>
                   <input
                     className="portal-input"
                     type="date"
@@ -257,16 +257,16 @@ export function ReleaseEditor({
                       })
                     }
                   />
-                  <small>The label confirms the final schedule.</small>
+                  <small>Leave blank if undecided. The label confirms the final schedule.</small>
                 </label>
                 <label>
-                  Genre
+                  Genre <small>Optional</small>
                   <input
                     className="portal-input"
                     list="release-genres"
                     value={data.genre}
                     maxLength={100}
-                    placeholder="Choose or enter a genre"
+                    placeholder="Choose a genre or leave undecided"
                     onChange={(e) =>
                       update((d) => {
                         d.genre = e.target.value
@@ -609,6 +609,12 @@ export function ReleaseEditor({
                 Have artwork ready? Add it here. You can also submit without artwork and coordinate
                 it with the label.
               </p>
+              <label className="portal-checkbox">
+                <input type="checkbox" checked={Boolean(data.artwork_requested)} disabled={busy}
+                  onChange={event => update(d => { d.artwork_requested = event.target.checked })} />
+                Ask label to make one
+              </label>
+              <p className="portal-muted">If selected, the label will coordinate the artwork with you. You can still upload a reference below.</p>
               <div className="portal-artwork-area">
                 {artwork ? (
                   <img src={artwork} alt="Release artwork" className="portal-artwork-preview" />

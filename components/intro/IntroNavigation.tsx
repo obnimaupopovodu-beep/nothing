@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { audienceIntroSeen } from '@/lib/audienceNavigation'
+import { useAudienceExperience } from '@/components/layout/AudienceExperience'
 import { catalogReleases } from '@/components/data/catalog'
 import { catalogReturnRequested } from '@/lib/catalogReturn'
 
@@ -33,6 +35,7 @@ function moveToTarget(target: string | null) {
 }
 
 export function IntroNavigation({ routes = ROUTES, skipOnHash = false }: { routes?: IntroRoute[]; skipOnHash?: boolean }) {
+  const skipIntro = Boolean(useAudienceExperience()?.skipIntro)
   const [state, setState] = useState<IntroState>('boot')
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState(4)
@@ -43,7 +46,7 @@ export function IntroNavigation({ routes = ROUTES, skipOnHash = false }: { route
   const finishedRef = useRef(false)
 
   useEffect(() => {
-    if (catalogReturnRequested() || (skipOnHash && window.location.hash)) {
+    if (skipIntro || audienceIntroSeen() || catalogReturnRequested() || (skipOnHash && window.location.hash)) {
       setState('closed')
       requestAnimationFrame(() => window.dispatchEvent(new CustomEvent(INTRO_REVEAL_EVENT)))
       return
@@ -89,7 +92,7 @@ export function IntroNavigation({ routes = ROUTES, skipOnHash = false }: { route
       })
     })()
     return () => { cancelled = true }
-  }, [reducedMotion, skipOnHash])
+  }, [reducedMotion, skipOnHash, skipIntro])
 
   const finishIntro = useCallback(() => {
     if (finishedRef.current) return
@@ -195,7 +198,7 @@ export function IntroNavigation({ routes = ROUTES, skipOnHash = false }: { route
     }
   }, [state, selectRoute])
 
-  if (state === 'closed') return null
+  if (skipIntro || state === 'closed') return null
 
   const menuVisible = state === 'opening' || state === 'menu' || state === 'navigating'
   const isInteractive = state === 'menu'
