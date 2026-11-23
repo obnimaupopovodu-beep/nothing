@@ -13,7 +13,6 @@ const PRINCIPLES = [
 ]
 
 const CONTENT_REVEAL_START = .70
-const CONTENT_REVEAL_STAGGER = .035
 const CONTENT_REVEAL_DURATION = .16
 
 const FLASH_POINTS = [0.33, 0.38]
@@ -30,25 +29,30 @@ const sharpEaseInOut = (value: number) => {
   return rise / (rise + fall)
 }
 
-function PrincipleCard({ index, progress, reduced }: { index: number; progress: MotionValue<number>; reduced: boolean }) {
-  const item = PRINCIPLES[index]
-  const Icon = item.icon
-  const opacity = useTransform(progress, value => sharpEaseInOut((value - CONTENT_REVEAL_START - index * CONTENT_REVEAL_STAGGER) / CONTENT_REVEAL_DURATION))
-  const y = useTransform(opacity, value => (1 - value) * 16)
-  return <motion.article className="about-principle" style={{ opacity: reduced ? 1 : opacity, y: reduced ? 0 : y }}>
-    <Icon className="about-principle__icon" size={30} weight="light" aria-hidden="true" />
-    <h3>{item.title}</h3><p>{item.copy}</p>
-  </motion.article>
+function OrbitPrinciple({ index, active, reduced }: { index: number; active: MotionValue<number>; reduced: boolean }) {
+  const { title, copy, icon: Icon } = PRINCIPLES[index]
+  const offset = useTransform(active, value => index - value)
+  const angle = useTransform(offset, value => Math.max(-1.75, Math.min(1.75, value)) * 0.76)
+  const x = useTransform(angle, value => `${-21 * (1 - Math.cos(value))}cqw`)
+  const y = useTransform(angle, value => `${51 * Math.sin(value)}cqh`)
+  const rotate = useTransform(angle, value => 17 * Math.sin(value))
+  const scale = useTransform(angle, value => 0.76 + 0.24 * Math.cos(value))
+  const opacity = useTransform(offset, value => clamp01(1 - Math.abs(value) / 1.52) ** 1.4)
+  const filter = useTransform(offset, value => `blur(${Math.min(Math.abs(value) ** 1.65 * 5, 14)}px)`)
+  return (
+    <motion.article className="about-principle" style={reduced ? undefined : { x, y, rotate, scale, opacity, filter }}>
+      <Icon className="about-principle__icon" size={25} weight="light" aria-hidden="true" />
+      <h3>{title}</h3>
+      <p>{copy}</p>
+    </motion.article>
+  )
 }
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const railRef = useRef<HTMLDivElement>(null)
   const progress = useMotionValue(0)
-  const railStart = useMotionValue(-140)
-  const railTravel = useMotionValue(1000)
-  const { scrollYProgress: cardsProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
-  const railY = useTransform([cardsProgress, railStart, railTravel], ([position, start, travel]) => Number(start) - Number(position) * Number(travel))
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
+  const active = useTransform(scrollYProgress, [0, 0.94], [0, PRINCIPLES.length - 1])
   const reduced = Boolean(useReducedMotion())
   const scrollController = useSmoothScroll()
   const autoplayConsumed = useRef(false)
@@ -67,25 +71,6 @@ export function AboutSection() {
   const mobileY = useTransform(shift, (value) => `${-30 * value}svh`)
   const introOpacity = useTransform(progress, value => sharpEaseInOut((value - CONTENT_REVEAL_START) / CONTENT_REVEAL_DURATION))
   const introY = useTransform(introOpacity, value => (1 - value) * 16)
-
-  useEffect(() => {
-    const rail = railRef.current
-    if (!rail) return
-    const measure = () => {
-      const cards = rail.querySelectorAll<HTMLElement>('.about-principle')
-      const first = cards[0], last = cards[cards.length - 1]
-      if (!first || !last) return
-      const firstCenter = first.offsetTop + first.offsetHeight / 2
-      const lastCenter = last.offsetTop + last.offsetHeight / 2
-      railStart.set(-firstCenter)
-      railTravel.set(Math.max(0, lastCenter - firstCenter))
-    }
-    const observer = new ResizeObserver(measure)
-    observer.observe(rail)
-    rail.querySelectorAll('.about-principle').forEach(card => observer.observe(card))
-    measure()
-    return () => observer.disconnect()
-  }, [railStart, railTravel])
 
   useEffect(() => {
     if (reduced) return
@@ -175,8 +160,8 @@ export function AboutSection() {
           }
         } else {
           // The introduction is a one-time presentation, independent of the
-          // reversible card rail. Returning through the section must not undo
-          // card visibility or move the wordmark back towards the center.
+          // reversible carousel. Returning through the section must not undo
+          // text visibility or move the wordmark back towards the center.
           if (scrollDelta < 0 && rect.top <= 1) autoplayConsumed.current = true
           const target = autoplayConsumed.current ? 1 : 0
           const current = progress.get()
@@ -242,9 +227,9 @@ export function AboutSection() {
           </div>
 
           <div className="about-description">
-            <motion.div ref={railRef} className="about-principles" style={{ y: reduced ? 0 : railY }}>
-              <motion.p className="about-principles__intro" style={{ opacity: reduced ? 1 : introOpacity, y: reduced ? 0 : introY }}>It works each record properly:</motion.p>
-              {PRINCIPLES.map((item, index) => <PrincipleCard key={item.title} index={index} progress={progress} reduced={reduced} />)}
+            <motion.p className="about-principles__intro" style={{ opacity: reduced ? 1 : introOpacity, y: reduced ? 0 : introY }}>It works each record properly:</motion.p>
+            <motion.div className="about-principles" style={{ opacity: reduced ? 1 : introOpacity }}>
+              {PRINCIPLES.map((item, index) => <OrbitPrinciple key={item.title} index={index} active={active} reduced={reduced} />)}
             </motion.div>
           </div>
         </div>
@@ -296,25 +281,29 @@ export function AboutSection() {
         .mobile-title-track { display: none; }
         .about-description {
           position: absolute;
-          left: 55%;
+          left: 48%;
           right: var(--pad);
-          top: 0;
-          height: 100%;
-          pointer-events: none;
-          mask-image: linear-gradient(transparent, #000 17%, #000 83%, transparent);
+          top: 21%;
+          height: 64%;
         }
-        :global(.about-principles) { position: absolute; top: 50%; width: 100%; display: grid; gap: clamp(28px, 5vh, 64px); }
-        :global(.about-principles__intro) { margin: 0 0 -8px; color: var(--ink-2); font-size: clamp(15px, 1.2vw, 18px); letter-spacing: -.02em; }
+        :global(.about-principles__intro) { position: relative; z-index: 1; margin: 0 0 0 16%; color: var(--ink-2); font-size: clamp(15px, 1.2vw, 18px); letter-spacing: -.02em; }
+        :global(.about-principles) {
+          position: absolute;
+          inset: 10% 0 0;
+          container-type: size;
+          mask-image: linear-gradient(transparent, #000 21%, #000 79%, transparent);
+        }
         :global(.about-principle) {
-          position: relative; padding: clamp(26px, 3vw, 44px); min-height: 260px;
-          display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
-          border: 1px solid rgba(255,255,255,.14); border-radius: var(--r);
-          background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
-          color: var(--ink); pointer-events: auto;
+          position: absolute;
+          top: 50%;
+          inset-inline: 16% 0;
+          translate: 0 -50%;
+          transform-origin: left center;
+          color: var(--ink);
         }
-        :global(.about-principle__icon) { color: #adb8da; margin-bottom: 30px; }
-        :global(.about-principle h3) { margin: 0; font-size: clamp(26px, 2.8vw, 42px); font-weight: 800; letter-spacing: -.045em; line-height: 1.08; }
-        :global(.about-principle p) { margin: 20px 0 0; max-width: 34ch; color: var(--ink-2); font-size: clamp(14px, 1.25vw, 17px); line-height: 1.6; }
+        :global(.about-principle__icon) { color: #adb8da; margin-bottom: 12px; }
+        :global(.about-principle h3) { margin: 0; font-size: clamp(26px, 3.5vw, 50px); font-weight: 800; letter-spacing: -.055em; line-height: 1.04; }
+        :global(.about-principle p) { margin: 12px 0 0; max-width: 34ch; color: var(--ink-2); font-size: clamp(14px, 1.25vw, 17px); line-height: 1.45; }
         @media (max-width: 700px) {
           .desktop-title-track { display: none; }
           .mobile-title-track {
@@ -328,9 +317,8 @@ export function AboutSection() {
             font-size: clamp(46px, 12vw, 68px);
           }
           .about-description { left: var(--pad); right: var(--pad); top: 35%; height: 65%; }
-          :global(.about-principle) { min-height: 220px; padding: 26px; }
           :global(.about-principle h3) { font-size: clamp(26px, 7vw, 36px); }
-          :global(.about-principle__icon) { margin-bottom: 24px; }
+          :global(.about-principle__icon) { margin-bottom: 10px; }
           :global(.about-principles__intro) { font-size: 14px; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -345,9 +333,10 @@ export function AboutSection() {
             padding-block: 96px;
           }
           .desktop-title-track, .about-description { position: static; transform: none; }
-          .about-description { height: auto; mask-image: none; }
-          :global(.about-principles) { position: relative; top: auto; }
-          :global(.about-principle) { min-height: 0; }
+          .about-description { height: auto; }
+          :global(.about-principles__intro) { margin-inline-start: 0; }
+          :global(.about-principles) { position: static; container-type: normal; mask-image: none; display: grid; gap: 28px; margin-top: 24px; }
+          :global(.about-principle) { position: static; translate: none; }
           :global(.about-title) { max-width: none; }
         }
         @media (prefers-reduced-motion: reduce) and (max-width: 700px) {

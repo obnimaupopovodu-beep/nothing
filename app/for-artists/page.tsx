@@ -1,3 +1,5 @@
+import { PromoEnvelope } from './PromoEnvelope'
+import promo from './promo.module.css'
 import type { Metadata } from 'next'
 import { SITE_URL, ARTIST_TITLE, ARTIST_DESCRIPTION } from '@/lib/site'
 import { Navigation }          from '@/components/layout/Navigation'
@@ -42,8 +44,10 @@ export default function ForArtists() {
           <StatsBanner />
           <MarqueeBand />
           <ReleasePathsSection />
-          {/* untouched by design: the everywhere reveal animation */}
-          <PlatformsSection />
+          <div className={promo.handoff}>
+            <PlatformsSection />
+            <PromoEnvelope />
+          </div>
           <SocialSection />
           <FaqSection />
           <DemoSection />

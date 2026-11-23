@@ -5,7 +5,7 @@ import { useInView } from 'framer-motion'
 
 const STATS = [
   { value: 90, suffix: '%', label: 'royalties stay with the artist' },
-  { value: 60, suffix: '+', label: 'artists released with us'      },
+  { value: 5, suffix: '+', label: 'artists released with us'      },
   { value: 48, suffix: 'h', label: 'answer on every demo sent'     },
 ]
 

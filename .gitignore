@@ -43,3 +43,6 @@ next-env.d.ts
 .next-portal-check/
 .next-portal-build/
 supabase/.temp/
+
+# Local search-discovery verification build
+.next-seo-check/

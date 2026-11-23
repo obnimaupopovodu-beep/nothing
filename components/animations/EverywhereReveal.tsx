@@ -70,11 +70,11 @@ function ReachCounter({ progress }: { progress: MotionValue<number> }) {
 }
 
 export function EverywhereReveal() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const timelineRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ width: 1280, height: 800 })
   const reducedMotion = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
+  const { scrollYProgress } = useScroll({ target: timelineRef, offset: ['start start', 'end end'] })
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: .0001 })
   const rawMouseX = useMotionValue(0)
   const rawMouseY = useMotionValue(0)
@@ -105,7 +105,8 @@ export function EverywhereReveal() {
 
   const mobile = size.width < 700
   const visiblePlatforms = platforms.slice(0, mobile ? MOBILE_POSITIONS.length : POSITIONS.length)
-  return <div ref={containerRef} className="everywhere-reveal">
+  return <div className="everywhere-reveal">
+    <div ref={timelineRef} className="everywhere-timeline" aria-hidden="true" />
     <div className="everywhere-stage" ref={stageRef}
       onPointerMove={event => {
         if (event.pointerType !== 'mouse') return

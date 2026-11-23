@@ -9,6 +9,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   if (!isPublicSite || process.env.VERCEL_ENV === 'preview') {
     return { rules: { userAgent: '*', disallow: '/' } }
   }
+  // The wildcard includes Googlebot, Bingbot, OAI-SearchBot and PerplexityBot.
+  // Keep one shared policy so AI-specific groups cannot override private-path exclusions.
   return {
     rules: { userAgent: '*', allow: '/', disallow: ['/artists', '/admin', '/login', '/preview', '/auth', '/api'] },
     sitemap: `${isPlaylistsSite ? PLAYLISTS_URL : SITE_URL}/sitemap.xml`,

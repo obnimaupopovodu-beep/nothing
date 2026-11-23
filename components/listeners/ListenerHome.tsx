@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { findArtist, artistPath } from '@/lib/musicDiscovery'
 import { AudienceSwitch } from '@/components/layout/AudienceExperience'
 import { ParticleHeadline } from '@/components/listeners/ParticleHeadline'
 import { ParticleSphere } from '@/components/animations/ParticleSphere'
@@ -194,7 +195,7 @@ export function ListenerHome() {
           <a href="#catalog" onClick={() => goArtist(item.name)} className="listener-artist">
             <Image unoptimized src={release.artwork} alt="" width={90} height={90} loading="lazy" />
             <h3>{item.name}</h3><span>{item.sound}</span><ArrowUpRight aria-hidden="true" />
-          </a></Reveal> })}
+          </a>{findArtist(item.name) && <Link className="l-text-link" href={artistPath(findArtist(item.name)!.slug)}>View {item.name}’s artist profile <ArrowUpRight /></Link>}</Reveal> })}
       </div>
     </section>
 
@@ -230,10 +231,10 @@ export function ListenerHome() {
       <Reveal><ScrollTitle lines={["Good taste.", "Better company."]} /><p className="l-lede">New releases, shared discoveries and people who get it. Come hang out.</p></Reveal>
       <div className="listener-community__links">
         <a href="https://discord.gg/pt8V9prdd" target="_blank" rel="noopener noreferrer"><DiscordLogo /><span>Join us on Discord</span><ArrowUpRight /></a>
-        <a href="https://instagram.com/uwbelieve_records" target="_blank" rel="noopener noreferrer"><InstagramLogo /><span>Follow on Instagram</span><ArrowUpRight /></a>
+        <a href="https://instagram.com/uwbelieve_main" target="_blank" rel="noopener noreferrer"><InstagramLogo /><span>Follow on Instagram</span><ArrowUpRight /></a>
       </div>
     </section>
-    <footer className="listener-footer l-shell"><Link className="l-brand" href="/">uwbelieve<span>.</span></Link><p>Independent music. Open ears.</p><nav aria-label="Footer"><a href="/for-artists">For artists</a><a href="https://artists.uwbelieve.com">Artist login</a><a href="mailto:info@uwbelieve.com">Say hello</a></nav><small>© {new Date().getFullYear()} uwbelieve</small></footer>
+    <footer className="listener-footer l-shell"><Link className="l-brand" href="/">uwbelieve<span>.</span></Link><p>Independent music.</p><nav aria-label="Footer"><Link href="/music/artists">Artists</Link><a href="/for-artists">For artists</a><a href="https://artists.uwbelieve.com">Artist login</a><a href="mailto:info@uwbelieve.com">Say hello</a></nav><small>© {new Date().getFullYear()} uwbelieve</small></footer>
     <audio ref={audio} crossOrigin="anonymous" preload="none" onEnded={()=>setPlaying(false)} onError={()=>{setPlaying(false);setAudioError('Unable to load the audio. Open the release to try again.')}} />
     {mounted && current && createPortal(<div className="listener-page listener-player-layer"><aside className="listener-now" aria-label="Now playing"><div className="listener-now-sphere"><ParticleSphere analyser={analyser} compact /></div><Image unoptimized src={current.artwork} alt="" width={44} height={44} /><div><strong>{current.title}</strong><span>{audioError || current.artist}</span></div><button type="button" onClick={()=>void preview(current)} aria-label={playing ? 'Pause preview' : 'Resume preview'}>{playing ? <Pause weight="fill" /> : <Play weight="fill" />}</button><Link href={releaseLink(current)} prefetch={false} aria-label="Open full record"><ArrowUpRight /></Link><button type="button" aria-label="Close audio player" onClick={closePlayer}><X /></button></aside></div>, document.body)}
   </main>
